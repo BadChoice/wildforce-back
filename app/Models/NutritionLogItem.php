@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
+use App\Contracts\Syncable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class NutritionLogItem extends Model
+class NutritionLogItem extends Model implements Syncable
 {
-    use SoftDeletes, UsesUuidPrimaryKey;
+    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
 
     protected function casts(): array
     {
@@ -19,5 +21,10 @@ class NutritionLogItem extends Model
     public function entry(): BelongsTo
     {
         return $this->belongsTo(NutritionLogEntry::class, 'nutrition_log_entry_id');
+    }
+
+    protected static function syncOwnerRelationship(): string
+    {
+        return 'entry.user';
     }
 }

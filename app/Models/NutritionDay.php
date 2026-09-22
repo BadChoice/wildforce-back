@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
+use App\Contracts\Syncable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class NutritionDay extends Model
+class NutritionDay extends Model implements Syncable
 {
-    use SoftDeletes, UsesUuidPrimaryKey;
+    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
 
     protected function casts(): array
     {
@@ -25,5 +27,10 @@ class NutritionDay extends Model
     public function meals(): HasMany
     {
         return $this->hasMany(NutritionMeal::class);
+    }
+
+    protected static function syncOwnerRelationship(): string
+    {
+        return 'plan.user';
     }
 }

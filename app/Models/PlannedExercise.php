@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
+use App\Contracts\Syncable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class PlannedExercise extends Model
+class PlannedExercise extends Model implements Syncable
 {
-    use SoftDeletes, UsesUuidPrimaryKey;
+    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
 
     protected function casts(): array
     {
@@ -30,5 +32,10 @@ class PlannedExercise extends Model
     public function exerciseResults(): HasMany
     {
         return $this->hasMany(ExerciseResult::class);
+    }
+
+    protected static function syncOwnerRelationship(): string
+    {
+        return 'workoutDay.user';
     }
 }

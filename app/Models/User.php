@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Concerns\SyncsWithUser;
+use App\Contracts\Syncable;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -35,10 +38,10 @@ use Laravel\Sanctum\HasApiTokens;
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
+class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Syncable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, HasUuids, Notifiable, PasskeyAuthenticatable, SoftDeletes, TwoFactorAuthenticatable;
+    use HasApiTokens, HasFactory, HasUuids, Notifiable, PasskeyAuthenticatable, SoftDeletes, SyncsWithUser, TwoFactorAuthenticatable;
 
     public $incrementing = false;
 
@@ -58,6 +61,31 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'height_cm' => 'integer',
             'weight_kg' => 'decimal:2',
             'password' => 'hashed',
+        ];
+    }
+
+    public function scopeForUser(Builder $query, self $user): Builder
+    {
+        return $query->whereKey($user);
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected static function syncExcludedAttributes(): array
+    {
+        return [
+            'id',
+            'email',
+            'email_verified_at',
+            'password',
+            'remember_token',
+            'two_factor_secret',
+            'two_factor_recovery_codes',
+            'two_factor_confirmed_at',
+            'created_at',
+            'updated_at',
+            'deleted_at',
         ];
     }
 
