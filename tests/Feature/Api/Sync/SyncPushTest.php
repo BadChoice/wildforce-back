@@ -17,7 +17,6 @@ test('it creates a user-owned record and returns its synchronized state', functi
             'id' => $locationId,
             'created_at' => '2026-09-22T12:00:00Z',
             'updated_at' => '2026-09-22T12:00:00Z',
-            'deleted_at' => null,
             'name' => 'Home gym',
             'equipment' => ['dumbbells', 'flatBench'],
             'is_default' => true,

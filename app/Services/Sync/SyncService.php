@@ -24,6 +24,9 @@ class SyncService
         return DB::transaction(function () use ($user, $modelClass, $records): Collection {
             return collect($records)->map(function (array $record) use ($user, $modelClass): Model {
                 $clientUpdatedAt = Carbon::parse($record['updated_at']);
+                $deletedAt = isset($record['deleted_at'])
+                    ? Carbon::parse($record['deleted_at'])
+                    : null;
                 $model = $this->syncQuery($user, $modelClass)->whereKey($record['id'])->first();
                 $isNew = $model === null;
 
@@ -55,7 +58,7 @@ class SyncService
                     'id' => $record['id'],
                     ...($isNew ? ['created_at' => Carbon::parse($record['created_at'])] : []),
                     'updated_at' => $clientUpdatedAt,
-                    'deleted_at' => $record['deleted_at'] === null ? null : Carbon::parse($record['deleted_at']),
+                    'deleted_at' => $deletedAt,
                 ]);
 
                 if (Schema::hasColumn($model->getTable(), 'user_id')) {
