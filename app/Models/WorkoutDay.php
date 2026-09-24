@@ -38,4 +38,9 @@ class WorkoutDay extends Model implements Syncable
     {
         return $this->hasMany(PlannedExercise::class);
     }
+
+    public function directExercises(): HasMany
+    {
+        return $this->hasMany(PlannedExercise::class)->whereNull('workout_block_id');
+    }
 }

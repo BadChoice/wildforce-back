@@ -128,3 +128,64 @@ test('it rejects updates to a record owned by another user', function () {
 
     expect($location->fresh()->name)->toBe('Private gym');
 });
+
+test('it synchronizes a complete workout day graph atomically', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+    $workoutDayId = (string) Str::uuid();
+    $blockId = (string) Str::uuid();
+    $exerciseId = (string) Str::uuid();
+    $resultId = (string) Str::uuid();
+
+    $response = $this->postJson('/api/sync/workout-days', [
+        'records' => [[
+            'id' => $workoutDayId,
+            'created_at' => '2026-09-24T12:00:00Z',
+            'updated_at' => '2026-09-24T12:00:00Z',
+            'deleted_at' => null,
+            'title' => 'Upper body',
+            'focus' => 'upperBody',
+            'status' => 'planned',
+            'did_count_toward_streak' => false,
+            'order_index' => 0,
+            'creation_source' => 'generated',
+            'blocks' => [[
+                'id' => $blockId,
+                'created_at' => '2026-09-24T12:00:00Z',
+                'updated_at' => '2026-09-24T12:00:00Z',
+                'deleted_at' => null,
+                'type' => 'standard',
+                'order_index' => 0,
+                'rounds' => 1,
+                'exercises' => [[
+                    'id' => $exerciseId,
+                    'created_at' => '2026-09-24T12:00:00Z',
+                    'updated_at' => '2026-09-24T12:00:00Z',
+                    'deleted_at' => null,
+                    'exercise' => 'benchPress',
+                    'order_index' => 0,
+                    'exercise_results' => [[
+                        'id' => $resultId,
+                        'created_at' => '2026-09-24T12:00:00Z',
+                        'updated_at' => '2026-09-24T12:00:00Z',
+                        'deleted_at' => null,
+                        'feedback' => 'justRight',
+                        'completed_at' => '2026-09-24T12:00:00Z',
+                    ]],
+                ]],
+            ]],
+            'exercises' => [],
+        ]],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.0.id', $workoutDayId)
+        ->assertJsonPath('data.0.blocks.0.id', $blockId)
+        ->assertJsonPath('data.0.blocks.0.exercises.0.id', $exerciseId)
+        ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.id', $resultId);
+
+    $this->assertDatabaseHas('workout_days', ['id' => $workoutDayId, 'user_id' => $user->id]);
+    $this->assertDatabaseHas('workout_blocks', ['id' => $blockId, 'workout_day_id' => $workoutDayId]);
+    $this->assertDatabaseHas('planned_exercises', ['id' => $exerciseId, 'workout_day_id' => $workoutDayId, 'workout_block_id' => $blockId]);
+    $this->assertDatabaseHas('exercise_results', ['id' => $resultId, 'planned_exercise_id' => $exerciseId]);
+});
