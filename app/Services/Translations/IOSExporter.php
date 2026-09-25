@@ -9,7 +9,7 @@ class IOSExporter
     public function __construct(private Filesystem $files) {}
 
     /**
-     * @param  list<array{key: string, description: ?string, translations: array{en: string, es: string, ca: string}}>  $translations
+     * @param  list<array{key: string, description: ?string, translations: array<string, string>}>  $translations
      */
     public function export(array $translations, string $path): void
     {

@@ -11,18 +11,19 @@ class AndroidExporter
     public function __construct(private Filesystem $files) {}
 
     /**
-     * @param  list<array{key: string, description: ?string, translations: array{en: string, es: string, ca: string}}>  $translations
+     * @param  list<array{key: string, description: ?string, translations: array<string, string>}>  $translations
      */
     public function export(array $translations, string $path): void
     {
-        foreach (['en' => 'values', 'es' => 'values-es', 'ca' => 'values-ca'] as $locale => $directory) {
+        foreach (config('translations.locales') as $locale => $configuration) {
+            $directory = $configuration['android_directory'];
             $this->files->ensureDirectoryExists("{$path}/{$directory}");
             $this->files->put("{$path}/{$directory}/strings.xml", $this->xml($translations, $locale));
         }
     }
 
     /**
-     * @param  list<array{key: string, description: ?string, translations: array{en: string, es: string, ca: string}}>  $translations
+     * @param  list<array{key: string, description: ?string, translations: array<string, string>}>  $translations
      */
     private function xml(array $translations, string $locale): string
     {
@@ -41,7 +42,7 @@ class AndroidExporter
                 ? ''
                 : '    <!-- '.str_replace('--', '—', $translation['description'])." -->\n";
             $strings[] = $comment.'    <string name="'.$resourceName.'" formatted="false">'
-                .$this->escape($translation['translations'][$locale]).'</string>';
+                .$this->escape($translation['translations'][$locale] ?? '').'</string>';
         }
 
         return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<resources>\n"

@@ -12,7 +12,7 @@ class GoogleSheetTranslations
     /**
      * Download the first worksheet of a public Google Sheet as translations.
      *
-     * @return list<array{key: string, description: ?string, translations: array{en: string, es: string, ca: string}}>
+     * @return list<array{key: string, description: ?string, translations: array<string, string>}>
      */
     public function download(string $spreadsheetId): array
     {
@@ -30,7 +30,7 @@ class GoogleSheetTranslations
     }
 
     /**
-     * @return list<array{key: string, description: ?string, translations: array{en: string, es: string, ca: string}}>
+     * @return list<array{key: string, description: ?string, translations: array<string, string>}>
      */
     private function parseWorkbook(string $contents): array
     {
@@ -95,7 +95,7 @@ class GoogleSheetTranslations
 
     /**
      * @param  list<string>  $sharedStrings
-     * @return list<array{key: string, description: ?string, translations: array{en: string, es: string, ca: string}}>
+     * @return list<array{key: string, description: ?string, translations: array<string, string>}>
      */
     private function translationsFromWorksheet(string $contents, array $sharedStrings): array
     {
@@ -110,7 +110,9 @@ class GoogleSheetTranslations
         $header = $this->rowValues($rows[0], $sharedStrings);
         $columns = array_flip(array_map(fn (string $value): string => mb_strtolower(trim($value)), $header));
 
-        foreach (['key', 'description', 'en', 'es', 'ca'] as $column) {
+        $locales = array_keys(config('translations.locales'));
+
+        foreach (['key', 'description', ...array_map(mb_strtolower(...), $locales)] as $column) {
             if (! array_key_exists($column, $columns)) {
                 throw new RuntimeException("The Google Sheet is missing the required '{$column}' column.");
             }
@@ -138,11 +140,9 @@ class GoogleSheetTranslations
             $translations[$key] = [
                 'key' => $key,
                 'description' => $description === '' ? null : $description,
-                'translations' => [
-                    'en' => $values[$columns['en']] ?? '',
-                    'es' => $values[$columns['es']] ?? '',
-                    'ca' => $values[$columns['ca']] ?? '',
-                ],
+                'translations' => collect($locales)
+                    ->mapWithKeys(fn (string $locale): array => [$locale => $values[$columns[mb_strtolower($locale)]] ?? ''])
+                    ->all(),
             ];
         }
 

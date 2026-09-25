@@ -16,17 +16,13 @@ test('downloads translations from a public Google Sheet workbook', function () {
 
     $translations = app(GoogleSheetTranslations::class)->download('sheet-id');
 
-    expect($translations)->toBe([
-        [
-            'key' => 'welcome.title',
-            'description' => 'Home screen title',
-            'translations' => [
-                'en' => 'Welcome & enjoy',
-                'es' => 'Bienvenido',
-                'ca' => 'Benvingut',
-            ],
-        ],
-    ]);
+    expect($translations)->toHaveCount(1)
+        ->and($translations[0]['key'])->toBe('welcome.title')
+        ->and($translations[0]['description'])->toBe('Home screen title')
+        ->and($translations[0]['translations'])->toHaveKeys(array_keys(config('translations.locales')))
+        ->and($translations[0]['translations']['en'])->toBe('Welcome & enjoy')
+        ->and($translations[0]['translations']['de'])->toBe('Willkommen')
+        ->and($translations[0]['translations']['zh-Hans'])->toBe('欢迎');
 });
 
 test('exports iOS and Android translation resources', function () {
@@ -38,6 +34,13 @@ test('exports iOS and Android translation resources', function () {
             'en' => 'Welcome & enjoy',
             'es' => 'Bienvenido',
             'ca' => 'Benvingut',
+            'de' => 'Willkommen',
+            'fr' => 'Bienvenue',
+            'it' => 'Benvenuto',
+            'ja' => 'ようこそ',
+            'nl' => 'Welkom',
+            'pt' => 'Bem-vindo',
+            'zh-Hans' => '欢迎',
         ],
     ]];
 
@@ -52,8 +55,15 @@ test('exports iOS and Android translation resources', function () {
                     'comment' => 'Home screen title',
                     'localizations' => [
                         'ca' => ['stringUnit' => ['state' => 'translated', 'value' => 'Benvingut']],
+                        'de' => ['stringUnit' => ['state' => 'translated', 'value' => 'Willkommen']],
                         'en' => ['stringUnit' => ['state' => 'translated', 'value' => 'Welcome & enjoy']],
                         'es' => ['stringUnit' => ['state' => 'translated', 'value' => 'Bienvenido']],
+                        'fr' => ['stringUnit' => ['state' => 'translated', 'value' => 'Bienvenue']],
+                        'it' => ['stringUnit' => ['state' => 'translated', 'value' => 'Benvenuto']],
+                        'ja' => ['stringUnit' => ['state' => 'translated', 'value' => 'ようこそ']],
+                        'nl' => ['stringUnit' => ['state' => 'translated', 'value' => 'Welkom']],
+                        'pt' => ['stringUnit' => ['state' => 'translated', 'value' => 'Bem-vindo']],
+                        'zh-Hans' => ['stringUnit' => ['state' => 'translated', 'value' => '欢迎']],
                     ],
                 ],
             ],
@@ -63,7 +73,11 @@ test('exports iOS and Android translation resources', function () {
         ->and(file_get_contents("{$directory}/res/values-es/strings.xml"))
         ->toContain('<string name="welcome_title" formatted="false">Bienvenido</string>')
         ->and(file_get_contents("{$directory}/res/values-ca/strings.xml"))
-        ->toContain('<string name="welcome_title" formatted="false">Benvingut</string>');
+        ->toContain('<string name="welcome_title" formatted="false">Benvingut</string>')
+        ->and(file_get_contents("{$directory}/res/values-de/strings.xml"))
+        ->toContain('<string name="welcome_title" formatted="false">Willkommen</string>')
+        ->and(file_get_contents("{$directory}/res/values-zh-rCN/strings.xml"))
+        ->toContain('<string name="welcome_title" formatted="false">欢迎</string>');
 });
 
 test('generates the requested platform through the Artisan command', function () {
@@ -86,20 +100,23 @@ function translationWorkbook(): string
     $path = tempnam(sys_get_temp_dir(), 'translation-workbook-');
     $archive = new ZipArchive;
     $archive->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-    $archive->addFromString('xl/sharedStrings.xml', <<<'XML'
-<?xml version="1.0" encoding="UTF-8"?>
-<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-    <si><t>key</t></si><si><t>description</t></si><si><t>en</t></si><si><t>es</t></si><si><t>ca</t></si>
-    <si><t>welcome.title</t></si><si><t>Home screen title</t></si><si><t>Welcome &amp; enjoy</t></si><si><t>Bienvenido</t></si><si><t>Benvingut</t></si>
-</sst>
-XML);
-    $archive->addFromString('xl/worksheets/sheet1.xml', <<<'XML'
-<?xml version="1.0" encoding="UTF-8"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>
-    <row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c><c r="C1" t="s"><v>2</v></c><c r="D1" t="s"><v>3</v></c><c r="E1" t="s"><v>4</v></c></row>
-    <row r="2"><c r="A2" t="s"><v>5</v></c><c r="B2" t="s"><v>6</v></c><c r="C2" t="s"><v>7</v></c><c r="D2" t="s"><v>8</v></c><c r="E2" t="s"><v>9</v></c></row>
-</sheetData></worksheet>
-XML);
+    $locales = array_keys(config('translations.locales'));
+    $values = [
+        'key', 'description', ...$locales,
+        'welcome.title', 'Home screen title', 'Welcome & enjoy', 'Bienvenido', 'Benvingut', 'Willkommen',
+        'Bienvenue', 'Benvenuto', 'ようこそ', 'Welkom', 'Bem-vindo', '欢迎',
+    ];
+    $sharedStrings = implode('', array_map(
+        fn (string $value): string => '<si><t>'.htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</t></si>',
+        $values,
+    ));
+    $columns = fn (int $row, int $offset): string => implode('', array_map(
+        fn (int $index): string => '<c r="'.chr(65 + $index).$row.'" t="s"><v>'.($offset + $index).'</v></c>',
+        range(0, count($locales) + 1),
+    ));
+
+    $archive->addFromString('xl/sharedStrings.xml', '<?xml version="1.0" encoding="UTF-8"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'.$sharedStrings.'</sst>');
+    $archive->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1">'.$columns(1, 0).'</row><row r="2">'.$columns(2, count($locales) + 2).'</row></sheetData></worksheet>');
     $archive->close();
 
     $contents = file_get_contents($path);
