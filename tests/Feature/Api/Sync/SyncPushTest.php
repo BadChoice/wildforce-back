@@ -189,3 +189,60 @@ test('it synchronizes a complete workout day graph atomically', function () {
     $this->assertDatabaseHas('planned_exercises', ['id' => $exerciseId, 'workout_day_id' => $workoutDayId, 'workout_block_id' => $blockId]);
     $this->assertDatabaseHas('exercise_results', ['id' => $resultId, 'planned_exercise_id' => $exerciseId]);
 });
+
+test('it synchronizes a complete nutrition plan graph atomically', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+    $planId = (string) Str::uuid();
+    $dayId = (string) Str::uuid();
+    $mealId = (string) Str::uuid();
+
+    $response = $this->postJson('/api/sync/nutrition-plans', [
+        'records' => [[
+            'id' => $planId,
+            'created_at' => '2026-09-25T12:00:00Z',
+            'updated_at' => '2026-09-25T12:00:00Z',
+            'deleted_at' => null,
+            'starts_on' => '2026-09-25T00:00:00Z',
+            'goal' => 'generalFitness',
+            'daily_calorie_average' => 2200,
+            'days' => [[
+                'id' => $dayId,
+                'created_at' => '2026-09-25T12:00:00Z',
+                'updated_at' => '2026-09-25T12:00:00Z',
+                'deleted_at' => null,
+                'date' => '2026-09-25',
+                'weekday' => 'thursday',
+                'day_type' => 'rest',
+                'target_calories' => 2200,
+                'target_protein_grams' => 150,
+                'target_carbs_grams' => 200,
+                'target_fat_grams' => 70,
+                'energy_demand' => 'low',
+                'meals' => [[
+                    'id' => $mealId,
+                    'created_at' => '2026-09-25T12:00:00Z',
+                    'updated_at' => '2026-09-25T12:00:00Z',
+                    'deleted_at' => null,
+                    'title' => 'Breakfast',
+                    'order_index' => 0,
+                    'meal_type' => 'breakfast',
+                    'target_calories' => 550,
+                    'target_protein_grams' => 35,
+                    'target_carbs_grams' => 50,
+                    'target_fat_grams' => 20,
+                    'example_foods' => [],
+                ]],
+            ]],
+        ]],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.0.id', $planId)
+        ->assertJsonPath('data.0.days.0.id', $dayId)
+        ->assertJsonPath('data.0.days.0.meals.0.id', $mealId);
+
+    $this->assertDatabaseHas('nutrition_plans', ['id' => $planId, 'user_id' => $user->id]);
+    $this->assertDatabaseHas('nutrition_days', ['id' => $dayId, 'nutrition_plan_id' => $planId]);
+    $this->assertDatabaseHas('nutrition_meals', ['id' => $mealId, 'nutrition_day_id' => $dayId]);
+});
