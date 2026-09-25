@@ -1,0 +1,23 @@
+[
+  {
+    "name": "keep-latest-5",
+    "action": {
+      "type": "Keep"
+    },
+    "mostRecentVersions": {
+      "packageNamePrefixes": [
+        "wildforce"
+      ],
+      "keepCount": 5
+    }
+  },
+  {
+    "name": "delete-old",
+    "action": {
+      "type": "Delete"
+    },
+    "condition": {
+      "tagState": "any"
+    }
+  }
+]
