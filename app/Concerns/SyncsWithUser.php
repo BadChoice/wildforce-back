@@ -45,8 +45,18 @@ trait SyncsWithUser
      */
     public function syncPayload(): array
     {
+        $attributes = $this->only(static::syncAttributes());
+
+        foreach ($attributes as $attribute => $value) {
+            $cast = $this->getCasts()[$attribute] ?? null;
+
+            if (is_string($cast) && str_starts_with($cast, 'decimal:') && $value !== null) {
+                $attributes[$attribute] = (float) $value;
+            }
+        }
+
         return [
-            ...$this->only(static::syncAttributes()),
+            ...$attributes,
             'id' => $this->getKey(),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),

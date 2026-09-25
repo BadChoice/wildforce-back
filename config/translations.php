@@ -1,6 +1,7 @@
 <?php
 
 return [
+    // https://docs.google.com/spreadsheets/d/1a3H2NRUXxVqaCjwBwMTCbxwFzDeZqlv_8I8C0EZhXho/edit?gid=0#gid=0
     'google_sheet_id' => env('GOOGLE_SHEETS_TRANSLATIONS_ID', '1a3H2NRUXxVqaCjwBwMTCbxwFzDeZqlv_8I8C0EZhXho'),
 
     'locales' => [
