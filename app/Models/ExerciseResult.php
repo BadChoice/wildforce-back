@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ExerciseResult extends Model implements Syncable
 {
-    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
+    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey {
+        SyncsWithUser::syncPayload as private baseSyncPayload;
+    }
 
     protected function casts(): array
     {
@@ -26,5 +28,22 @@ class ExerciseResult extends Model implements Syncable
     protected static function syncOwnerRelationship(): string
     {
         return 'plannedExercise.workoutDay.user';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function syncPayload(): array
+    {
+        $payload = $this->baseSyncPayload();
+
+        if (is_array($payload['watch_set_summary'] ?? null)) {
+            $payload['watch_set_summary'] = [
+                'cadence_rpm' => 0,
+                ...$payload['watch_set_summary'],
+            ];
+        }
+
+        return $payload;
     }
 }
