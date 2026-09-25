@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class SyncService
@@ -23,6 +24,7 @@ class SyncService
     {
         return DB::transaction(function () use ($user, $modelClass, $records): Collection {
             return collect($records)->map(function (array $record) use ($user, $modelClass): Model {
+                $record['id'] = Str::lower($record['id']);
                 $clientUpdatedAt = Carbon::parse($record['updated_at']);
                 $deletedAt = isset($record['deleted_at'])
                     ? Carbon::parse($record['deleted_at'])
@@ -55,8 +57,10 @@ class SyncService
                         'updated_at',
                         'deleted_at',
                     ])),
-                    'id' => $record['id'],
-                    ...($isNew ? ['created_at' => Carbon::parse($record['created_at'])] : []),
+                    ...($isNew ? [
+                        'id' => $record['id'],
+                        'created_at' => Carbon::parse($record['created_at']),
+                    ] : []),
                     'updated_at' => $clientUpdatedAt,
                     'deleted_at' => $deletedAt,
                 ]);

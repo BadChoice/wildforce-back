@@ -6,6 +6,7 @@ use App\Models\NutritionMeal;
 use App\Models\NutritionPlan;
 use App\Models\PlannedExercise;
 use App\Models\TrainingLocation;
+use App\Models\TrainingPreference;
 use App\Models\User;
 use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
@@ -55,6 +56,24 @@ test('it returns every changed record without a pagination limit', function () {
 
     $response->assertOk()
         ->assertJsonCount(101, 'data');
+});
+
+test('it serializes empty custom workout focuses as an object', function () {
+    $user = User::factory()->create();
+    $preferences = new TrainingPreference;
+    $preferences->forceFill([
+        'id' => (string) Str::uuid(),
+        'user_id' => $user->id,
+        'workout_days' => [],
+        'custom_workout_focuses' => [],
+    ]);
+    $preferences->save();
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/sync/pull?resource=training-preferences');
+
+    $response->assertOk();
+    expect($response->getContent())->toContain('"custom_workout_focuses":{}');
 });
 
 test('it pulls a complete workout day when an exercise result changed', function () {

@@ -70,6 +70,44 @@ test('it keeps the server version when it is newer than the pushed record', func
     expect($location->fresh()->name)->toBe('Server gym');
 });
 
+test('it does not rewrite an existing primary key when UUID casing differs', function () {
+    $user = User::factory()->create();
+    $location = new TrainingLocation;
+    $location->forceFill([
+        'id' => (string) Str::uuid(),
+        'user_id' => $user->id,
+        'name' => 'Home gym',
+        'equipment' => ['dumbbells'],
+    ]);
+    $location->save();
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/sync/push', [
+        'resource' => 'users',
+        'records' => [[
+            'id' => strtoupper($user->id),
+            'created_at' => '2030-09-22T12:00:00Z',
+            'updated_at' => '2030-09-23T12:00:00Z',
+            'name' => 'Updated user',
+            'height_cm' => 170,
+            'weight_kg' => 70,
+            'birth_date' => '1990-01-01',
+            'gender' => 'male',
+            'language' => 'en',
+            'metric_system' => 'metric',
+            'current_streak' => 0,
+            'longest_streak' => 0,
+            'xp' => 25,
+            'xp_level' => 1,
+        ]],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.0.name', 'Updated user');
+
+    expect($location->fresh()->user_id)->toBe($user->id);
+});
+
 test('it returns 401 when no token is provided', function () {
     $response = $this->postJson('/api/sync/push', []);
 

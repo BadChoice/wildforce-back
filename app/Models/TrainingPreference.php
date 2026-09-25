@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TrainingPreference extends Model implements Syncable
 {
-    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
+    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey {
+        SyncsWithUser::syncPayload as private baseSyncPayload;
+    }
 
     protected function casts(): array
     {
@@ -21,5 +23,16 @@ class TrainingPreference extends Model implements Syncable
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function syncPayload(): array
+    {
+        $payload = $this->baseSyncPayload();
+        $payload['custom_workout_focuses'] = (object) ($this->custom_workout_focuses ?? []);
+
+        return $payload;
     }
 }
