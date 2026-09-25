@@ -4,6 +4,8 @@
 .env.*
 vendor/
 node_modules/
+public/build/
 storage/logs/*
+storage/framework/views/*
 Dockerfile
 docker-compose.yml

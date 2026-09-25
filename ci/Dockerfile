@@ -1,5 +1,7 @@
 FROM php:8.4-fpm
 
+COPY --from=node:22-bookworm-slim /usr/local/ /usr/local/
+
 RUN apt-get update && apt-get install -y \
     nginx \
     git \
@@ -23,6 +25,11 @@ RUN composer install \
     --no-interaction \
     --prefer-dist \
     --optimize-autoloader
+
+RUN npm ci \
+    && npm run build \
+    && npm cache clean --force \
+    && rm -rf node_modules
 
 RUN chown -R www-data:www-data \
     /var/www/html/storage \

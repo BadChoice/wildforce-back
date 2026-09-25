@@ -9,6 +9,14 @@ test('login screen can be rendered', function () {
     $response->assertOk();
 });
 
+test('login screen generates secure asset URLs behind a proxy', function () {
+    $response = $this->withServerVariables([
+        'HTTP_X_FORWARDED_PROTO' => 'https',
+    ])->get(route('login'));
+
+    $response->assertSee('https://localhost:8000/build/assets/', false);
+});
+
 test('users can authenticate using the login screen', function () {
     $user = User::factory()->create();
 
