@@ -94,7 +94,7 @@ test('it pulls a complete workout day when an exercise result changed', function
         ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.id', $result->id)
         ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.watch_set_summary', [
             'rep_count' => 8,
-            'cadence_rpm' => 0,
+            'cadence_r_p_m' => 0,
             'average_rep_duration_seconds' => 0,
             'average_range_of_motion' => 0,
             'range_of_motion_drop_percent' => 0,

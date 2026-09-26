@@ -222,7 +222,7 @@ test('it synchronizes a complete workout day graph atomically', function () {
         ->assertJsonPath('data.0.blocks.0.id', $blockId)
         ->assertJsonPath('data.0.blocks.0.exercises.0.id', $exerciseId)
         ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.id', $resultId)
-        ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.watch_set_summary.cadence_rpm', 0);
+        ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.watch_set_summary.cadence_r_p_m', 0);
 
     $this->assertDatabaseHas('workout_days', ['id' => $workoutDayId, 'user_id' => $user->id]);
     $this->assertDatabaseHas('workout_blocks', ['id' => $blockId, 'workout_day_id' => $workoutDayId]);

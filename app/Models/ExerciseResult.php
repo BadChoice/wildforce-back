@@ -8,6 +8,7 @@ use App\Contracts\Syncable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
 
 class ExerciseResult extends Model implements Syncable
 {
@@ -41,9 +42,9 @@ class ExerciseResult extends Model implements Syncable
             $watchSetSummary = $payload['watch_set_summary'];
 
             $payload['watch_set_summary'] = [
-                ...$watchSetSummary,
+                ...Arr::except($watchSetSummary, ['cadence_rpm', 'cadence_r_p_m']),
                 'rep_count' => $watchSetSummary['rep_count'] ?? 0,
-                'cadence_rpm' => $watchSetSummary['cadence_rpm'] ?? 0,
+                'cadence_r_p_m' => $watchSetSummary['cadence_rpm'] ?? $watchSetSummary['cadence_r_p_m'] ?? 0,
                 'average_rep_duration_seconds' => $watchSetSummary['average_rep_duration_seconds'] ?? 0,
                 'average_range_of_motion' => $watchSetSummary['average_range_of_motion'] ?? 0,
                 'range_of_motion_drop_percent' => $watchSetSummary['range_of_motion_drop_percent'] ?? 0,
