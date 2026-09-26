@@ -42,7 +42,16 @@ class ExerciseResult extends Model implements Syncable
 
             $payload['watch_set_summary'] = [
                 ...$watchSetSummary,
+                'rep_count' => $watchSetSummary['rep_count'] ?? 0,
                 'cadence_rpm' => $watchSetSummary['cadence_rpm'] ?? 0,
+                'average_rep_duration_seconds' => $watchSetSummary['average_rep_duration_seconds'] ?? 0,
+                'average_range_of_motion' => $watchSetSummary['average_range_of_motion'] ?? 0,
+                'range_of_motion_drop_percent' => $watchSetSummary['range_of_motion_drop_percent'] ?? 0,
+                'cadence_drift_percent' => $watchSetSummary['cadence_drift_percent'] ?? 0,
+                'consistency_score' => $watchSetSummary['consistency_score'] ?? 0,
+                'average_confidence' => $watchSetSummary['average_confidence'] ?? 0,
+                'dominant_velocity_label' => $watchSetSummary['dominant_velocity_label'] ?? 'controlled',
+                'alerts' => $watchSetSummary['alerts'] ?? [],
             ];
         }
 
