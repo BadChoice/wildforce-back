@@ -1,0 +1,65 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://wildforce.app/schemas/exercise-catalog/v1/schema.json",
+    "title": "Wildforce exercise catalog v1",
+    "type": "object",
+    "required": ["metadata", "referenceData", "exercises"],
+    "properties": {
+        "metadata": {
+            "type": "object",
+            "required": ["schemaVersion", "locale", "source", "exerciseCount"],
+            "properties": {
+                "schemaVersion": {"const": "1.0.0"},
+                "locale": {"const": "en"},
+                "source": {"type": "string"},
+                "exerciseCount": {"type": "integer", "minimum": 1}
+            }
+        },
+        "referenceData": {"type": "object"},
+        "exercises": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "required": [
+                    "id", "name", "category", "requiredEquipment", "compatibleGoals", "movementPatterns",
+                    "difficulty", "isUnilateral", "isPerSideLoad", "contraindicatedRestrictions",
+                    "substitutionCandidates", "description", "instructions", "tips", "primaryMuscles",
+                    "secondaryMuscles", "supportsExternalLoad", "trackingMode", "targetMetrics", "metValue",
+                    "notesForLlm", "assets"
+                ],
+                "properties": {
+                    "id": {"type": "string", "pattern": "^[a-z][A-Za-z0-9]*$"},
+                    "name": {"type": "string"},
+                    "category": {"type": "string"},
+                    "requiredEquipment": {"type": "array", "items": {"type": "string"}},
+                    "compatibleGoals": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                    "movementPatterns": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                    "difficulty": {"type": "string"},
+                    "isUnilateral": {"type": "boolean"},
+                    "isPerSideLoad": {"type": "boolean"},
+                    "contraindicatedRestrictions": {"type": "array", "items": {"type": "string"}},
+                    "substitutionCandidates": {"type": "array", "items": {"type": "string"}},
+                    "description": {"type": "string"},
+                    "instructions": {"type": "array", "items": {"type": "string"}},
+                    "tips": {"type": "array", "items": {"type": "string"}},
+                    "primaryMuscles": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                    "secondaryMuscles": {"type": "array", "items": {"type": "string"}},
+                    "supportsExternalLoad": {"type": "boolean"},
+                    "trackingMode": {"type": "string"},
+                    "targetMetrics": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                    "metValue": {"type": "number", "minimum": 0},
+                    "notesForLlm": {"type": ["string", "null"]},
+                    "assets": {
+                        "type": "object",
+                        "required": ["verticalImageKey", "tutorialImageKey"],
+                        "properties": {
+                            "verticalImageKey": {"type": "string"},
+                            "tutorialImageKey": {"type": "string"}
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
