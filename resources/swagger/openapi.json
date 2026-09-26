@@ -15,6 +15,9 @@
       "name": "Authentication"
     },
     {
+      "name": "Feedback"
+    },
+    {
       "name": "Sync"
     }
   ],
@@ -106,6 +109,35 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/feedback": {
+      "post": {
+        "tags": [
+          "Feedback"
+        ],
+        "summary": "Email feedback from the authenticated user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Feedback accepted and emailed."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
           }
         }
       }
@@ -468,6 +500,24 @@
           "device_name": {
             "type": "string",
             "maxLength": 255
+          }
+        }
+      },
+      "FeedbackRequest": {
+        "type": "object",
+        "required": [
+          "category",
+          "message"
+        ],
+        "properties": {
+          "category": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5000
           }
         }
       },
