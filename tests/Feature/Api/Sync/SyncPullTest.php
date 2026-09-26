@@ -91,7 +91,8 @@ test('it pulls a complete workout day when an exercise result changed', function
         ->assertJsonPath('data.0.id', $workoutDay->id)
         ->assertJsonPath('data.0.blocks.0.id', $block->id)
         ->assertJsonPath('data.0.blocks.0.exercises.0.id', $exercise->id)
-        ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.id', $result->id);
+        ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.id', $result->id)
+        ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.watch_set_summary.cadence_rpm', 0);
 });
 
 test('it pulls a complete nutrition plan when a meal changed', function () {
@@ -191,6 +192,7 @@ function makeExerciseResult(PlannedExercise $exercise, string $updatedAt): Exerc
         'id' => (string) Str::uuid(),
         'planned_exercise_id' => $exercise->id,
         'feedback' => 'justRight',
+        'watch_set_summary' => ['rep_count' => 8],
         'completed_at' => Carbon::parse($updatedAt),
         'created_at' => Carbon::parse($updatedAt),
         'updated_at' => Carbon::parse($updatedAt),

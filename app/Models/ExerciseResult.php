@@ -38,9 +38,11 @@ class ExerciseResult extends Model implements Syncable
         $payload = $this->baseSyncPayload();
 
         if (is_array($payload['watch_set_summary'] ?? null)) {
+            $watchSetSummary = $payload['watch_set_summary'];
+
             $payload['watch_set_summary'] = [
-                'cadence_rpm' => 0,
-                ...$payload['watch_set_summary'],
+                ...$watchSetSummary,
+                'cadence_rpm' => $watchSetSummary['cadence_rpm'] ?? 0,
             ];
         }
 
