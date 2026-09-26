@@ -33,7 +33,7 @@ export default defineRailway(() => {
       MAIL_MAILER: "resend",
       MEMCACHED_HOST: preserve(),
       PORT: "8080",
-      QUEUE_CONNECTION: preserve(),
+      QUEUE_CONNECTION: "sync",
       RAILWAY_DOCKERFILE_PATH: "ci/Dockerfile",
       REDIS_CLIENT: preserve(),
       REDIS_HOST: preserve(),
