@@ -1,12 +1,12 @@
 import { defineRailway, github, postgres, preserve, project, service, volume } from "railway/iac";
 
 export default defineRailway(() => {
-  const Postgres = postgres("Postgres", { region: "sfo" });
+  const Postgres = postgres("Postgres", { region: "europe-west4-drams3a" });
   Postgres.networking = { privateNetworkEndpoint: "postgres" };
-  const postgresVolume = volume("postgres-volume", { alerts: { usage: { "100": {}, "80": {}, "95": {} } }, allowOnlineResize: true, region: "sfo", sizeMB: 500 });
+  const postgresVolume = volume("postgres-volume", { alerts: { usage: { "100": {}, "80": {}, "95": {} } }, allowOnlineResize: true, region: "europe-west4-drams3a", sizeMB: 500 });
   const wildforceBack = service("wildforce-back", {
     source: github("BadChoice/wildforce-back", { checkSuites: false }),
-    replicas: { "sfo": 1 },
+    replicas: { "europe-west4-drams3a": 1 },
     healthcheck: "/up",
     env: {
       APP_DEBUG: "false",
