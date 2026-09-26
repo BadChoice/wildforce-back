@@ -28,7 +28,7 @@ export default defineRailway(() => {
       LOG_DEPRECATIONS_CHANNEL: preserve(),
       LOG_LEVEL: preserve(),
       LOG_STACK: preserve(),
-      MAIL_FROM_ADDRESS: "jordi@gloobus.net",
+      MAIL_FROM_ADDRESS: "hello@wildforce.app",
       MAIL_FROM_NAME: "Wildforce",
       MAIL_MAILER: "resend",
       MEMCACHED_HOST: preserve(),
