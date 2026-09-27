@@ -8,6 +8,7 @@ export default defineRailway(() => {
     source: github("BadChoice/wildforce-back", { checkSuites: false }),
     replicas: { "europe-west4-drams3a": 1 },
     healthcheck: "/up",
+    preDeploy: "php artisan migrate --force --no-interaction",
     env: {
       APP_DEBUG: "false",
       APP_ENV: "production",
