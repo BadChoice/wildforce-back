@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -142,6 +143,53 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
     public function workoutDays(): HasMany
     {
         return $this->hasMany(WorkoutDay::class);
+    }
+
+    public function subscription(): HasOne
+    {
+        return $this->hasOne(Subscription::class);
+    }
+
+    public function attachSubscription(Subscription $subscription): Subscription
+    {
+        if ($this->subscription()->exists()) {
+            throw new \LogicException('A user can only have one subscription.');
+        }
+
+        return $this->subscription()->save($subscription);
+    }
+
+    public function replaceSubscription(Subscription $subscription): Subscription
+    {
+        $this->subscription()->delete();
+
+        $subscription = $this->subscription()->save($subscription);
+        $this->unsetRelation('subscription');
+
+        return $subscription;
+    }
+
+    public function hasAppAccess(): bool
+    {
+        return $this->subscription()->first()?->isActive() ?? false;
+    }
+
+    public function clients(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'coaching_enrollments', 'coach_user_id', 'client_user_id')
+            ->using(CoachingEnrollment::class)
+            ->as('enrollment')
+            ->withPivot(['id', 'status', 'starts_at', 'ends_at'])
+            ->withTimestamps();
+    }
+
+    public function coaches(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'coaching_enrollments', 'client_user_id', 'coach_user_id')
+            ->using(CoachingEnrollment::class)
+            ->as('enrollment')
+            ->withPivot(['id', 'status', 'starts_at', 'ends_at'])
+            ->withTimestamps();
     }
 
     /**

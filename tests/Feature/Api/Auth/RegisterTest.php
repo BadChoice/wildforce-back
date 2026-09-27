@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SubscriptionPlan;
 use App\Models\User;
 
 test('it registers a user and returns a bearer token for the device', function () {
@@ -15,7 +16,7 @@ test('it registers a user and returns a bearer token for the device', function (
         ->assertJsonPath('user.name', 'Jane Doe')
         ->assertJsonPath('user.email', 'jane@example.com')
         ->assertJsonPath('token_type', 'Bearer')
-        ->assertJsonStructure(['user' => ['id', 'name', 'email'], 'token', 'token_type']);
+        ->assertJsonStructure(['user' => ['id', 'name', 'email'], 'token', 'token_type', 'trial_ends_at']);
 
     $user = User::query()->where('email', 'jane@example.com')->firstOrFail();
     $authenticatedResponse = $this->getJson('/api/user', [
@@ -24,6 +25,8 @@ test('it registers a user and returns a bearer token for the device', function (
 
     expect($user->id)->toBeUuid()
         ->and($response->json('token'))->toBeString()->not->toBeEmpty()
+        ->and($user->subscription->plan)->toBe(SubscriptionPlan::Trial)
+        ->and($user->subscription->renews_at)->toEqual($user->subscription->starts_at->copy()->addDays(15))
         ->and($user->tokens)->toHaveCount(1)
         ->and($user->tokens->sole()->name)->toBe('Jane’s iPhone');
 

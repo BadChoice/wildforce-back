@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -34,6 +35,13 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
         ];
+    }
+
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->attachSubscription(Subscription::createTrial());
+        });
     }
 
     /**

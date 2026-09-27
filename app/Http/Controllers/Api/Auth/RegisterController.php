@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\RegisterRequest;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
@@ -18,6 +19,7 @@ class RegisterController extends Controller
             'email' => $request->string('email')->lower()->toString(),
             'password' => Hash::make($request->string('password')->toString()),
         ]);
+        $trial = $user->attachSubscription(Subscription::createTrial());
 
         event(new Registered($user));
 
@@ -31,6 +33,7 @@ class RegisterController extends Controller
             ],
             'token' => $token->plainTextToken,
             'token_type' => 'Bearer',
+            'trial_ends_at' => $trial->renews_at,
         ], 201);
     }
 }
