@@ -25,7 +25,7 @@ class SyncPullRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'resource' => ['required', 'string', Rule::in(app(SyncRegistry::class)->resources())],
+            'resource' => ['required', 'string', Rule::in(app(SyncRegistry::class)->pullResources())],
             'updated_after' => ['nullable', 'date'],
         ];
     }

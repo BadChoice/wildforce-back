@@ -58,6 +58,33 @@ test('it returns every changed record without a pagination limit', function () {
         ->assertJsonCount(101, 'data');
 });
 
+test('it pulls the authenticated user subscription without sensitive provider details', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $subscription = $user->subscription;
+    $subscription->forceFill([
+        'auto_renews' => true,
+        'provider_reference' => 'private-provider-reference',
+        'starts_at' => Carbon::parse('2026-09-22T12:00:00Z'),
+        'renews_at' => Carbon::parse('2026-10-22T12:00:00Z'),
+        'updated_at' => Carbon::parse('2026-09-22T12:00:00Z'),
+    ])->save();
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/sync/pull?resource=subscriptions');
+
+    $response->assertOk()
+        ->assertJsonPath('meta.resource', 'subscriptions')
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $subscription->id)
+        ->assertJsonPath('data.0.plan', 'trial')
+        ->assertJsonPath('data.0.provider', 'internal')
+        ->assertJsonPath('data.0.status', 'active')
+        ->assertJsonPath('data.0.auto_renews', true)
+        ->assertJsonMissing(['id' => $otherUser->subscription->id])
+        ->assertJsonMissing(['provider_reference' => 'private-provider-reference']);
+});
+
 test('it serializes empty custom workout focuses as an object', function () {
     $user = User::factory()->create();
     $preferences = new TrainingPreference;

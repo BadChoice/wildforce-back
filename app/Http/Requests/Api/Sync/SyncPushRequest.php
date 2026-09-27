@@ -27,7 +27,7 @@ class SyncPushRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'resource' => ['required', 'string', Rule::in(app(SyncRegistry::class)->resources())],
+            'resource' => ['required', 'string', Rule::in(app(SyncRegistry::class)->pushResources())],
             'records' => ['required', 'array', 'max:100'],
             'records.*' => ['array'],
             'records.*.id' => ['required', 'uuid'],

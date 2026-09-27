@@ -15,6 +15,7 @@ use App\Models\NutritionMeal;
 use App\Models\NutritionPlan;
 use App\Models\NutritionProfile;
 use App\Models\PlannedExercise;
+use App\Models\Subscription;
 use App\Models\TrainingLocation;
 use App\Models\TrainingPreference;
 use App\Models\User;
@@ -49,6 +50,32 @@ class SyncRegistry
         'workout-blocks' => WorkoutBlock::class,
         'planned-exercises' => PlannedExercise::class,
         'exercise-results' => ExerciseResult::class,
+        'subscriptions' => Subscription::class,
+    ];
+
+    /**
+     * @var list<string>
+     */
+    private const PUSH_RESOURCES = [
+        'users',
+        'user-app-settings',
+        'training-preferences',
+        'training-locations',
+        'body-metric-entries',
+        'body-progress-photo-sessions',
+        'exercise-profiles',
+        'nutrition-profiles',
+        'nutrition-log-media',
+        'nutrition-log-entries',
+        'nutrition-log-items',
+        'nutrition-plans',
+        'nutrition-days',
+        'nutrition-meals',
+        'workout-plans',
+        'workout-days',
+        'workout-blocks',
+        'planned-exercises',
+        'exercise-results',
     ];
 
     /**
@@ -62,9 +89,17 @@ class SyncRegistry
     /**
      * @return list<string>
      */
-    public function resources(): array
+    public function pullResources(): array
     {
         return array_keys(self::MODELS);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function pushResources(): array
+    {
+        return self::PUSH_RESOURCES;
     }
 
     /**

@@ -114,6 +114,19 @@ test('it returns 401 when no token is provided', function () {
     $response->assertUnauthorized();
 });
 
+test('it rejects subscriptions because they can only be pulled', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/sync/push', [
+        'resource' => 'subscriptions',
+        'records' => [],
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['resource']);
+});
+
 test('it rejects attributes that are not synchronizable', function () {
     $user = User::factory()->create();
     Sanctum::actingAs($user);

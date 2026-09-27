@@ -6,6 +6,7 @@ use App\Contracts\Syncable;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -110,6 +111,12 @@ class SyncService
      */
     private function syncQuery(User $user, string $modelClass): Builder
     {
-        return $modelClass::query()->withTrashed()->forUser($user);
+        $query = $modelClass::query();
+
+        if (in_array(SoftDeletes::class, class_uses_recursive($modelClass), true)) {
+            $query->withTrashed();
+        }
+
+        return $query->forUser($user);
     }
 }

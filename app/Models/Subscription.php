@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
+use App\Contracts\Syncable;
 use App\Enums\SubscriptionPlan;
 use App\Enums\SubscriptionProvider;
 use App\Enums\SubscriptionStatus;
@@ -23,8 +25,9 @@ use Illuminate\Support\Carbon;
     'renews_at',
     'cancelled_at',
 ])]
-class Subscription extends Model
+class Subscription extends Model implements Syncable
 {
+    use SyncsWithUser;
     use UsesUuidPrimaryKey;
 
     protected function casts(): array
@@ -83,5 +86,21 @@ class Subscription extends Model
     {
         return in_array($this->status, [SubscriptionStatus::Active, SubscriptionStatus::GracePeriod], true)
             && ($this->renews_at === null || $this->renews_at->isFuture());
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected static function syncExcludedAttributes(): array
+    {
+        return [
+            'id',
+            'user_id',
+            'created_at',
+            'updated_at',
+            'deleted_at',
+            'demo_code_id',
+            'provider_reference',
+        ];
     }
 }
