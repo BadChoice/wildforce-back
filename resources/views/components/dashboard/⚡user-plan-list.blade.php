@@ -23,6 +23,7 @@ new class extends Component
     {
         return User::query()
             ->select(['id', 'name', 'email'])
+            ->with('subscription')
             ->withCount([
                 'workoutPlans',
                 'workoutDays as custom_workouts_count' => fn (Builder $query): Builder => $query->whereNull('workout_plan_id'),
@@ -48,6 +49,7 @@ new class extends Component
                     ->with([
                         'workoutDays' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
                     ]),
+                'subscription',
             ])
             ->find($this->selectedUserId);
     }
@@ -93,6 +95,8 @@ new class extends Component
                 <flux:table.column align="end">{{ __('Workout plans') }}</flux:table.column>
                 <flux:table.column align="end">{{ __('Custom workouts') }}</flux:table.column>
                 <flux:table.column align="end">{{ __('Nutrition plans') }}</flux:table.column>
+                <flux:table.column>{{ __('Subscription') }}</flux:table.column>
+                <flux:table.column>{{ __('Access') }}</flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
@@ -110,10 +114,20 @@ new class extends Component
                         <flux:table.cell align="end"><flux:badge>{{ $user->workout_plans_count }}</flux:badge></flux:table.cell>
                         <flux:table.cell align="end"><flux:badge>{{ $user->custom_workouts_count }}</flux:badge></flux:table.cell>
                         <flux:table.cell align="end"><flux:badge>{{ $user->nutrition_plans_count }}</flux:badge></flux:table.cell>
+                        <flux:table.cell>
+                            {{ $user->subscription?->plan?->value ? str($user->subscription->plan->value)->replace('_', ' ')->title() : __('None') }}
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            @if ($user->subscription?->isActive())
+                                <flux:badge color="green">{{ __('Active') }}</flux:badge>
+                            @else
+                                <flux:badge color="zinc">{{ __('Inactive') }}</flux:badge>
+                            @endif
+                        </flux:table.cell>
                     </flux:table.row>
                 @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="5" class="py-8 text-center">
+                        <flux:table.cell colspan="7" class="py-8 text-center">
                             {{ __('No users found.') }}
                         </flux:table.cell>
                     </flux:table.row>

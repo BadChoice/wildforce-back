@@ -124,3 +124,22 @@ test('dashboard displays the selected user training details', function () {
         ->assertSee('Back squat')
         ->assertSee('100.00 kg');
 });
+
+test('dashboard displays subscription information for a selected user', function () {
+    $user = User::factory()->create([
+        'name' => 'Demo User',
+        'email' => 'demo@example.com',
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test('dashboard.user-plan-list')
+        ->assertSee('Trial')
+        ->assertSee('Active')
+        ->call('selectUser', $user->id)
+        ->call('selectTab', 'subscription')
+        ->assertSee('Subscription details and current access.')
+        ->assertSee('Trial')
+        ->assertSee('Internal')
+        ->assertSee('Access ends');
+});

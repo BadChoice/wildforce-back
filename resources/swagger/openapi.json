@@ -18,6 +18,9 @@
       "name": "Feedback"
     },
     {
+      "name": "Subscriptions"
+    },
+    {
       "name": "Sync"
     }
   ],
@@ -132,6 +135,43 @@
         "responses": {
           "204": {
             "description": "Feedback accepted and emailed."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/api/subscription/redeem-code": {
+      "post": {
+        "tags": [
+          "Subscriptions"
+        ],
+        "summary": "Redeem a demo access code",
+        "description": "Replaces the authenticated user's trial subscription with a demo subscription.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemDemoCodeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Demo subscription activated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedeemDemoCodeResponse"
+                }
+              }
+            }
           },
           "401": {
             "$ref": "#/components/responses/Unauthenticated"
@@ -518,6 +558,38 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 5000
+          }
+        }
+      },
+      "RedeemDemoCodeRequest": {
+        "type": "object",
+        "required": [
+          "code"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "WILDFORCE-DEMO"
+          }
+        }
+      },
+      "RedeemDemoCodeResponse": {
+        "type": "object",
+        "required": [
+          "demo_code",
+          "demo_access_ends_at"
+        ],
+        "properties": {
+          "demo_code": {
+            "type": "string"
+          },
+          "demo_access_ends_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
           }
         }
       },

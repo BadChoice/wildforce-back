@@ -44,7 +44,7 @@
                 @break
 
             @case('subscription')
-                <x-dashboard.placeholder-tab :title="__('Subscription')" :description="__('Subscription details will be available here soon.')" />
+                <x-dashboard.subscription-details :subscription="$user->subscription" />
                 @break
         @endswitch
     </div>
