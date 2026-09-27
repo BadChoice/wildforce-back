@@ -11,6 +11,7 @@ tags:
   - name: Authentication
   - name: Feedback
   - name: Subscriptions
+  - name: Coaching
   - name: Sync
 paths:
   /api/auth/register:
@@ -105,6 +106,19 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /api/account/coaches:
+    get:
+      tags: [Coaching]
+      summary: Get the authenticated user's active coaches
+      responses:
+        '200':
+          description: Active coaches assigned to the authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachCollection'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
   /api/sync/push:
     post:
       tags: [Sync]
@@ -241,7 +255,7 @@ components:
       required: true
       schema:
         type: string
-        enum: [users, user-app-settings, training-preferences, training-locations, body-metric-entries, body-progress-photo-sessions, exercise-profiles, nutrition-profiles, nutrition-log-media, nutrition-log-entries, nutrition-log-items, nutrition-plans, nutrition-days, nutrition-meals, workout-plans, workout-days, workout-blocks, planned-exercises, exercise-results]
+        enum: [users, user-app-settings, training-preferences, training-locations, body-metric-entries, body-progress-photo-sessions, exercise-profiles, nutrition-profiles, nutrition-log-media, nutrition-log-entries, nutrition-log-items, nutrition-plans, nutrition-days, nutrition-meals, workout-plans, workout-days, workout-blocks, planned-exercises, exercise-results, subscriptions]
     UpdatedAfter:
       name: updated_after
       in: query
@@ -267,6 +281,17 @@ components:
         id: {type: string, format: uuid}
         name: {type: string}
         email: {type: string, format: email}
+    Coach:
+      type: object
+      required: [id, name]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+    CoachCollection:
+      type: object
+      required: [data]
+      properties:
+        data: {type: array, items: {$ref: '#/components/schemas/Coach'}}
     RegisterRequest:
       type: object
       required: [name, email, password, password_confirmation, device_name]

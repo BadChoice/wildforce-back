@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Access\RedeemDemoCodeController;
+use App\Http\Controllers\Api\Account\CoachController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\FeedbackController;
@@ -19,6 +20,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/subscription/redeem-code', RedeemDemoCodeController::class);
     Route::post('/feedback', FeedbackController::class);
     Route::middleware(EnsureUserHasAppAccess::class)->group(function () {
+        Route::get('/account/coaches', CoachController::class);
         Route::post('/sync/push', SyncPushController::class);
         Route::get('/sync/pull', SyncPullController::class);
         Route::apiResource('/sync/workout-days', WorkoutDaySyncController::class)->only(['index', 'store']);
