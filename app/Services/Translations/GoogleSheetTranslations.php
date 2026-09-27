@@ -10,11 +10,12 @@ use ZipArchive;
 class GoogleSheetTranslations
 {
     /**
-     * Download the first worksheet of a public Google Sheet as translations.
+     * Download selected worksheets of a public Google Sheet as translations.
      *
+     * @param  list<string>  $worksheetNames
      * @return list<array{key: string, description: ?string, translations: array<string, string>}>
      */
-    public function download(string $spreadsheetId): array
+    public function download(string $spreadsheetId, array $worksheetNames = []): array
     {
         if ($spreadsheetId === '') {
             throw new RuntimeException('The Google Sheets translation ID is not configured.');
@@ -26,13 +27,13 @@ class GoogleSheetTranslations
             ->throw()
             ->body();
 
-        return $this->parseWorkbook($contents);
+        return $this->parseWorkbook($contents, $worksheetNames);
     }
 
     /**
      * @return list<array{key: string, description: ?string, translations: array<string, string>}>
      */
-    private function parseWorkbook(string $contents): array
+    private function parseWorkbook(string $contents, array $worksheetNames): array
     {
         $temporaryFile = tempnam(sys_get_temp_dir(), 'translations-');
 
@@ -51,19 +52,84 @@ class GoogleSheetTranslations
 
             try {
                 $sharedStrings = $this->sharedStrings($archive);
-                $worksheet = $archive->getFromName('xl/worksheets/sheet1.xml');
+                $translations = [];
 
-                if ($worksheet === false) {
-                    throw new RuntimeException('The XLSX file does not contain a first worksheet.');
+                foreach ($this->worksheets($archive, $worksheetNames) as $worksheetName => $worksheet) {
+                    foreach ($this->translationsFromWorksheet($worksheet, $sharedStrings) as $translation) {
+                        $key = $translation['key'];
+
+                        if (array_key_exists($key, $translations)) {
+                            throw new RuntimeException("The Google Sheet contains the duplicate key '{$key}' across selected worksheets.");
+                        }
+
+                        $translations[$key] = $translation;
+                    }
                 }
 
-                return $this->translationsFromWorksheet($worksheet, $sharedStrings);
+                return array_values($translations);
             } finally {
                 $archive->close();
             }
         } finally {
             unlink($temporaryFile);
         }
+    }
+
+    /**
+     * @param  list<string>  $worksheetNames
+     * @return array<string, string>
+     */
+    private function worksheets(ZipArchive $archive, array $worksheetNames): array
+    {
+        if ($worksheetNames === []) {
+            $worksheet = $archive->getFromName('xl/worksheets/sheet1.xml');
+
+            if ($worksheet === false) {
+                throw new RuntimeException('The XLSX file does not contain a first worksheet.');
+            }
+
+            return ['sheet1' => $worksheet];
+        }
+
+        $workbook = $archive->getFromName('xl/workbook.xml');
+        $relationships = $archive->getFromName('xl/_rels/workbook.xml.rels');
+
+        if ($workbook === false || $relationships === false) {
+            throw new RuntimeException('The XLSX file does not contain workbook metadata.');
+        }
+
+        $workbookXml = $this->xml($workbook, 'workbook');
+        $workbookXml->registerXPathNamespace('spreadsheet', 'http://schemas.openxmlformats.org/spreadsheetml/2006/main');
+        $workbookXml->registerXPathNamespace('relationship', 'http://schemas.openxmlformats.org/officeDocument/2006/relationships');
+        $relationshipsXml = $this->xml($relationships, 'workbook relationships');
+        $relationshipsXml->registerXPathNamespace('relationship', 'http://schemas.openxmlformats.org/package/2006/relationships');
+
+        $targets = [];
+        foreach ($relationshipsXml->xpath('//relationship:Relationship') ?: [] as $relationship) {
+            $attributes = $relationship->attributes();
+            $targets[(string) $attributes['Id']] = (string) $attributes['Target'];
+        }
+
+        $worksheets = [];
+        foreach ($worksheetNames as $worksheetName) {
+            $sheet = collect($workbookXml->xpath('//spreadsheet:sheets/spreadsheet:sheet') ?: [])
+                ->first(fn (SimpleXMLElement $sheet): bool => (string) $sheet['name'] === $worksheetName);
+
+            if (! $sheet instanceof SimpleXMLElement) {
+                throw new RuntimeException("The Google Sheet does not contain the '{$worksheetName}' worksheet.");
+            }
+
+            $relationshipId = (string) $sheet->attributes('http://schemas.openxmlformats.org/officeDocument/2006/relationships')['id'];
+            $worksheet = $archive->getFromName('xl/'.($targets[$relationshipId] ?? ''));
+
+            if ($worksheet === false) {
+                throw new RuntimeException("The XLSX file does not contain the '{$worksheetName}' worksheet.");
+            }
+
+            $worksheets[$worksheetName] = $worksheet;
+        }
+
+        return $worksheets;
     }
 
     /**

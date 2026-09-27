@@ -34,9 +34,8 @@ class GenerateTranslations extends Command
         }
 
         try {
-            $translations = $this->googleSheetTranslations->download((string) config('translations.google_sheet_id'));
-
             if ($this->option('ios')) {
+                $translations = $this->googleSheetTranslations->download((string) config('translations.google_sheet_id'), ['app', 'exercise_catalog']);
                 $path = (string) config('translations.ios_path');
                 $this->ensurePathIsConfigured($path, 'TRANSLATIONS_IOS_PATH');
                 $this->iosExporter->export($translations, $path);
@@ -44,6 +43,7 @@ class GenerateTranslations extends Command
             }
 
             if ($this->option('android')) {
+                $translations = $this->googleSheetTranslations->download((string) config('translations.google_sheet_id'), ['app']);
                 $path = (string) config('translations.android_path');
                 $this->ensurePathIsConfigured($path, 'TRANSLATIONS_ANDROID_PATH');
                 $this->androidExporter->export($translations, $path);

@@ -86,13 +86,14 @@ test('generates the requested platform through the Artisan command', function ()
     config()->set('translations.ios_path', "{$directory}/Localizable.xcstrings");
     Http::preventStrayRequests();
     Http::fake([
-        'docs.google.com/spreadsheets/d/sheet-id/export*' => Http::response(translationWorkbook()),
+        'docs.google.com/spreadsheets/d/sheet-id/export*' => Http::response(translationWorkbookWithCatalog()),
     ]);
 
     $this->artisan('app:translations', ['--ios' => true])->assertSuccessful();
 
     expect(file_get_contents("{$directory}/Localizable.xcstrings"))
-        ->toContain('"welcome.title"');
+        ->toContain('"welcome.title"')
+        ->toContain('"Walking"');
 });
 
 function translationWorkbook(): string
@@ -117,6 +118,41 @@ function translationWorkbook(): string
 
     $archive->addFromString('xl/sharedStrings.xml', '<?xml version="1.0" encoding="UTF-8"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'.$sharedStrings.'</sst>');
     $archive->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1">'.$columns(1, 0).'</row><row r="2">'.$columns(2, count($locales) + 2).'</row></sheetData></worksheet>');
+    $archive->close();
+
+    $contents = file_get_contents($path);
+    unlink($path);
+
+    return $contents;
+}
+
+function translationWorkbookWithCatalog(): string
+{
+    $path = tempnam(sys_get_temp_dir(), 'translation-workbook-');
+    $archive = new ZipArchive;
+    $archive->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+    $locales = array_keys(config('translations.locales'));
+    $values = [
+        'key', 'description', ...$locales,
+        'welcome.title', 'Home screen title', 'Welcome & enjoy', 'Bienvenido', 'Benvingut', 'Willkommen',
+        'Bienvenue', 'Benvenuto', 'ようこそ', 'Welkom', 'Bem-vindo', '欢迎',
+        'Walking', 'Exercise name', 'Walking', 'Caminar', 'Caminar', 'Gehen',
+        'Marche', 'Camminare', 'ウォーキング', 'Wandelen', 'Caminhada', '步行',
+    ];
+    $sharedStrings = implode('', array_map(
+        fn (string $value): string => '<si><t>'.htmlspecialchars($value, ENT_XML1 | ENT_QUOTES, 'UTF-8').'</t></si>',
+        $values,
+    ));
+    $columns = fn (int $row, int $offset): string => implode('', array_map(
+        fn (int $index): string => '<c r="'.chr(65 + $index).$row.'" t="s"><v>'.($offset + $index).'</v></c>',
+        range(0, count($locales) + 1),
+    ));
+
+    $archive->addFromString('xl/sharedStrings.xml', '<?xml version="1.0" encoding="UTF-8"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'.$sharedStrings.'</sst>');
+    $archive->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="app" sheetId="1" r:id="rId1"/><sheet name="exercise_catalog" sheetId="2" r:id="rId2"/></sheets></workbook>');
+    $archive->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Target="worksheets/sheet2.xml"/></Relationships>');
+    $archive->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1">'.$columns(1, 0).'</row><row r="2">'.$columns(2, count($locales) + 2).'</row></sheetData></worksheet>');
+    $archive->addFromString('xl/worksheets/sheet2.xml', '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1">'.$columns(1, 0).'</row><row r="2">'.$columns(2, (count($locales) + 2) * 2).'</row></sheetData></worksheet>');
     $archive->close();
 
     $contents = file_get_contents($path);
