@@ -97,12 +97,15 @@ new class extends Component
 
             <flux:table.rows>
                 @forelse ($this->users as $user)
-                    <flux:table.row :key="$user->id">
-                        <flux:table.cell variant="strong">
-                            <flux:button variant="ghost" size="sm" wire:click="selectUser('{{ $user->id }}')" class="-ml-2 font-semibold">
-                                {{ $user->name }}
-                            </flux:button>
-                        </flux:table.cell>
+                        <flux:table.row :key="$user->id">
+                            <flux:table.cell variant="strong">
+                                <div class="flex items-center gap-3">
+                                    <x-user-avatar :user="$user" />
+                                    <flux:button variant="ghost" size="sm" wire:click="selectUser('{{ $user->id }}')" class="-ml-2 font-semibold">
+                                        {{ $user->name }}
+                                    </flux:button>
+                                </div>
+                            </flux:table.cell>
                         <flux:table.cell>{{ $user->email }}</flux:table.cell>
                         <flux:table.cell align="end"><flux:badge>{{ $user->workout_plans_count }}</flux:badge></flux:table.cell>
                         <flux:table.cell align="end"><flux:badge>{{ $user->custom_workouts_count }}</flux:badge></flux:table.cell>

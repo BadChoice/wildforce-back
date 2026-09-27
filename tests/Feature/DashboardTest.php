@@ -114,6 +114,7 @@ test('dashboard displays the selected user training details', function () {
     Livewire::test('dashboard.user-plan-list')
         ->call('selectUser', $user->id)
         ->assertSee('Alex Morgan')
+        ->assertSee('https://khbsrnhvonggicfmhcpg.supabase.co/storage/v1/object/public/wildfit/avatars/'.$user->id.'.png')
         ->assertSee('Training profile')
         ->assertSee('Build Strength')
         ->assertSee('Strength foundation')

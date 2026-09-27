@@ -66,11 +66,11 @@ class IOSExerciseCatalogExporter
             }
 
             func remoteImage(gender: Gender = .female) -> URL? {
-                Supabase.url(folder: "vertical", for: "\\(rawValue)_\\(gender.rawValue)", fileExtension: "jpeg")
+                Supabase.url(folder: "vertical", for: "\(rawValue)_\(gender.rawValue)", fileExtension: "jpeg")
             }
 
             func remoteTutorialImage(gender: Gender = .female) -> URL? {
-                Supabase.url(folder: "tutorial", for: "\\(rawValue)_\\(gender.rawValue)", fileExtension: "png")
+                Supabase.url(folder: "tutorial", for: "\(rawValue)_\(gender.rawValue)", fileExtension: "png")
             }
 
             func generateIconPrompt() -> String {

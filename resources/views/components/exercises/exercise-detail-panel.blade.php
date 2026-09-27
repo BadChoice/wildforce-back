@@ -25,9 +25,23 @@
                 <x-dashboard.detail-item :label="__('Difficulty')" :value="str($exercise['difficulty'])->headline()" />
                 <x-dashboard.detail-item :label="__('Tracking')" :value="str($exercise['trackingMode'])->headline()" />
                 <x-dashboard.detail-item :label="__('MET value')" :value="number_format($exercise['metValue'], 1)" />
-                <x-dashboard.detail-item :label="__('Primary muscles')" :value="collect($exercise['primaryMuscles'])->map(fn (string $muscle): string => str($muscle)->headline())->join(', ')" class="sm:col-span-2" />
+                <div class="rounded-lg bg-zinc-50 p-3 sm:col-span-2 dark:bg-zinc-800/60">
+                    <dt class="text-xs font-medium tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Primary muscles') }}</dt>
+                    <dd class="mt-2 flex flex-wrap gap-x-3 gap-y-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        @foreach ($exercise['primaryMuscles'] as $muscle)
+                            <x-exercises.reference-icon :id="$muscle" type="muscle-group" />
+                        @endforeach
+                    </dd>
+                </div>
                 @if ($exercise['secondaryMuscles'] !== [])
-                    <x-dashboard.detail-item :label="__('Secondary muscles')" :value="collect($exercise['secondaryMuscles'])->map(fn (string $muscle): string => str($muscle)->headline())->join(', ')" class="sm:col-span-2" />
+                    <div class="rounded-lg bg-zinc-50 p-3 sm:col-span-2 dark:bg-zinc-800/60">
+                        <dt class="text-xs font-medium tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Secondary muscles') }}</dt>
+                        <dd class="mt-2 flex flex-wrap gap-x-3 gap-y-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                            @foreach ($exercise['secondaryMuscles'] as $muscle)
+                                <x-exercises.reference-icon :id="$muscle" type="muscle-group" />
+                            @endforeach
+                        </dd>
+                    </div>
                 @endif
             </dl>
         </section>
@@ -55,7 +69,16 @@
         <section class="space-y-3">
             <flux:heading size="sm">{{ __('Programming metadata') }}</flux:heading>
             <dl class="grid gap-3 sm:grid-cols-2">
-                <x-dashboard.detail-item :label="__('Equipment')" :value="collect($exercise['requiredEquipment'])->map(fn (string $equipment): string => str($equipment)->headline())->join(', ') ?: __('None')" />
+                <div class="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/60">
+                    <dt class="text-xs font-medium tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Equipment') }}</dt>
+                    <dd class="mt-2 flex flex-wrap gap-x-3 gap-y-2 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        @forelse ($exercise['requiredEquipment'] as $equipment)
+                            <x-exercises.reference-icon :id="$equipment" type="equipment" />
+                        @empty
+                            <span>{{ __('None') }}</span>
+                        @endforelse
+                    </dd>
+                </div>
                 <x-dashboard.detail-item :label="__('Movement patterns')" :value="collect($exercise['movementPatterns'])->map(fn (string $pattern): string => str($pattern)->headline())->join(', ')" />
                 <x-dashboard.detail-item :label="__('Goals')" :value="collect($exercise['compatibleGoals'])->map(fn (string $goal): string => str($goal)->headline())->join(', ')" class="sm:col-span-2" />
                 <x-dashboard.detail-item :label="__('Target metrics')" :value="collect($exercise['targetMetrics'])->map(fn (string $metric): string => str($metric)->headline())->join(', ')" class="sm:col-span-2" />

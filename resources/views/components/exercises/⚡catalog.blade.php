@@ -190,6 +190,7 @@ new class extends Component
             <flux:table.columns>
                 <flux:table.column>{{ __('Exercise') }}</flux:table.column>
                 <flux:table.column>{{ __('Category') }}</flux:table.column>
+                <flux:table.column>{{ __('Equipment') }}</flux:table.column>
                 <flux:table.column>{{ __('Primary muscles') }}</flux:table.column>
                 <flux:table.column>{{ __('Tracking') }}</flux:table.column>
                 <flux:table.column>{{ __('MET') }}</flux:table.column>
@@ -210,13 +211,30 @@ new class extends Component
                             </div>
                         </flux:table.cell>
                         <flux:table.cell><flux:badge>{{ $exercise['category'] }}</flux:badge></flux:table.cell>
-                        <flux:table.cell>{{ implode(', ', $exercise['primaryMuscles']) }}</flux:table.cell>
+                        <flux:table.cell>
+                            @if ($exercise['requiredEquipment'] === [])
+                                <span class="text-zinc-500 dark:text-zinc-400">{{ __('None') }}</span>
+                            @else
+                                <div class="flex flex-wrap gap-x-3 gap-y-1">
+                                    @foreach ($exercise['requiredEquipment'] as $equipment)
+                                        <x-exercises.reference-icon :id="$equipment" type="equipment" />
+                                    @endforeach
+                                </div>
+                            @endif
+                        </flux:table.cell>
+                        <flux:table.cell>
+                            <div class="flex flex-wrap gap-x-3 gap-y-1">
+                                @foreach ($exercise['primaryMuscles'] as $muscle)
+                                    <x-exercises.reference-icon :id="$muscle" type="muscle-group" />
+                                @endforeach
+                            </div>
+                        </flux:table.cell>
                         <flux:table.cell>{{ $exercise['trackingMode'] }}</flux:table.cell>
                         <flux:table.cell>{{ number_format($exercise['metValue'], 1) }}</flux:table.cell>
                     </flux:table.row>
                 @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="5" class="py-8 text-center">{{ __('No exercises match the selected filters.') }}</flux:table.cell>
+                        <flux:table.cell colspan="6" class="py-8 text-center">{{ __('No exercises match the selected filters.') }}</flux:table.cell>
                     </flux:table.row>
                 @endforelse
             </flux:table.rows>

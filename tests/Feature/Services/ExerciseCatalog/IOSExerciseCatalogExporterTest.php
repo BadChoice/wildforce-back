@@ -13,6 +13,8 @@ test('exports the canonical catalog as Swift source files', function () {
         ->toContain('case walking')
         ->toContain('case neckCircles')
         ->toContain('func remoteImage(gender: Gender = .female) -> URL?')
+        ->toContain('for: "\\(rawValue)_\\(gender.rawValue)"')
+        ->not->toContain('for: "\\\\(rawValue)_\\\\(gender.rawValue)"')
         ->and(file_get_contents("{$directory}/ExerciseCatalog.swift"))
         ->toContain('.walking: ExerciseMetadata(')
         ->toContain('englishName: "Walking"')
