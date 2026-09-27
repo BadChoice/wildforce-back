@@ -210,7 +210,9 @@ new class extends Component
                                 </div>
                             </div>
                         </flux:table.cell>
-                        <flux:table.cell><flux:badge>{{ $exercise['category'] }}</flux:badge></flux:table.cell>
+                        <flux:table.cell>
+                            <x-exercises.reference-icon :id="$exercise['category']" type="exerciseCategories" />
+                        </flux:table.cell>
                         <flux:table.cell>
                             @if ($exercise['requiredEquipment'] === [])
                                 <span class="text-zinc-500 dark:text-zinc-400">{{ __('None') }}</span>
@@ -225,7 +227,7 @@ new class extends Component
                         <flux:table.cell>
                             <div class="flex flex-wrap gap-x-3 gap-y-1">
                                 @foreach ($exercise['primaryMuscles'] as $muscle)
-                                    <x-exercises.reference-icon :id="$muscle" type="muscle-group" />
+                                    <x-exercises.reference-icon :id="$muscle" type="muscleGroups" />
                                 @endforeach
                             </div>
                         </flux:table.cell>

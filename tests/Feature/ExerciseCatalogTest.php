@@ -17,8 +17,8 @@ test('authenticated users can explore the exercise catalog', function () {
         ->assertSee('Exercise catalog')
         ->assertSee('Walking')
         ->assertSee('barbellBackSquat')
-        ->assertSee('https://khbsrnhvonggicfmhcpg.supabase.co/storage/v1/object/public/wildfit/muscleGroups/muscle_group_cardio.png')
-        ->assertSee('https://khbsrnhvonggicfmhcpg.supabase.co/storage/v1/object/public/wildfit/equipment/treadmill.png');
+        ->assertSee('data-flux-icon')
+        ->assertSee('Dumbbells');
 });
 
 test('the exercise catalog shows the selected exercise in a detail panel', function () {
