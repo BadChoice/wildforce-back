@@ -2,6 +2,7 @@
 
 namespace App\Services\ExerciseCatalog;
 
+use Illuminate\Support\Arr;
 use JsonException;
 
 class ExerciseCatalog
@@ -23,5 +24,19 @@ class ExerciseCatalog
         $catalog = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
 
         return $catalog;
+    }
+
+    /**
+     * @param  array<string, mixed>  $exercise
+     */
+    public function imageUrl(array $exercise, string $gender = 'female'): string
+    {
+        $key = str_replace(
+            '{gender}',
+            $gender,
+            (string) Arr::get($exercise, 'assets.verticalImageKey'),
+        );
+
+        return rtrim((string) config('exercise_catalog.image_base_url'), '/').'/vertical/'.$key;
     }
 }
