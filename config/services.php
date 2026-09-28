@@ -22,6 +22,13 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'team_id' => env('APPLE_TEAM_ID', 'SV3ZXK4PZF'), // codepassion
+        'key_id' => env('APPLE_KEY_ID'),
+        'private_key' => env('APPLE_PRIVATE_KEY'),
+    ],
+
     'feedback' => [
         'recipient' => env('FEEDBACK_MAIL_TO', 'hello@codepassion.io'),
     ],

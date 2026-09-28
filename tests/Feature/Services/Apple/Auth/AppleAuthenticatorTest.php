@@ -1,0 +1,147 @@
+<?php
+
+use App\Models\User;
+use App\Models\UserIdentity;
+use App\Services\Apple\Auth\AppleAuthenticator;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
+
+test('it creates an Apple user after validating Apple’s signed identity token', function () {
+    [$privateKey, $jwk] = appleTestKeyMaterial();
+    $identityToken = appleTestIdentityToken($privateKey, [
+        'iss' => 'https://appleid.apple.com',
+        'aud' => 'com.wildforce.app',
+        'exp' => now()->addMinute()->timestamp,
+        'sub' => 'apple-user-123',
+        'email' => 'jane@privaterelay.appleid.com',
+        'email_verified' => 'true',
+    ]);
+
+    config()->set('services.apple', [
+        'client_id' => 'com.wildforce.app',
+        'team_id' => 'TEAM123456',
+        'key_id' => 'KEY1234567',
+        'private_key' => $privateKey,
+    ]);
+    Cache::forget('apple-sign-in-public-keys');
+    Http::preventStrayRequests();
+    Http::fake([
+        'https://appleid.apple.com/auth/token' => Http::response(['id_token' => $identityToken]),
+        'https://appleid.apple.com/auth/keys' => Http::response(['keys' => [$jwk]]),
+    ]);
+
+    $result = app(AppleAuthenticator::class)->authenticate('apple-authorization-code', 'Jane’s iPhone', 'Jane Doe');
+
+    expect($result->user->name)->toBe('Jane Doe')
+        ->and($result->user->email)->toBe('jane@privaterelay.appleid.com')
+        ->and($result->user->password)->toBeNull()
+        ->and($result->token)->toBeString()->not->toBeEmpty()
+        ->and($result->trialEndsAt)->not->toBeNull();
+
+    $this->assertDatabaseHas('user_identities', [
+        'user_id' => $result->user->id,
+        'provider' => 'apple',
+        'provider_user_id' => 'apple-user-123',
+        'provider_email' => 'jane@privaterelay.appleid.com',
+    ]);
+    $this->assertDatabaseCount('user_identities', 1);
+
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://appleid.apple.com/auth/token');
+    Http::assertSent(fn (Request $request): bool => $request->url() === 'https://appleid.apple.com/auth/keys');
+});
+
+test('it does not remove an Apple identity that is the user’s only sign-in method', function () {
+    $user = User::factory()->create(['password' => null]);
+    UserIdentity::create([
+        'user_id' => $user->id,
+        'provider' => UserIdentity::AppleProvider,
+        'provider_user_id' => 'apple-user-123',
+    ]);
+
+    expect(fn () => app(AppleAuthenticator::class)->unlink($user))
+        ->toThrow(ValidationException::class);
+
+    $this->assertDatabaseCount('user_identities', 1);
+});
+
+test('it removes Apple when the user has another linked identity', function () {
+    $user = User::factory()->create(['password' => null]);
+    $appleIdentity = UserIdentity::create([
+        'user_id' => $user->id,
+        'provider' => UserIdentity::AppleProvider,
+        'provider_user_id' => 'apple-user-123',
+    ]);
+    $googleIdentity = new UserIdentity([
+        'user_id' => $user->id,
+        'provider_user_id' => 'google-user-123',
+    ]);
+    $googleIdentity->provider = 'google';
+    $googleIdentity->save();
+
+    app(AppleAuthenticator::class)->unlink($user);
+
+    $this->assertModelMissing($appleIdentity);
+    $this->assertDatabaseHas('user_identities', [
+        'user_id' => $user->id,
+        'provider' => 'google',
+    ]);
+});
+
+/**
+ * @return array{string, array<string, string>}
+ */
+function appleTestKeyMaterial(): array
+{
+    $key = openssl_pkey_new([
+        'private_key_type' => OPENSSL_KEYTYPE_EC,
+        'curve_name' => 'prime256v1',
+    ]);
+    openssl_pkey_export($key, $privateKey);
+    $details = openssl_pkey_get_details($key);
+
+    return [$privateKey, [
+        'kty' => 'EC',
+        'crv' => 'P-256',
+        'kid' => 'apple-test-key',
+        'x' => appleTestBase64UrlEncode($details['ec']['x']),
+        'y' => appleTestBase64UrlEncode($details['ec']['y']),
+    ]];
+}
+
+/**
+ * @param  array<string, int|string>  $claims
+ */
+function appleTestIdentityToken(string $privateKey, array $claims): string
+{
+    $header = appleTestBase64UrlEncode(json_encode(['alg' => 'ES256', 'kid' => 'apple-test-key'], JSON_THROW_ON_ERROR));
+    $payload = appleTestBase64UrlEncode(json_encode($claims, JSON_THROW_ON_ERROR));
+    openssl_sign($header.'.'.$payload, $signature, $privateKey, OPENSSL_ALGO_SHA256);
+
+    return $header.'.'.$payload.'.'.appleTestBase64UrlEncode(appleTestDerSignatureToJose($signature));
+}
+
+function appleTestBase64UrlEncode(string $value): string
+{
+    return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
+}
+
+function appleTestDerSignatureToJose(string $signature): string
+{
+    $offset = 2;
+
+    if (ord($signature[1]) > 127) {
+        $offset += ord($signature[1]) & 0x7F;
+    }
+
+    $offset++;
+    $rLength = ord($signature[$offset++]);
+    $r = substr($signature, $offset, $rLength);
+    $offset += $rLength + 1;
+    $sLength = ord($signature[$offset++]);
+    $s = substr($signature, $offset, $sLength);
+
+    return str_pad(ltrim($r, "\x00"), 32, "\x00", STR_PAD_LEFT)
+        .str_pad(ltrim($s, "\x00"), 32, "\x00", STR_PAD_LEFT);
+}

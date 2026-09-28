@@ -29,7 +29,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $name
  * @property string $email
  * @property Carbon|null $email_verified_at
- * @property string $password
+ * @property string|null $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
@@ -93,6 +93,23 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
     public function appSettings(): HasOne
     {
         return $this->hasOne(UserAppSettings::class);
+    }
+
+    /**
+     * @return HasOne<UserIdentity, $this>
+     */
+    public function appleIdentity(): HasOne
+    {
+        return $this->hasOne(UserIdentity::class)
+            ->where('provider', UserIdentity::AppleProvider);
+    }
+
+    /**
+     * @return HasMany<UserIdentity, $this>
+     */
+    public function identities(): HasMany
+    {
+        return $this->hasMany(UserIdentity::class);
     }
 
     public function trainingPreferences(): HasOne
