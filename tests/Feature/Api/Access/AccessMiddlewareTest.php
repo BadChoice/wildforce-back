@@ -14,3 +14,21 @@ test('it blocks sync access when the user has no subscription, trial, or demo ac
         ->assertForbidden()
         ->assertJsonPath('code', 'subscription_required');
 });
+
+test('it returns subscription access status for an expired user', function () {
+    $user = User::factory()->create();
+    $user->subscription()->update(['status' => SubscriptionStatus::Expired]);
+
+    Sanctum::actingAs($user);
+
+    $this->getJson('/api/subscription/access')
+        ->assertOk()
+        ->assertJsonPath('data.has_access', false)
+        ->assertJsonPath('data.status', SubscriptionStatus::Expired->value)
+        ->assertJsonPath('data.plan', 'trial');
+});
+
+test('it requires authentication to read subscription access status', function () {
+    $this->getJson('/api/subscription/access')
+        ->assertUnauthorized();
+});

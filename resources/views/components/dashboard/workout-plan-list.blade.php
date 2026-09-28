@@ -31,7 +31,14 @@
                     <div class="space-y-2">
                         @forelse ($workoutPlan->workoutDays as $workoutDay)
                             <div class="rounded-lg bg-zinc-50 p-3 dark:bg-zinc-800/60">
-                                <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $workoutDay->title }}</div>
+                                <div class="flex items-start justify-between gap-3">
+                                    <div class="font-medium text-zinc-900 dark:text-zinc-100">{{ $workoutDay->title }}</div>
+                                    @if ($editable)
+                                        <flux:button type="button" size="sm" variant="ghost" icon="pencil-square" wire:click="openExistingWorkoutDayEditor('{{ $workoutPlan->id }}', '{{ $workoutDay->id }}')">
+                                            {{ __('Edit') }}
+                                        </flux:button>
+                                    @endif
+                                </div>
                                 <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
                                     <span>{{ str($workoutDay->focus)->headline() }}</span>
                                     @if ($workoutDay->intended_weekday)

@@ -46,10 +46,13 @@
             <div class="space-y-5">
                 @foreach ($blocks as $blockIndex => $block)
                     <section wire:key="workout-block-{{ $block['id'] }}" class="overflow-hidden rounded-xl border {{ $selectedWorkoutBlockId === $block['id'] ? 'border-zinc-950 ring-1 ring-zinc-950 dark:border-white dark:ring-white' : 'border-zinc-200 dark:border-zinc-700' }}">
-                        <button type="button" wire:click="selectWorkoutBlock('{{ $block['id'] }}')" class="flex w-full items-center justify-between gap-3 bg-zinc-50 px-4 py-3 text-left dark:bg-zinc-800/60">
-                            <span class="font-medium">{{ __('Block :number', ['number' => $blockIndex + 1]) }}</span>
-                            <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ $selectedWorkoutBlockId === $block['id'] ? __('Selected') : __('Select to add exercises') }}</span>
-                        </button>
+                        <div class="flex items-center justify-between gap-3 bg-zinc-50 px-4 py-3 dark:bg-zinc-800/60">
+                            <button type="button" wire:click="selectWorkoutBlock('{{ $block['id'] }}')" class="min-w-0 flex-1 text-left">
+                                <span class="font-medium">{{ __('Block :number', ['number' => $blockIndex + 1]) }}</span>
+                                <span class="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">{{ $selectedWorkoutBlockId === $block['id'] ? __('Selected') : __('Select to add exercises') }}</span>
+                            </button>
+                            <flux:button size="sm" variant="ghost" icon="trash" wire:click="removeWorkoutBlock('{{ $block['id'] }}')" aria-label="{{ __('Remove block :number', ['number' => $blockIndex + 1]) }}" />
+                        </div>
 
                         <div class="space-y-3 p-4">
                             <flux:field>

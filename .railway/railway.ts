@@ -68,6 +68,9 @@ export default defineRailway(() => {
       AWS_ENDPOINT: "${{user-storage.ENDPOINT}}",
       AWS_USE_PATH_STYLE_ENDPOINT: "false",
 
+      SUPABASE_S3_KEY: preserve(),
+      SUPABASE_S3_SECRET: preserve(),
+
       // -------------------------
       // Apple
       // -------------------------

@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => env('FILESYSTEM_DISK', 'local'),
+    'default' => env('FILESYSTEM_DISK', 's3'),
 
     /*
     |--------------------------------------------------------------------------
@@ -56,6 +56,20 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
+        ],
+
+        'supabase' => [
+            'driver' => 's3',
+            'key' => env('SUPABASE_S3_KEY'),
+            'secret' => env('SUPABASE_S3_SECRET'),
+            'region' => env('SUPABASE_S3_REGION', 'eu-west-1'),
+            'bucket' => env('SUPABASE_S3_BUCKET', 'wildfit'),
+            'url' => env('SUPABASE_S3_URL', 'https://khbsrnhvonggicfmhcpg.supabase.co/storage/v1/object/public/wildfit'),
+            'endpoint' => env('SUPABASE_S3_ENDPOINT', 'https://khbsrnhvonggicfmhcpg.storage.supabase.co/storage/v1/s3'),
+            'use_path_style_endpoint' => true,
+            'visibility' => 'public',
             'throw' => false,
             'report' => false,
         ],

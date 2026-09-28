@@ -35,6 +35,8 @@ new class extends Component
 
     public ?string $selectedWorkoutPlanId = null;
 
+    public ?string $selectedWorkoutDayId = null;
+
     public string $workoutDayTitle = '';
 
     public string $workoutDayNotes = '';
@@ -194,11 +196,62 @@ new class extends Component
 
         $this->resetValidation();
         $this->selectedWorkoutPlanId = $workoutPlan->id;
+        $this->selectedWorkoutDayId = null;
         $this->workoutDayTitle = '';
         $this->workoutDayNotes = '';
         $this->workoutDayFocus = 'fullBody';
         $this->workoutDayBlocks = [];
         $this->addWorkoutBlock();
+        $this->exerciseSearch = '';
+        $this->showWorkoutDayEditor = true;
+    }
+
+    public function openExistingWorkoutDayEditor(string $workoutPlanId, string $workoutDayId): void
+    {
+        $workoutPlan = $this->selectedClient?->workoutPlans()->whereKey($workoutPlanId)->first();
+
+        if ($workoutPlan === null) {
+            return;
+        }
+
+        $workoutDay = $workoutPlan->workoutDays()
+            ->with(['blocks' => fn (HasMany $query): HasMany => $query->orderBy('order_index')->with([
+                'exercises' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
+            ])])
+            ->whereKey($workoutDayId)
+            ->first();
+
+        if ($workoutDay === null) {
+            return;
+        }
+
+        $exerciseNames = collect(Arr::get($this->exerciseCatalog->all(), 'exercises', []))
+            ->filter(fn (mixed $exercise): bool => is_array($exercise))
+            ->keyBy('id');
+
+        $this->resetValidation();
+        $this->selectedWorkoutPlanId = $workoutPlan->id;
+        $this->selectedWorkoutDayId = $workoutDay->id;
+        $this->workoutDayTitle = $workoutDay->title;
+        $this->workoutDayNotes = $workoutDay->notes ?? '';
+        $this->workoutDayFocus = $workoutDay->focus;
+        $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => [
+            'id' => $block->id,
+            'type' => $block->type,
+            'notes' => $block->notes ?? '',
+            'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => [
+                'id' => $exercise->id,
+                'exercise' => $exercise->exercise,
+                'name' => (string) data_get($exerciseNames->get($exercise->exercise), 'name', $exercise->exercise),
+                'notes' => $exercise->notes ?? '',
+                'sets' => $exercise->sets ?? 3,
+                'reps_min' => $exercise->reps_min ?? 8,
+                'reps_max' => $exercise->reps_max ?? 12,
+                'target_weight_kg' => $exercise->target_weight_kg ?? '',
+                'rest_seconds' => $exercise->rest_seconds ?? 90,
+            ])->all(),
+        ])->all();
+        $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
         $this->exerciseSearch = '';
         $this->showWorkoutDayEditor = true;
     }
@@ -224,6 +277,18 @@ new class extends Component
     {
         if (collect($this->workoutDayBlocks)->contains('id', $blockId)) {
             $this->selectedWorkoutBlockId = $blockId;
+        }
+    }
+
+    public function removeWorkoutBlock(string $blockId): void
+    {
+        $this->workoutDayBlocks = array_values(array_filter(
+            $this->workoutDayBlocks,
+            fn (array $block): bool => $block['id'] !== $blockId,
+        ));
+
+        if ($this->selectedWorkoutBlockId === $blockId) {
+            $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
         }
     }
 
@@ -282,10 +347,12 @@ new class extends Component
             'workoutDayTitle' => ['required', 'string', 'max:255'],
             'workoutDayNotes' => ['nullable', 'string'],
             'workoutDayFocus' => ['required', 'string', 'max:255'],
-            'workoutDayBlocks' => ['required', 'array', 'min:1'],
+            'workoutDayBlocks' => ['required', 'array'],
+            'workoutDayBlocks.*.id' => ['required', 'uuid'],
             'workoutDayBlocks.*.type' => ['required', 'string', 'max:255'],
             'workoutDayBlocks.*.notes' => ['nullable', 'string'],
             'workoutDayBlocks.*.exercises' => ['array'],
+            'workoutDayBlocks.*.exercises.*.id' => ['required', 'uuid'],
             'workoutDayBlocks.*.exercises.*.exercise' => ['required', 'string', 'max:255'],
             'workoutDayBlocks.*.exercises.*.notes' => ['nullable', 'string'],
             'workoutDayBlocks.*.exercises.*.sets' => ['required', 'integer', 'min:1', 'max:100'],
@@ -302,21 +369,42 @@ new class extends Component
         }
 
         DB::transaction(function () use ($client, $workoutPlan, $validated): void {
-            $workoutDay = new WorkoutDay;
+            $workoutDay = $this->selectedWorkoutDayId === null
+                ? new WorkoutDay
+                : $workoutPlan->workoutDays()->with('blocks.exercises')->whereKey($this->selectedWorkoutDayId)->first();
+
+            if ($workoutDay === null) {
+                return;
+            }
+
             $workoutDay->forceFill([
                 'user_id' => $client->id,
                 'workout_plan_id' => $workoutPlan->id,
                 'title' => $validated['workoutDayTitle'],
                 'focus' => $validated['workoutDayFocus'],
                 'status' => 'planned',
-                'order_index' => ((int) $workoutPlan->workoutDays()->max('order_index')) + 1,
-                'creation_source' => 'manual',
                 'notes' => $validated['workoutDayNotes'] ?: null,
             ]);
+
+            if (! $workoutDay->exists) {
+                $workoutDay->order_index = ((int) $workoutPlan->workoutDays()->max('order_index')) + 1;
+                $workoutDay->creation_source = 'manual';
+            }
+
             $workoutDay->save();
 
+            $existingBlocks = $workoutDay->blocks->keyBy('id');
+            $submittedBlockIds = collect($validated['workoutDayBlocks'])->pluck('id')->all();
+
+            $existingBlocks
+                ->reject(fn (WorkoutBlock $block): bool => in_array($block->id, $submittedBlockIds, true))
+                ->each(function (WorkoutBlock $block): void {
+                    $block->exercises->each->delete();
+                    $block->delete();
+                });
+
             foreach ($validated['workoutDayBlocks'] as $blockIndex => $blockData) {
-                $workoutBlock = new WorkoutBlock;
+                $workoutBlock = $existingBlocks->get($blockData['id']) ?? new WorkoutBlock;
                 $workoutBlock->forceFill([
                     'workout_day_id' => $workoutDay->id,
                     'type' => $blockData['type'],
@@ -326,8 +414,17 @@ new class extends Component
                 ]);
                 $workoutBlock->save();
 
+                $existingExercises = $workoutBlock->exists && $existingBlocks->has($workoutBlock->id)
+                    ? $existingBlocks->get($workoutBlock->id)->exercises->keyBy('id')
+                    : collect();
+                $submittedExerciseIds = collect($blockData['exercises'])->pluck('id')->all();
+
+                $existingExercises
+                    ->reject(fn (PlannedExercise $exercise): bool => in_array($exercise->id, $submittedExerciseIds, true))
+                    ->each->delete();
+
                 foreach ($blockData['exercises'] as $exerciseIndex => $exerciseData) {
-                    $plannedExercise = new PlannedExercise;
+                    $plannedExercise = $existingExercises->get($exerciseData['id']) ?? new PlannedExercise;
                     $plannedExercise->forceFill([
                         'workout_day_id' => $workoutDay->id,
                         'workout_block_id' => $workoutBlock->id,

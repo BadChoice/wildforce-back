@@ -15,6 +15,9 @@
       "name": "Authentication"
     },
     {
+      "name": "Media"
+    },
+    {
       "name": "Account"
     },
     {
@@ -255,6 +258,153 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthenticated"
+          }
+        }
+      }
+    },
+    "/api/users/avatar": {
+      "post": {
+        "tags": [
+          "Media"
+        ],
+        "summary": "Upload the authenticated user's public avatar",
+        "description": "Stores a PNG at `avatars/{user-id}.png` in the public `wildfit` Supabase bucket.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "image"
+                ],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "PNG image up to 2 MiB."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Avatar uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "example": "avatars/018f70f9-66a0-7a26-a4f8-8e0e1433f50e.png"
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/api/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}": {
+      "post": {
+        "tags": [
+          "Media"
+        ],
+        "summary": "Upload a private body progress photo",
+        "description": "Stores a JPEG on the default private S3 disk and updates the matching photo path on the session.",
+        "parameters": [
+          {
+            "name": "bodyProgressPhotoSession",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "angle",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "profile",
+                "front",
+                "torso"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "image"
+                ],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG image up to 5 MiB."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Progress photo uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "example": "018f70f9-66a0-7a26-a4f8-8e0e1433f50e-front.jpg"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "description": "Progress photo session does not belong to the authenticated user."
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
           }
         }
       }

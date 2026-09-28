@@ -142,3 +142,59 @@ test('it saves a complete workout day for a selected client plan', function () {
         ->and($plannedExercise->sets)->toBe(4)
         ->and($plannedExercise->target_weight_kg)->toBe('100.00');
 });
+
+test('it updates a workout day and removes its deleted blocks and exercises', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    $workoutPlan = WorkoutPlan::factory()->for($client)->create();
+    $workoutDay = WorkoutDay::factory()->for($client)->for($workoutPlan, 'plan')->create([
+        'title' => 'Original lower body',
+        'notes' => 'Original notes',
+    ]);
+    $removedBlock = WorkoutBlock::factory()->for($workoutDay, 'workoutDay')->create(['order_index' => 0]);
+    $removedExercise = PlannedExercise::factory()
+        ->for($workoutDay, 'workoutDay')
+        ->for($removedBlock, 'block')
+        ->create();
+    $retainedBlock = WorkoutBlock::factory()->for($workoutDay, 'workoutDay')->create(['order_index' => 1]);
+    $retainedExercise = PlannedExercise::factory()
+        ->for($workoutDay, 'workoutDay')
+        ->for($retainedBlock, 'block')
+        ->create(['exercise' => 'benchPress']);
+    $this->actingAs($coach);
+
+    Livewire::test('dashboard.clients')
+        ->call('selectClient', $client->id)
+        ->call('openExistingWorkoutDayEditor', $workoutPlan->id, $workoutDay->id)
+        ->assertSet('workoutDayTitle', 'Original lower body')
+        ->call('removeWorkoutBlock', $removedBlock->id)
+        ->call('addWorkoutBlock')
+        ->call('addExercise', 'barbellBackSquat')
+        ->set('workoutDayTitle', 'Updated lower body')
+        ->set('workoutDayNotes', 'Updated notes')
+        ->set('workoutDayBlocks.0.notes', 'Retained block notes')
+        ->set('workoutDayBlocks.0.exercises.0.sets', 5)
+        ->set('workoutDayBlocks.1.exercises.0.reps_min', 6)
+        ->set('workoutDayBlocks.1.exercises.0.reps_max', 8)
+        ->call('saveWorkoutDay')
+        ->assertSet('showWorkoutDayEditor', false);
+
+    $workoutDay->refresh();
+    $this->assertSame('Updated lower body', $workoutDay->title);
+    $this->assertSame('Updated notes', $workoutDay->notes);
+    $this->assertSoftDeleted('workout_blocks', ['id' => $removedBlock->id]);
+    $this->assertSoftDeleted('planned_exercises', ['id' => $removedExercise->id]);
+
+    $retainedBlock->refresh();
+    $retainedExercise->refresh();
+    expect($retainedBlock->notes)->toBe('Retained block notes')
+        ->and($retainedExercise->sets)->toBe(5)
+        ->and(WorkoutBlock::query()->whereBelongsTo($workoutDay, 'workoutDay')->count())->toBe(2)
+        ->and(PlannedExercise::query()->whereBelongsTo($workoutDay, 'workoutDay')->count())->toBe(2);
+});
