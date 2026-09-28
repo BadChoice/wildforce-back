@@ -2,6 +2,8 @@
 
 use App\Enums\SubscriptionPlan;
 use App\Enums\SubscriptionProvider;
+use App\Enums\SubscriptionStatus;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Services\AppStore\AppStoreJwsVerifier;
 use Laravel\Sanctum\Sanctum;
@@ -31,8 +33,17 @@ test('it stores a verified App Store subscription for the authenticated account'
         ->auto_renews->toBeTrue();
 });
 
-test('it rejects a transaction that is not linked to the authenticated account', function () {
+test('it rejects a transaction already associated with another account', function () {
     $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $otherUser->replaceSubscription(new Subscription([
+        'plan' => SubscriptionPlan::MemberYearly,
+        'provider' => SubscriptionProvider::AppStore,
+        'status' => SubscriptionStatus::Active,
+        'provider_reference' => '1000001234567890',
+        'starts_at' => now()->subMonth(),
+        'renews_at' => now()->addYear(),
+    ]));
     $transaction = appStoreTransaction((string) str()->uuid());
 
     $this->mock(AppStoreJwsVerifier::class, function (MockInterface $mock) use ($transaction): void {

@@ -1,4 +1,4 @@
-@props(['workoutPlans'])
+@props(['workoutPlans', 'editable' => false])
 
 <section aria-labelledby="workout-plans-heading" class="space-y-4">
     <div>
@@ -17,7 +17,14 @@
                             <span>{{ trans_choice(':count workout day|:count workout days', $workoutPlan->workoutDays->count(), ['count' => $workoutPlan->workoutDays->count()]) }}</span>
                         </div>
                     </div>
-                    <flux:icon name="chevron-down" class="size-5 shrink-0 transition-transform group-open:rotate-180" />
+                    <div class="flex items-center gap-2">
+                        @if ($editable)
+                            <flux:button type="button" size="sm" variant="ghost" icon="plus" wire:click.stop="openWorkoutDayEditor('{{ $workoutPlan->id }}')">
+                                {{ __('Workout day') }}
+                            </flux:button>
+                        @endif
+                        <flux:icon name="chevron-down" class="size-5 shrink-0 transition-transform group-open:rotate-180" />
+                    </div>
                 </summary>
 
                 <div class="border-t border-zinc-200 p-3 dark:border-zinc-700">

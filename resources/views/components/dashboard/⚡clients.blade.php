@@ -1,9 +1,17 @@
 <?php
 
 use App\Enums\CoachingEnrollmentStatus;
+use App\Models\PlannedExercise;
 use App\Models\User;
+use App\Models\WorkoutBlock;
+use App\Models\WorkoutDay;
+use App\Models\WorkoutPlan;
+use App\Services\ExerciseCatalog\ExerciseCatalog;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -14,6 +22,40 @@ new class extends Component
     public string $selectedTab = 'info';
 
     public bool $showClientDetail = false;
+
+    public bool $showWorkoutPlanForm = false;
+
+    public string $workoutPlanName = '';
+
+    public string $workoutPlanGoal = 'generalFitness';
+
+    public string $workoutPlanNotes = '';
+
+    public bool $showWorkoutDayEditor = false;
+
+    public ?string $selectedWorkoutPlanId = null;
+
+    public string $workoutDayTitle = '';
+
+    public string $workoutDayNotes = '';
+
+    public string $workoutDayFocus = 'fullBody';
+
+    public ?string $selectedWorkoutBlockId = null;
+
+    public string $exerciseSearch = '';
+
+    /**
+     * @var list<array{id: string, type: string, notes: string, exercises: list<array{id: string, exercise: string, name: string, notes: string, sets: int, reps_min: int, reps_max: int, target_weight_kg: string, rest_seconds: int}>}>
+     */
+    public array $workoutDayBlocks = [];
+
+    protected ExerciseCatalog $exerciseCatalog;
+
+    public function boot(ExerciseCatalog $exerciseCatalog): void
+    {
+        $this->exerciseCatalog = $exerciseCatalog;
+    }
 
     /**
      * @return Collection<int, User>
@@ -48,6 +90,32 @@ new class extends Component
             ->first();
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
+    #[Computed]
+    public function availableExercises(): array
+    {
+        $exercises = Arr::get($this->exerciseCatalog->all(), 'exercises', []);
+
+        if (! is_array($exercises)) {
+            return [];
+        }
+
+        $search = Str::lower($this->exerciseSearch);
+
+        return array_values(array_filter($exercises, function (mixed $exercise) use ($search): bool {
+            if (! is_array($exercise)) {
+                return false;
+            }
+
+            return $search === '' || Str::contains(
+                Str::lower(implode(' ', [(string) ($exercise['id'] ?? ''), (string) ($exercise['name'] ?? '')])),
+                $search,
+            );
+        }));
+    }
+
     public function selectClient(string $clientId): void
     {
         if (! auth()->user()->clients(CoachingEnrollmentStatus::Active)
@@ -73,6 +141,213 @@ new class extends Component
     public function closeClientDetail(): void
     {
         $this->showClientDetail = false;
+    }
+
+    public function openWorkoutPlanForm(): void
+    {
+        if ($this->selectedClient === null) {
+            return;
+        }
+
+        $this->resetValidation();
+        $this->workoutPlanName = '';
+        $this->workoutPlanGoal = 'generalFitness';
+        $this->workoutPlanNotes = '';
+        $this->showWorkoutPlanForm = true;
+    }
+
+    public function saveWorkoutPlan(): void
+    {
+        $validated = $this->validate([
+            'workoutPlanName' => ['required', 'string', 'max:255'],
+            'workoutPlanGoal' => ['required', 'string', 'max:255'],
+            'workoutPlanNotes' => ['nullable', 'string'],
+        ]);
+        $client = $this->selectedClient;
+
+        if ($client === null) {
+            return;
+        }
+
+        $workoutPlan = new WorkoutPlan;
+        $workoutPlan->forceFill([
+            'user_id' => $client->id,
+            'name' => $validated['workoutPlanName'],
+            'goal' => $validated['workoutPlanGoal'],
+            'notes' => $validated['workoutPlanNotes'] ?: null,
+            'status' => 'draft',
+        ]);
+        $workoutPlan->save();
+
+        unset($this->selectedClient);
+
+        $this->showWorkoutPlanForm = false;
+    }
+
+    public function openWorkoutDayEditor(string $workoutPlanId): void
+    {
+        $workoutPlan = $this->selectedClient?->workoutPlans()->whereKey($workoutPlanId)->first();
+
+        if ($workoutPlan === null) {
+            return;
+        }
+
+        $this->resetValidation();
+        $this->selectedWorkoutPlanId = $workoutPlan->id;
+        $this->workoutDayTitle = '';
+        $this->workoutDayNotes = '';
+        $this->workoutDayFocus = 'fullBody';
+        $this->workoutDayBlocks = [];
+        $this->addWorkoutBlock();
+        $this->exerciseSearch = '';
+        $this->showWorkoutDayEditor = true;
+    }
+
+    public function closeWorkoutDayEditor(): void
+    {
+        $this->showWorkoutDayEditor = false;
+    }
+
+    public function addWorkoutBlock(): void
+    {
+        $blockId = (string) Str::uuid();
+        $this->workoutDayBlocks[] = [
+            'id' => $blockId,
+            'type' => 'standard',
+            'notes' => '',
+            'exercises' => [],
+        ];
+        $this->selectedWorkoutBlockId = $blockId;
+    }
+
+    public function selectWorkoutBlock(string $blockId): void
+    {
+        if (collect($this->workoutDayBlocks)->contains('id', $blockId)) {
+            $this->selectedWorkoutBlockId = $blockId;
+        }
+    }
+
+    public function addExercise(string $exerciseId): void
+    {
+        if ($this->selectedWorkoutBlockId === null) {
+            return;
+        }
+
+        $exercise = collect($this->availableExercises)->firstWhere('id', $exerciseId);
+
+        if (! is_array($exercise)) {
+            return;
+        }
+
+        foreach ($this->workoutDayBlocks as $blockIndex => $block) {
+            if ($block['id'] !== $this->selectedWorkoutBlockId) {
+                continue;
+            }
+
+            $this->workoutDayBlocks[$blockIndex]['exercises'][] = [
+                'id' => (string) Str::uuid(),
+                'exercise' => $exerciseId,
+                'name' => (string) $exercise['name'],
+                'notes' => '',
+                'sets' => 3,
+                'reps_min' => 8,
+                'reps_max' => 12,
+                'target_weight_kg' => '',
+                'rest_seconds' => 90,
+            ];
+
+            return;
+        }
+    }
+
+    public function removeExercise(string $blockId, string $exerciseId): void
+    {
+        foreach ($this->workoutDayBlocks as $blockIndex => $block) {
+            if ($block['id'] !== $blockId) {
+                continue;
+            }
+
+            $this->workoutDayBlocks[$blockIndex]['exercises'] = array_values(array_filter(
+                $block['exercises'],
+                fn (array $exercise): bool => $exercise['id'] !== $exerciseId,
+            ));
+
+            return;
+        }
+    }
+
+    public function saveWorkoutDay(): void
+    {
+        $validated = $this->validate([
+            'workoutDayTitle' => ['required', 'string', 'max:255'],
+            'workoutDayNotes' => ['nullable', 'string'],
+            'workoutDayFocus' => ['required', 'string', 'max:255'],
+            'workoutDayBlocks' => ['required', 'array', 'min:1'],
+            'workoutDayBlocks.*.type' => ['required', 'string', 'max:255'],
+            'workoutDayBlocks.*.notes' => ['nullable', 'string'],
+            'workoutDayBlocks.*.exercises' => ['array'],
+            'workoutDayBlocks.*.exercises.*.exercise' => ['required', 'string', 'max:255'],
+            'workoutDayBlocks.*.exercises.*.notes' => ['nullable', 'string'],
+            'workoutDayBlocks.*.exercises.*.sets' => ['required', 'integer', 'min:1', 'max:100'],
+            'workoutDayBlocks.*.exercises.*.reps_min' => ['required', 'integer', 'min:0', 'max:1000'],
+            'workoutDayBlocks.*.exercises.*.reps_max' => ['required', 'integer', 'gte:workoutDayBlocks.*.exercises.*.reps_min', 'max:1000'],
+            'workoutDayBlocks.*.exercises.*.target_weight_kg' => ['nullable', 'numeric', 'min:0', 'max:999999'],
+            'workoutDayBlocks.*.exercises.*.rest_seconds' => ['required', 'integer', 'min:0', 'max:3600'],
+        ]);
+        $client = $this->selectedClient;
+        $workoutPlan = $client?->workoutPlans()->whereKey($this->selectedWorkoutPlanId)->first();
+
+        if ($client === null || $workoutPlan === null) {
+            return;
+        }
+
+        DB::transaction(function () use ($client, $workoutPlan, $validated): void {
+            $workoutDay = new WorkoutDay;
+            $workoutDay->forceFill([
+                'user_id' => $client->id,
+                'workout_plan_id' => $workoutPlan->id,
+                'title' => $validated['workoutDayTitle'],
+                'focus' => $validated['workoutDayFocus'],
+                'status' => 'planned',
+                'order_index' => ((int) $workoutPlan->workoutDays()->max('order_index')) + 1,
+                'creation_source' => 'manual',
+                'notes' => $validated['workoutDayNotes'] ?: null,
+            ]);
+            $workoutDay->save();
+
+            foreach ($validated['workoutDayBlocks'] as $blockIndex => $blockData) {
+                $workoutBlock = new WorkoutBlock;
+                $workoutBlock->forceFill([
+                    'workout_day_id' => $workoutDay->id,
+                    'type' => $blockData['type'],
+                    'order_index' => $blockIndex,
+                    'rounds' => 1,
+                    'notes' => $blockData['notes'] ?: null,
+                ]);
+                $workoutBlock->save();
+
+                foreach ($blockData['exercises'] as $exerciseIndex => $exerciseData) {
+                    $plannedExercise = new PlannedExercise;
+                    $plannedExercise->forceFill([
+                        'workout_day_id' => $workoutDay->id,
+                        'workout_block_id' => $workoutBlock->id,
+                        'exercise' => $exerciseData['exercise'],
+                        'order_index' => $exerciseIndex,
+                        'sets' => $exerciseData['sets'],
+                        'reps_min' => $exerciseData['reps_min'],
+                        'reps_max' => $exerciseData['reps_max'],
+                        'target_weight_kg' => $exerciseData['target_weight_kg'] === '' ? null : $exerciseData['target_weight_kg'],
+                        'rest_seconds' => $exerciseData['rest_seconds'],
+                        'notes' => $exerciseData['notes'] ?: null,
+                    ]);
+                    $plannedExercise->save();
+                }
+            }
+        });
+
+        unset($this->selectedClient);
+
+        $this->showWorkoutDayEditor = false;
     }
 };
 ?>
@@ -115,4 +390,50 @@ new class extends Component
             <x-dashboard.client-detail-panel :client="$this->selectedClient" :active-tab="$selectedTab" />
         </flux:modal>
     @endif
+
+    <flux:modal wire:model="showWorkoutPlanForm" class="w-full max-w-lg">
+        <form wire:submit="saveWorkoutPlan" class="space-y-5">
+            <div>
+                <flux:heading size="lg">{{ __('New workout plan') }}</flux:heading>
+                <flux:text variant="subtle" class="mt-1">{{ __('Create a draft plan for this client.') }}</flux:text>
+            </div>
+
+            <flux:field>
+                <flux:label>{{ __('Name') }}</flux:label>
+                <flux:input wire:model="workoutPlanName" autofocus />
+                <flux:error name="workoutPlanName" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Goal') }}</flux:label>
+                <flux:select wire:model="workoutPlanGoal">
+                    @foreach (['generalFitness', 'loseWeight', 'buildMuscle', 'gainStrength', 'improveEndurance', 'improveMobility', 'bodyRecomposition'] as $goal)
+                        <option value="{{ $goal }}">{{ str($goal)->headline() }}</option>
+                    @endforeach
+                </flux:select>
+                <flux:error name="workoutPlanGoal" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Notes') }}</flux:label>
+                <flux:textarea wire:model="workoutPlanNotes" rows="4" />
+                <flux:error name="workoutPlanNotes" />
+            </flux:field>
+
+            <div class="flex justify-end gap-3">
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="primary">{{ __('Create workout plan') }}</flux:button>
+            </div>
+        </form>
+    </flux:modal>
+
+    <flux:modal wire:model="showWorkoutDayEditor" :closable="false" class="w-full max-w-7xl p-0">
+        <x-dashboard.workout-day-editor
+            :blocks="$workoutDayBlocks"
+            :available-exercises="$this->availableExercises"
+            :selected-workout-block-id="$selectedWorkoutBlockId"
+        />
+    </flux:modal>
 </div>

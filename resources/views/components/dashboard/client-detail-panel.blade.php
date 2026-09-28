@@ -42,7 +42,17 @@
                 @break
 
             @case('training')
-                <x-dashboard.workout-plan-list :workout-plans="$client->workoutPlans" />
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <flux:heading size="sm">{{ __('Workout plans') }}</flux:heading>
+                            <flux:text variant="subtle">{{ __('Build and manage this client’s training plans.') }}</flux:text>
+                        </div>
+                        <flux:button size="sm" variant="primary" icon="plus" wire:click="openWorkoutPlanForm">{{ __('Workout plan') }}</flux:button>
+                    </div>
+
+                    <x-dashboard.workout-plan-list :workout-plans="$client->workoutPlans" editable />
+                </div>
                 @break
 
             @case('nutrition')

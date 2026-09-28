@@ -19,7 +19,6 @@ class AppStoreSubscriptionService
     public function synchronize(User $user, string $signedTransaction): Subscription
     {
         $transaction = $this->jwsVerifier->verify($signedTransaction);
-        $this->ensureTransactionBelongsToUser($transaction, $user);
 
         return DB::transaction(fn (): Subscription => $this->persist($user, $transaction));
     }
@@ -111,18 +110,6 @@ class AppStoreSubscriptionService
         $user->subscription()->lockForUpdate()->first()?->delete();
 
         return $user->subscription()->save(new Subscription($attributes));
-    }
-
-    /** @param array<string, mixed> $transaction */
-    private function ensureTransactionBelongsToUser(array $transaction, User $user): void
-    {
-        $appAccountToken = $transaction['appAccountToken'] ?? null;
-
-        if (! is_string($appAccountToken) || ! hash_equals(strtolower($user->id), strtolower($appAccountToken))) {
-            throw ValidationException::withMessages([
-                'signed_transaction' => ['This App Store transaction belongs to another account.'],
-            ]);
-        }
     }
 
     /** @param array<string, mixed> $transaction */

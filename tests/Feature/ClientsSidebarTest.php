@@ -2,7 +2,9 @@
 
 use App\Enums\CoachingEnrollmentStatus;
 use App\Models\CoachingEnrollment;
+use App\Models\PlannedExercise;
 use App\Models\User;
+use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use Livewire\Livewire;
@@ -68,4 +70,75 @@ test('it does not allow a coach to inspect a user who is not their client', func
         ->call('selectClient', $otherUser->id)
         ->assertSet('selectedClientId', null)
         ->assertSet('showClientDetail', false);
+});
+
+test('it creates a draft workout plan for a selected client', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    $this->actingAs($coach);
+
+    Livewire::test('dashboard.clients')
+        ->call('selectClient', $client->id)
+        ->call('selectTab', 'training')
+        ->call('openWorkoutPlanForm')
+        ->set('workoutPlanName', 'Autumn strength')
+        ->set('workoutPlanGoal', 'gainStrength')
+        ->set('workoutPlanNotes', 'Build a strong base.')
+        ->call('saveWorkoutPlan')
+        ->assertSet('showWorkoutPlanForm', false)
+        ->assertSee('Autumn strength');
+
+    $this->assertDatabaseHas('workout_plans', [
+        'user_id' => $client->id,
+        'name' => 'Autumn strength',
+        'goal' => 'gainStrength',
+        'notes' => 'Build a strong base.',
+        'status' => 'draft',
+    ]);
+});
+
+test('it saves a complete workout day for a selected client plan', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    $workoutPlan = WorkoutPlan::factory()->for($client)->create();
+    $this->actingAs($coach);
+
+    Livewire::test('dashboard.clients')
+        ->call('selectClient', $client->id)
+        ->call('openWorkoutDayEditor', $workoutPlan->id)
+        ->set('workoutDayTitle', 'Lower strength')
+        ->set('workoutDayNotes', 'Keep the tempo controlled.')
+        ->set('workoutDayFocus', 'lowerBody')
+        ->call('addExercise', 'barbellBackSquat')
+        ->set('workoutDayBlocks.0.exercises.0.sets', 4)
+        ->set('workoutDayBlocks.0.exercises.0.reps_min', 5)
+        ->set('workoutDayBlocks.0.exercises.0.reps_max', 5)
+        ->set('workoutDayBlocks.0.exercises.0.target_weight_kg', '100')
+        ->call('saveWorkoutDay')
+        ->assertSet('showWorkoutDayEditor', false);
+
+    $workoutDay = WorkoutDay::query()->where('title', 'Lower strength')->sole();
+    $workoutBlock = WorkoutBlock::query()->whereBelongsTo($workoutDay, 'workoutDay')->sole();
+    $plannedExercise = PlannedExercise::query()->whereBelongsTo($workoutDay, 'workoutDay')->sole();
+
+    expect($workoutDay->user_id)->toBe($client->id)
+        ->and($workoutDay->workout_plan_id)->toBe($workoutPlan->id)
+        ->and($workoutDay->focus)->toBe('lowerBody')
+        ->and($workoutBlock->order_index)->toBe(0)
+        ->and($plannedExercise->workout_block_id)->toBe($workoutBlock->id)
+        ->and($plannedExercise->exercise)->toBe('barbellBackSquat')
+        ->and($plannedExercise->sets)->toBe(4)
+        ->and($plannedExercise->target_weight_kg)->toBe('100.00');
 });
