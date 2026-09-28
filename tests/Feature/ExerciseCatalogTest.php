@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\ExerciseProfile;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 
 test('guests are redirected from the exercise catalog', function () {
@@ -18,7 +20,7 @@ test('authenticated users can explore the exercise catalog', function () {
         ->assertSee('Walking')
         ->assertSee('barbellBackSquat')
         ->assertSee('data-flux-icon')
-        ->assertSee('Dumbbells');
+        ->assertSee('dumbbells');
 });
 
 test('the exercise catalog shows the selected exercise in a detail panel', function () {
@@ -27,8 +29,40 @@ test('the exercise catalog shows the selected exercise in a detail panel', funct
         ->assertSet('selectedExerciseId', 'walking')
         ->assertSet('showExerciseDetail', true)
         ->assertSee('A natural, low-impact way to improve cardiovascular health and burn calories.')
+        ->assertSee('Details and metadata')
         ->assertSee('Instructions')
-        ->assertSee('Exercise details');
+        ->assertSee('Exercise details')
+        ->assertDontSee('Profile');
+});
+
+test('the exercise catalog shows the selected user exercise profile', function () {
+    $user = User::factory()->create();
+    $exerciseProfile = new ExerciseProfile;
+    $exerciseProfile->forceFill([
+        'id' => (string) Str::uuid(),
+        'user_id' => $user->id,
+        'exercise' => 'walking',
+        'level' => 'intermediate',
+        'typical_duration_minutes' => 45,
+        'typical_distance_km' => 4.5,
+    ])->save();
+
+    Livewire::test('exercises.catalog', ['user' => $user])
+        ->call('selectExercise', 'walking')
+        ->assertSee('Profile')
+        ->call('selectExerciseTab', 'profile')
+        ->assertSee('Intermediate')
+        ->assertSee('45 min')
+        ->assertSee('4.500 km');
+});
+
+test('the exercise catalog shows an empty profile state for the selected user', function () {
+    $user = User::factory()->create();
+
+    Livewire::test('exercises.catalog', ['user' => $user])
+        ->call('selectExercise', 'walking')
+        ->call('selectExerciseTab', 'profile')
+        ->assertSee('This user has not created a profile for this exercise yet.');
 });
 
 test('the exercise catalog filters exercises by category and muscle', function () {

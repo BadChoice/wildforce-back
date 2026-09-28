@@ -1,13 +1,19 @@
 <?php
 
+use App\Models\ExerciseProfile;
+use App\Models\User;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 new class extends Component
 {
+    #[Locked]
+    public ?string $userId = null;
+
     public string $search = '';
 
     public string $category = '';
@@ -18,11 +24,28 @@ new class extends Component
 
     public bool $showExerciseDetail = false;
 
+    public string $selectedExerciseTab = 'details';
+
     protected ExerciseCatalog $exerciseCatalog;
 
     public function boot(ExerciseCatalog $exerciseCatalog): void
     {
         $this->exerciseCatalog = $exerciseCatalog;
+    }
+
+    public function mount(?User $user = null): void
+    {
+        $this->userId = $user?->id;
+    }
+
+    #[Computed]
+    public function user(): ?User
+    {
+        if ($this->userId === null) {
+            return null;
+        }
+
+        return User::query()->find($this->userId);
     }
 
     /**
@@ -112,6 +135,18 @@ new class extends Component
         return null;
     }
 
+    #[Computed]
+    public function selectedExerciseProfile(): ?ExerciseProfile
+    {
+        if ($this->user === null || $this->selectedExerciseId === null) {
+            return null;
+        }
+
+        return $this->user->exerciseProfiles()
+            ->where('exercise', $this->selectedExerciseId)
+            ->first();
+    }
+
     /**
      * @param  array<string, mixed>  $exercise
      */
@@ -125,6 +160,7 @@ new class extends Component
         foreach (Arr::get($this->catalog, 'exercises', []) as $exercise) {
             if (is_array($exercise) && ($exercise['id'] ?? null) === $exerciseId) {
                 $this->selectedExerciseId = $exerciseId;
+                $this->selectedExerciseTab = 'details';
                 $this->showExerciseDetail = true;
 
                 return;
@@ -135,6 +171,21 @@ new class extends Component
     public function closeExerciseDetail(): void
     {
         $this->showExerciseDetail = false;
+    }
+
+    public function selectExerciseTab(string $tab): void
+    {
+        $tabs = ['details', 'instructions'];
+
+        if ($this->user !== null) {
+            $tabs[] = 'profile';
+        }
+
+        if (! in_array($tab, $tabs, true)) {
+            return;
+        }
+
+        $this->selectedExerciseTab = $tab;
     }
 
     public function resetFilters(): void
@@ -251,7 +302,13 @@ new class extends Component
 
     @if ($this->selectedExercise)
         <flux:modal wire:model="showExerciseDetail" flyout position="right" :closable="false" class="w-full max-w-none p-0 sm:w-[34rem]">
-            <x-exercises.exercise-detail-panel :exercise="$this->selectedExercise" :image-url="$this->imageUrl($this->selectedExercise)" />
+            <x-exercises.exercise-detail-panel
+                :exercise="$this->selectedExercise"
+                :image-url="$this->imageUrl($this->selectedExercise)"
+                :active-tab="$selectedExerciseTab"
+                :user="$this->user"
+                :exercise-profile="$this->selectedExerciseProfile"
+            />
         </flux:modal>
     @endif
 </div>

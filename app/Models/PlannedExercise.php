@@ -6,6 +6,8 @@ use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use Database\Factories\PlannedExerciseFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,7 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PlannedExercise extends Model implements Syncable
 {
-    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
+    /** @use HasFactory<PlannedExerciseFactory> */
+    use HasFactory, SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
 
     protected function casts(): array
     {

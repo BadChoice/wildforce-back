@@ -29,6 +29,18 @@ return [
         'private_key' => env('APPLE_PRIVATE_KEY'),
     ],
 
+    'app_store' => [
+        'bundle_id' => env('APP_STORE_BUNDLE_ID', 'io.codepassion.doublegym'),
+        'root_certificate_fingerprints' => [
+            // Apple Root CA - G3, published by Apple at apple.com/certificateauthority.
+            '63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179',
+        ],
+        'product_plans' => [
+            'io.codepassion.wildforce.subscription.standard' => 'member_monthly',
+            'io.codepassion.wildforce.subscription.year' => 'member_yearly',
+        ],
+    ],
+
     'feedback' => [
         'recipient' => env('FEEDBACK_MAIL_TO', 'hello@codepassion.io'),
     ],
