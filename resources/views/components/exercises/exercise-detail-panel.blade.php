@@ -25,10 +25,21 @@
                 <x-exercises.reference-detail-item :label="__('Difficulty')" type="trainingLevels" :ids="[$exercise['difficulty']]" />
                 <x-exercises.reference-detail-item :label="__('Tracking')" type="trackingModes" :ids="[$exercise['trackingMode']]" />
                 <x-dashboard.detail-item :label="__('MET value')" :value="number_format($exercise['metValue'], 1)" />
-                <x-exercises.reference-detail-item :label="__('Primary muscles')" type="muscleGroups" :ids="$exercise['primaryMuscles']" class="sm:col-span-2" />
+
+                <x-ui.reference-box :label="__('Primary muscles')">
+                    @foreach($exercise['primaryMuscles'] as $muscle)
+                        <x-exercises.muscle-icon :muscle="$muscle" />
+                    @endforeach
+                </x-ui.reference-box>
+
                 @if ($exercise['secondaryMuscles'] !== [])
-                    <x-exercises.reference-detail-item :label="__('Secondary muscles')" type="muscleGroups" :ids="$exercise['secondaryMuscles']" class="sm:col-span-2" />
+                <x-ui.reference-box :label="__('Secondary muscles')">
+                    @foreach($exercise['secondaryMuscles'] as $muscle)
+                        <x-exercises.muscle-icon :muscle="$muscle" />
+                    @endforeach
+                </x-ui.reference-box>
                 @endif
+
             </dl>
         </section>
 
@@ -55,7 +66,14 @@
         <section class="space-y-3">
             <flux:heading size="sm">{{ __('Programming metadata') }}</flux:heading>
             <dl class="grid gap-3 sm:grid-cols-2">
-                <x-exercises.reference-detail-item :label="__('Equipment')" type="equipment" :ids="$exercise['requiredEquipment']" :empty-label="__('None')" />
+                <x-ui.reference-box :label="__('Equipment')">
+                    @forelse($exercise['requiredEquipment'] as $equipment)
+                        <x-exercises.equipment-icon :equipment="$equipment" />
+                    @empty
+                        {{ __('None') }}
+                    @endforelse
+                </x-ui.reference-box>
+
                 <x-exercises.reference-detail-item :label="__('Movement patterns')" type="movementPatterns" :ids="$exercise['movementPatterns']" />
                 <x-exercises.reference-detail-item :label="__('Goals')" type="goals" :ids="$exercise['compatibleGoals']" class="sm:col-span-2" />
                 <x-exercises.reference-detail-item :label="__('Target metrics')" type="targetMetrics" :ids="$exercise['targetMetrics']" class="sm:col-span-2" />

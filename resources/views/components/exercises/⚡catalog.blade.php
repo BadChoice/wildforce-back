@@ -185,13 +185,13 @@ new class extends Component
         </div>
     </div>
 
-    <div class="overflow-hidden rounded-xl border border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
+    <div class="overflow-hidden rounded-xl border p-2 border-neutral-200 bg-white dark:border-neutral-700 dark:bg-neutral-900">
         <flux:table>
             <flux:table.columns>
                 <flux:table.column>{{ __('Exercise') }}</flux:table.column>
                 <flux:table.column>{{ __('Category') }}</flux:table.column>
+                <flux:table.column>{{ __('Muscles') }}</flux:table.column>
                 <flux:table.column>{{ __('Equipment') }}</flux:table.column>
-                <flux:table.column>{{ __('Primary muscles') }}</flux:table.column>
                 <flux:table.column>{{ __('Tracking') }}</flux:table.column>
                 <flux:table.column>{{ __('MET') }}</flux:table.column>
             </flux:table.columns>
@@ -199,14 +199,14 @@ new class extends Component
             <flux:table.rows>
                 @forelse ($this->exercises as $exercise)
                     <flux:table.row :key="$exercise['id']">
-                        <flux:table.cell variant="strong">
+                        <flux:table.cell variant="strong" wire:click="selectExercise('{{ $exercise['id'] }}')">
                             <div class="flex items-center gap-3">
-                                <img src="{{ $this->imageUrl($exercise) }}" alt="" class="size-12 rounded-lg bg-zinc-100 object-cover dark:bg-zinc-800" loading="lazy" />
-                                <div class="flex min-w-0 flex-col gap-1">
-                                    <flux:button variant="ghost" size="sm" wire:click="selectExercise('{{ $exercise['id'] }}')" class="-ml-2 w-fit px-2 font-semibold">
+                                <img src="{{ $this->imageUrl($exercise) }}" alt="" class="h-14 w-10 rounded-lg bg-zinc-100 object-cover dark:bg-zinc-800" loading="lazy" />
+                                <div class="flex min-w-0 flex-col gap-0 items-start">
+                                    <flux:button variant="ghost" size="sm"  class="-ml-2 w-fit px-2 font-semibold">
                                         {{ $exercise['name'] }}
                                     </flux:button>
-                                    <span class="font-mono text-xs font-normal text-zinc-500 dark:text-zinc-400">{{ $exercise['id'] }}</span>
+                                    <span class="font-mono text-xs ml-1 font-normal text-zinc-500 dark:text-zinc-400">{{ $exercise['id'] }}</span>
                                 </div>
                             </div>
                         </flux:table.cell>
@@ -214,22 +214,28 @@ new class extends Component
                             <x-exercises.reference-icon :id="$exercise['category']" type="exerciseCategories" />
                         </flux:table.cell>
                         <flux:table.cell>
+                            <div class="flex flex-wrap gap-x-2 gap-y-1 mt-1">
+                                @foreach ($exercise['primaryMuscles'] as $muscle)
+                                    <x-exercises.muscle-icon :muscle="$muscle" />
+                                @endforeach
+                                @if (count($exercise['secondaryMuscles']))
+                                    <flux:separator vertical />
+                                    @foreach ($exercise['secondaryMuscles'] as $muscle)
+                                        <x-exercises.muscle-icon :muscle="$muscle" />
+                                    @endforeach
+                                @endif
+                            </div>
+                        </flux:table.cell>
+                        <flux:table.cell>
                             @if ($exercise['requiredEquipment'] === [])
                                 <span class="text-zinc-500 dark:text-zinc-400">{{ __('None') }}</span>
                             @else
                                 <div class="flex flex-wrap gap-x-3 gap-y-1">
                                     @foreach ($exercise['requiredEquipment'] as $equipment)
-                                        <x-exercises.reference-icon :id="$equipment" type="equipment" />
+                                        <x-exercises.equipment-icon :equipment="$equipment" />
                                     @endforeach
                                 </div>
                             @endif
-                        </flux:table.cell>
-                        <flux:table.cell>
-                            <div class="flex flex-wrap gap-x-3 gap-y-1">
-                                @foreach ($exercise['primaryMuscles'] as $muscle)
-                                    <x-exercises.reference-icon :id="$muscle" type="muscleGroups" />
-                                @endforeach
-                            </div>
                         </flux:table.cell>
                         <flux:table.cell>{{ $exercise['trackingMode'] }}</flux:table.cell>
                         <flux:table.cell>{{ number_format($exercise['metValue'], 1) }}</flux:table.cell>
