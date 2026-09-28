@@ -18,10 +18,10 @@ class AppleIdentityTokenVerifier
         [$header, $payload, $signature] = $parts;
         $headerData = $this->decodeJson($header);
         $claims = $this->decodeJson($payload);
-        if (($headerData['alg'] ?? null) !== 'ES256' || ! is_string($headerData['kid'] ?? null)) {
+        if (($headerData['alg'] ?? null) !== 'RS256' || ! is_string($headerData['kid'] ?? null)) {
             $this->invalid();
         }
-        $verified = openssl_verify($header.'.'.$payload, $this->joseToDer($this->decode($signature)), $this->applePublicKeys->publicKeyFor($headerData['kid']), OPENSSL_ALGO_SHA256);
+        $verified = openssl_verify($header.'.'.$payload, $this->decode($signature), $this->applePublicKeys->publicKeyFor($headerData['kid']), OPENSSL_ALGO_SHA256);
         if ($verified !== 1 || ($claims['iss'] ?? null) !== 'https://appleid.apple.com' || ($claims['aud'] ?? null) !== $this->appleClientSecret->clientId() || ! is_numeric($claims['exp'] ?? null) || (int) $claims['exp'] <= now()->getTimestamp()) {
             $this->invalid();
         }
@@ -49,20 +49,6 @@ class AppleIdentityTokenVerifier
         }
 
         return $decoded;
-    }
-
-    private function joseToDer(string $signature): string
-    {
-        if (strlen($signature) !== 64) {
-            $this->invalid();
-        }
-        $r = ltrim(substr($signature, 0, 32), "\x00");
-        $s = ltrim(substr($signature, 32), "\x00");
-        $r = (ord($r[0] ?? "\x00") >= 128 ? "\x00" : '').($r === '' ? "\x00" : $r);
-        $s = (ord($s[0] ?? "\x00") >= 128 ? "\x00" : '').($s === '' ? "\x00" : $s);
-        $body = "\x02".chr(strlen($r)).$r."\x02".chr(strlen($s)).$s;
-
-        return "\x30".chr(strlen($body)).$body;
     }
 
     private function invalid(): never

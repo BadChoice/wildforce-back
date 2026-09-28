@@ -9,8 +9,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 test('it creates an Apple user after validating Apple’s signed identity token', function () {
-    [$privateKey, $jwk] = appleTestKeyMaterial();
-    $identityToken = appleTestIdentityToken($privateKey, [
+    $clientPrivateKey = appleTestClientPrivateKey();
+    [$identityPrivateKey, $jwk] = appleTestIdentityKeyMaterial();
+    $identityToken = appleTestIdentityToken($identityPrivateKey, [
         'iss' => 'https://appleid.apple.com',
         'aud' => 'com.wildforce.app',
         'exp' => now()->addMinute()->timestamp,
@@ -23,7 +24,7 @@ test('it creates an Apple user after validating Apple’s signed identity token'
         'client_id' => 'com.wildforce.app',
         'team_id' => 'TEAM123456',
         'key_id' => 'KEY1234567',
-        'private_key' => $privateKey,
+        'private_key' => $clientPrivateKey,
     ]);
     Cache::forget('apple-sign-in-public-keys');
     Http::preventStrayRequests();
@@ -92,21 +93,35 @@ test('it removes Apple when the user has another linked identity', function () {
 /**
  * @return array{string, array<string, string>}
  */
-function appleTestKeyMaterial(): array
+function appleTestClientPrivateKey(): string
 {
     $key = openssl_pkey_new([
         'private_key_type' => OPENSSL_KEYTYPE_EC,
         'curve_name' => 'prime256v1',
     ]);
     openssl_pkey_export($key, $privateKey);
+
+    return $privateKey;
+}
+
+/**
+ * @return array{string, array<string, string>}
+ */
+function appleTestIdentityKeyMaterial(): array
+{
+    $key = openssl_pkey_new([
+        'private_key_type' => OPENSSL_KEYTYPE_RSA,
+        'private_key_bits' => 2048,
+    ]);
+    openssl_pkey_export($key, $privateKey);
     $details = openssl_pkey_get_details($key);
 
     return [$privateKey, [
-        'kty' => 'EC',
-        'crv' => 'P-256',
+        'kty' => 'RSA',
+        'alg' => 'RS256',
         'kid' => 'apple-test-key',
-        'x' => appleTestBase64UrlEncode($details['ec']['x']),
-        'y' => appleTestBase64UrlEncode($details['ec']['y']),
+        'n' => appleTestBase64UrlEncode($details['rsa']['n']),
+        'e' => appleTestBase64UrlEncode($details['rsa']['e']),
     ]];
 }
 
@@ -115,33 +130,14 @@ function appleTestKeyMaterial(): array
  */
 function appleTestIdentityToken(string $privateKey, array $claims): string
 {
-    $header = appleTestBase64UrlEncode(json_encode(['alg' => 'ES256', 'kid' => 'apple-test-key'], JSON_THROW_ON_ERROR));
+    $header = appleTestBase64UrlEncode(json_encode(['alg' => 'RS256', 'kid' => 'apple-test-key'], JSON_THROW_ON_ERROR));
     $payload = appleTestBase64UrlEncode(json_encode($claims, JSON_THROW_ON_ERROR));
     openssl_sign($header.'.'.$payload, $signature, $privateKey, OPENSSL_ALGO_SHA256);
 
-    return $header.'.'.$payload.'.'.appleTestBase64UrlEncode(appleTestDerSignatureToJose($signature));
+    return $header.'.'.$payload.'.'.appleTestBase64UrlEncode($signature);
 }
 
 function appleTestBase64UrlEncode(string $value): string
 {
     return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
-}
-
-function appleTestDerSignatureToJose(string $signature): string
-{
-    $offset = 2;
-
-    if (ord($signature[1]) > 127) {
-        $offset += ord($signature[1]) & 0x7F;
-    }
-
-    $offset++;
-    $rLength = ord($signature[$offset++]);
-    $r = substr($signature, $offset, $rLength);
-    $offset += $rLength + 1;
-    $sLength = ord($signature[$offset++]);
-    $s = substr($signature, $offset, $sLength);
-
-    return str_pad(ltrim($r, "\x00"), 32, "\x00", STR_PAD_LEFT)
-        .str_pad(ltrim($s, "\x00"), 32, "\x00", STR_PAD_LEFT);
 }
