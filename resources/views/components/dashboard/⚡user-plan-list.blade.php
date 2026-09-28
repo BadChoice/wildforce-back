@@ -4,6 +4,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -14,6 +15,11 @@ new class extends Component
     public string $selectedTab = 'training';
 
     public bool $showUserDetail = false;
+
+    public function mount(): void
+    {
+        Gate::authorize('viewDashboard');
+    }
 
     /**
      * @return Collection<int, User>

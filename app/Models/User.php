@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Concerns\SyncsWithUser;
 use App\Contracts\Syncable;
+use App\Enums\CoachingEnrollmentStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -28,6 +29,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string $id
  * @property string $name
  * @property string $email
+ * @property bool $is_admin
  * @property Carbon|null $email_verified_at
  * @property string|null $password
  * @property string|null $two_factor_secret
@@ -57,6 +59,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
     {
         return [
             'email_verified_at' => 'datetime',
+            'is_admin' => 'boolean',
             'birth_date' => 'date',
             'last_completed_workout_at' => 'datetime',
             'height_cm' => 'integer',
@@ -191,13 +194,35 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
         return $this->subscription()->first()?->isActive() ?? false;
     }
 
-    public function clients(): BelongsToMany
+    public function isAdmin(): bool
     {
-        return $this->belongsToMany(self::class, 'coaching_enrollments', 'coach_user_id', 'client_user_id')
+        return $this->is_admin ?? false;
+    }
+
+    public function canViewUserData(string $userId): bool
+    {
+        if ($this->isAdmin() || $this->getKey() === $userId) {
+            return true;
+        }
+
+        return $this->clients(CoachingEnrollmentStatus::Active)
+            ->whereKey($userId)
+            ->exists();
+    }
+
+    public function clients(?CoachingEnrollmentStatus $status = null): BelongsToMany
+    {
+        $clients = $this->belongsToMany(self::class, 'coaching_enrollments', 'coach_user_id', 'client_user_id')
             ->using(CoachingEnrollment::class)
             ->as('enrollment')
             ->withPivot(['id', 'status', 'starts_at', 'ends_at'])
             ->withTimestamps();
+
+        if ($status !== null) {
+            $clients->wherePivot('status', $status->value);
+        }
+
+        return $clients;
     }
 
     public function coaches(): BelongsToMany

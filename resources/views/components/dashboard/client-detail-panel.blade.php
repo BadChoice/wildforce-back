@@ -1,0 +1,57 @@
+@props(['client', 'activeTab'])
+
+<div class="max-h-[80vh] overflow-y-auto">
+    <header class="border-zinc-200 p-5 dark:border-zinc-700">
+        <div class="flex items-start gap-3">
+            <x-user-avatar :user="$client" size="lg" />
+            <div class="min-w-0 flex-1">
+                <flux:heading size="lg" class="truncate">{{ $client->name }}</flux:heading>
+                <flux:text variant="subtle" class="truncate">{{ $client->email }}</flux:text>
+            </div>
+            <flux:button variant="ghost" icon="x-mark" size="sm" wire:click="closeClientDetail" aria-label="{{ __('Close client details') }}" />
+        </div>
+
+        <nav aria-label="{{ __('Client details') }}" role="tablist" class="mt-5 flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
+            @foreach (['info' => __('Info'), 'training' => __('Training'), 'nutrition' => __('Nutrition'), 'body-metrics' => __('Body metrics')] as $tab => $label)
+                <button
+                    type="button"
+                    role="tab"
+                    wire:click="selectTab('{{ $tab }}')"
+                    aria-selected="{{ $activeTab === $tab ? 'true' : 'false' }}"
+                    class="shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition {{ $activeTab === $tab ? 'border-zinc-950 text-zinc-950 dark:border-white dark:text-white' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100' }}"
+                >
+                    {{ $label }}
+                </button>
+            @endforeach
+        </nav>
+    </header>
+
+    <div class="p-5">
+        @switch($activeTab)
+            @case('info')
+                <dl class="grid gap-3 sm:grid-cols-2">
+                    <x-dashboard.detail-item :label="__('Name')" :value="$client->name" />
+                    <x-dashboard.detail-item :label="__('Email')" :value="$client->email" />
+                    <x-dashboard.detail-item :label="__('Height')" :value="$client->height_cm ? __(':height cm', ['height' => $client->height_cm]) : __('Not set')" />
+                    <x-dashboard.detail-item :label="__('Weight')" :value="$client->weight_kg ? __(':weight kg', ['weight' => $client->weight_kg]) : __('Not set')" />
+                    <x-dashboard.detail-item :label="__('Date of birth')" :value="$client->birth_date?->format('d/m/Y') ?? __('Not set')" />
+                    <x-dashboard.detail-item :label="__('Gender')" :value="$client->gender ? str($client->gender)->headline() : __('Not set')" />
+                    <x-dashboard.detail-item :label="__('Language')" :value="$client->language ? str($client->language)->upper() : __('Not set')" />
+                    <x-dashboard.detail-item :label="__('Current streak')" :value="trans_choice(':count day|:count days', $client->current_streak, ['count' => $client->current_streak])" />
+                </dl>
+                @break
+
+            @case('training')
+                <x-dashboard.workout-plan-list :workout-plans="$client->workoutPlans" />
+                @break
+
+            @case('nutrition')
+                <x-dashboard.placeholder-tab :title="__('Nutrition')" :description="__('Nutrition details will be available here soon.')" />
+                @break
+
+            @case('body-metrics')
+                <x-dashboard.placeholder-tab :title="__('Body metrics')" :description="__('Body metrics will be available here soon.')" />
+                @break
+        @endswitch
+    </div>
+</div>

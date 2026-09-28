@@ -1,7 +1,7 @@
 @props(['user', 'activeTab'])
 
 <div class="flex min-h-dvh flex-col bg-white dark:bg-zinc-900">
-    <header class="border-b border-zinc-200 p-5 dark:border-zinc-700">
+    <header class="border-zinc-200 p-5 dark:border-zinc-700">
         <div class="flex items-start gap-3">
             <x-user-avatar :user="$user" size="lg" />
             <div class="min-w-0 flex-1">

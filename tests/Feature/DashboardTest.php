@@ -14,15 +14,22 @@ test('guests are redirected to the login page', function () {
     $response->assertRedirect(route('login'));
 });
 
-test('authenticated users can visit the dashboard', function () {
+test('non-administrators are redirected from the dashboard', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
-    $response = $this->get(route('dashboard'));
-    $response->assertOk();
+    $this->get(route('dashboard'))
+        ->assertRedirect(route('workout-plans.index'));
+});
+
+test('administrators can visit the dashboard', function () {
+    $this->actingAs(User::factory()->admin()->create());
+
+    $this->get(route('dashboard'))->assertOk();
 });
 
 test('dashboard shows each user plan counts', function () {
+    $admin = User::factory()->admin()->create();
     $user = User::factory()->create([
         'name' => 'Alex Morgan',
         'email' => 'alex@example.com',
@@ -56,7 +63,7 @@ test('dashboard shows each user plan counts', function () {
         'starts_on' => now(),
     ])->save();
 
-    $this->actingAs($user);
+    $this->actingAs($admin);
 
     $this->get(route('dashboard'))
         ->assertSee('Users and plans')
@@ -70,6 +77,7 @@ test('dashboard shows each user plan counts', function () {
 });
 
 test('dashboard displays the selected user training details', function () {
+    $admin = User::factory()->admin()->create();
     $user = User::factory()->create([
         'name' => 'Alex Morgan',
         'email' => 'alex@example.com',
@@ -109,7 +117,7 @@ test('dashboard displays the selected user training details', function () {
         'focus' => 'lowerBody',
     ])->save();
 
-    $this->actingAs($user);
+    $this->actingAs($admin);
 
     Livewire::test('dashboard.user-plan-list')
         ->call('selectUser', $user->id)
@@ -126,12 +134,13 @@ test('dashboard displays the selected user training details', function () {
 });
 
 test('dashboard displays subscription information for a selected user', function () {
+    $admin = User::factory()->admin()->create();
     $user = User::factory()->create([
         'name' => 'Demo User',
         'email' => 'demo@example.com',
     ]);
 
-    $this->actingAs($user);
+    $this->actingAs($admin);
 
     Livewire::test('dashboard.user-plan-list')
         ->assertSee('Trial')

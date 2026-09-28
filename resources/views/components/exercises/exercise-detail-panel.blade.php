@@ -1,9 +1,8 @@
 @props(['exercise', 'imageUrl', 'activeTab' => 'details', 'user' => null, 'exerciseProfile' => null])
 
 <div class="flex min-h-dvh flex-col bg-white dark:bg-zinc-900">
-    <header class="border-b border-zinc-200 p-5 dark:border-zinc-700">
+    <header class="border-zinc-200 p-5 dark:border-zinc-700">
         <div class="flex items-start gap-3">
-            <img src="{{ $imageUrl }}" alt="" class="size-16 rounded-lg object-cover" />
             <div class="min-w-0 flex-1">
                 <flux:heading size="lg" class="truncate">{{ $exercise['name'] }}</flux:heading>
                 <flux:text variant="subtle" class="font-mono text-xs">{{ $exercise['id'] }}</flux:text>
