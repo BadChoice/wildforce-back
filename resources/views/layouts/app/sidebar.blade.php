@@ -15,6 +15,10 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="dumbbell" :href="route('workout-plans.index')" :current="request()->routeIs('workout-plans.*')" wire:navigate>
+                        {{ __('Workout plans') }}
+                    </flux:sidebar.item>
+
                     <flux:sidebar.item icon="rectangle-stack" :href="route('exercises.index')" :current="request()->routeIs('exercises.*')" wire:navigate>
                         {{ __('Exercises') }}
                     </flux:sidebar.item>
