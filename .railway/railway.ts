@@ -1,10 +1,12 @@
-import { defineRailway, github, postgres, preserve, project, service, volume } from "railway/iac";
+import { defineRailway, github, postgres, preserve, project, service, volume, bucket } from "railway/iac";
 
 export default defineRailway(() => {
   const Postgres = postgres("Postgres", { region: "europe-west4-drams3a" });
   Postgres.networking = { privateNetworkEndpoint: "postgres" };
   const postgresVolume = volume("postgres-volume", { alerts: { usage: { "100": {}, "80": {}, "95": {} } }, allowOnlineResize: true, region: "europe-west4-drams3a", sizeMB: 500 });
-  const wildforceBack = service("wildforce-back", {
+  const userStorage = bucket("wildforce-user-storage", { region: "ams", });
+
+    const wildforceBack = service("wildforce-back", {
     source: github("BadChoice/wildforce-back", { checkSuites: false }),
     replicas: { "europe-west4-drams3a": 1 },
     healthcheck: "/up",
@@ -19,38 +21,60 @@ export default defineRailway(() => {
       APP_MAINTENANCE_DRIVER: preserve(),
       APP_NAME: preserve(),
       APP_URL: preserve(),
+
       BCRYPT_ROUNDS: preserve(),
       BROADCAST_CONNECTION: preserve(),
       CACHE_STORE: preserve(),
+
       DB_CONNECTION: "pgsql",
       DB_URL: Postgres.env.DATABASE_URL,
-      FILESYSTEM_DISK: preserve(),
+
       LOG_CHANNEL: "stderr",
       LOG_DEPRECATIONS_CHANNEL: preserve(),
       LOG_LEVEL: preserve(),
       LOG_STACK: preserve(),
-      MAIL_FROM_ADDRESS: "hello@wildforce.app",
-      MAIL_FROM_NAME: "Wildforce",
-      MAIL_MAILER: "resend",
+
       MEMCACHED_HOST: preserve(),
       PORT: "8080",
       QUEUE_CONNECTION: "sync",
       RAILWAY_DOCKERFILE_PATH: "ci/Dockerfile",
-      APPLE_CLIENT_ID: "io.codepassion.doublegym",
-      APPLE_TEAM_ID: "SV3ZXK4PZF",
-      APPLE_KEY_ID:"AC3X8Q3LP3",
-      APPLE_PRIVATE_KEY: preserve(),
       REDIS_CLIENT: preserve(),
       REDIS_HOST: preserve(),
       REDIS_PASSWORD: preserve(),
       REDIS_PORT: preserve(),
-      RESEND_API_KEY: preserve(),
       SESSION_DOMAIN: preserve(),
       SESSION_DRIVER: preserve(),
       SESSION_ENCRYPT: preserve(),
       SESSION_LIFETIME: preserve(),
       SESSION_PATH: preserve(),
       SESSION_SECURE_COOKIE: "true",
+
+      // -------------------------
+      // Mail
+      // -------------------------
+      MAIL_FROM_ADDRESS: "hello@wildforce.app",
+      MAIL_FROM_NAME: "Wildforce",
+      MAIL_MAILER: "resend",
+      RESEND_API_KEY: preserve(),
+
+      // -------------------------
+      // Storage
+      // -------------------------
+      FILESYSTEM_DISK: "s3",
+      AWS_ACCESS_KEY_ID: "${{user-storage.ACCESS_KEY_ID}}",
+      AWS_SECRET_ACCESS_KEY: "${{user-storage.SECRET_ACCESS_KEY}}",
+      AWS_DEFAULT_REGION: "${{user-storage.REGION}}",
+      AWS_BUCKET: "${{user-storage.BUCKET}}",
+      AWS_ENDPOINT: "${{user-storage.ENDPOINT}}",
+      AWS_USE_PATH_STYLE_ENDPOINT: "false",
+
+      // -------------------------
+      // Apple
+      // -------------------------
+      APPLE_CLIENT_ID: "io.codepassion.doublegym",
+      APPLE_TEAM_ID: "SV3ZXK4PZF",
+      APPLE_KEY_ID:"AC3X8Q3LP3",
+      APPLE_PRIVATE_KEY: preserve(),
     },
   });
 
