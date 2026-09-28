@@ -23,7 +23,7 @@ return [
     ],
 
     'apple' => [
-        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_id' => env('APPLE_CLIENT_ID', 'io.codepassion.doublegym'),
         'team_id' => env('APPLE_TEAM_ID', 'SV3ZXK4PZF'), // codepassion
         'key_id' => env('APPLE_KEY_ID'),
         'private_key' => env('APPLE_PRIVATE_KEY'),
