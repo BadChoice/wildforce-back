@@ -7,6 +7,8 @@ use JsonException;
 
 class ExerciseCatalog
 {
+    private mixed $catalog = null;
+
     /**
      * @return array<string, mixed>
      *
@@ -14,6 +16,10 @@ class ExerciseCatalog
      */
     public function all(): array
     {
+        if ($this->catalog != null) {
+            return $this->catalog;
+        }
+
         $contents = file_get_contents(resource_path('exercise-catalog/v1/catalog.json'));
 
         if ($contents === false) {
@@ -21,22 +27,16 @@ class ExerciseCatalog
         }
 
         /** @var array<string, mixed> $catalog */
-        $catalog = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
+        $this->catalog = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
 
-        return $catalog;
+        return $this->catalog;
     }
 
     /**
      * @param  array<string, mixed>  $exercise
      */
-    public function imageUrl(array $exercise, string $gender = 'female'): string
+    public function imageUrl(string $exercise, string $gender = 'female'): string
     {
-        $key = str_replace(
-            '{gender}',
-            $gender,
-            (string) Arr::get($exercise, 'assets.verticalImageKey'),
-        );
-
-        return rtrim((string) config('exercise_catalog.image_base_url'), '/').'/vertical/'.$key;
+        return rtrim((string) config('exercise_catalog.image_base_url'), '/').'/vertical/'.$exercise.'_'.$gender.'.jpeg';
     }
 }

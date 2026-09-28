@@ -117,7 +117,7 @@ new class extends Component
      */
     public function imageUrl(array $exercise): string
     {
-        return $this->exerciseCatalog->imageUrl($exercise);
+        return $this->exerciseCatalog->imageUrl($exercise['id']);
     }
 
     public function selectExercise(string $exerciseId): void

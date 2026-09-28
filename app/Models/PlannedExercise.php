@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Services\ExerciseCatalog\ExerciseCatalog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -37,5 +38,10 @@ class PlannedExercise extends Model implements Syncable
     protected static function syncOwnerRelationship(): string
     {
         return 'workoutDay.user';
+    }
+
+    public function imageUrl(): string
+    {
+        return app(ExerciseCatalog::class)->imageUrl($this->exercise);
     }
 }

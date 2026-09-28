@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Contracts\AppleAuthentication;
 use App\Services\Apple\Auth\AppleAuthenticator;
+use App\Services\ExerciseCatalog\ExerciseCatalog;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->app->singleton(ExerciseCatalog::class, function () {
+            return new ExerciseCatalog();
+        });
     }
 
     /**
