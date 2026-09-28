@@ -79,6 +79,6 @@ export default defineRailway(() => {
   });
 
   return project("authentic-harmony", {
-    resources: [wildforceBack, Postgres, postgresVolume],
+    resources: [wildforceBack, Postgres, postgresVolume, userStorage],
   });
 });
