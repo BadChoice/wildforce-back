@@ -10,6 +10,8 @@ final readonly class ProgressionAnalysis
      * @param  list<string>  $overworkedMuscleGroups
      * @param  list<string>  $staleExercises
      * @param  array<string, int>  $recentFeedbackBreakdown
+     * @param  list<array{number: int, phase: ?string, completionRate: float, completedWorkouts: int}>  $recentMesocycles
+     * @param  list<array{title: string, description: string, tone: string}>  $recommendations
      */
     public function __construct(
         public int $mesocycleNumber,
@@ -22,5 +24,7 @@ final readonly class ProgressionAnalysis
         public int $recentCompletedWorkouts,
         public string $readinessLevel,
         public array $recentFeedbackBreakdown,
+        public array $recentMesocycles,
+        public array $recommendations,
     ) {}
 }

@@ -7,6 +7,9 @@ use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Workouts\Progression\ProgressionAnalysis;
+use App\Services\Workouts\Progression\TrainingHistory;
+use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
@@ -24,6 +27,8 @@ new class extends Component
     public bool $showClientDetail = false;
 
     public bool $showWorkoutPlanForm = false;
+
+    public bool $showProgressionAnalysis = false;
 
     public string $workoutPlanName = '';
 
@@ -128,6 +133,7 @@ new class extends Component
 
         $this->selectedClientId = $clientId;
         $this->selectedTab = 'info';
+        $this->showProgressionAnalysis = false;
         $this->showClientDetail = true;
     }
 
@@ -143,6 +149,36 @@ new class extends Component
     public function closeClientDetail(): void
     {
         $this->showClientDetail = false;
+        $this->showProgressionAnalysis = false;
+    }
+
+    public function openProgressionAnalysis(): void
+    {
+        if ($this->selectedClient === null) {
+            return;
+        }
+
+        $this->showProgressionAnalysis = true;
+    }
+
+    public function closeProgressionAnalysis(): void
+    {
+        $this->showProgressionAnalysis = false;
+    }
+
+    #[Computed]
+    public function progressionAnalysis(): ?ProgressionAnalysis
+    {
+        $client = $this->selectedClient;
+
+        if ($client === null) {
+            return null;
+        }
+
+        return new WorkoutProgressionAnalyzer(
+            new TrainingHistory($client),
+            $this->exerciseCatalog,
+        )->analyze();
     }
 
     public function openWorkoutPlanForm(): void
@@ -484,7 +520,12 @@ new class extends Component
 
     @if ($this->selectedClient)
         <flux:modal wire:model="showClientDetail" :closable="false" class="w-full max-w-3xl">
-            <x-dashboard.client-detail-panel :client="$this->selectedClient" :active-tab="$selectedTab" />
+            <x-dashboard.client-detail-panel
+                :client="$this->selectedClient"
+                :active-tab="$selectedTab"
+                :progression-analysis="$this->showProgressionAnalysis ? $this->progressionAnalysis : null"
+                :show-progression-analysis="$showProgressionAnalysis"
+            />
         </flux:modal>
     @endif
 

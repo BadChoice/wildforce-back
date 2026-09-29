@@ -1,6 +1,10 @@
 <?php
 
 use App\Models\User;
+use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Workouts\Progression\ProgressionAnalysis;
+use App\Services\Workouts\Progression\TrainingHistory;
+use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,6 +19,15 @@ new class extends Component
     public string $selectedTab = 'training';
 
     public bool $showUserDetail = false;
+
+    public bool $showProgressionAnalysis = false;
+
+    protected ExerciseCatalog $exerciseCatalog;
+
+    public function boot(ExerciseCatalog $exerciseCatalog): void
+    {
+        $this->exerciseCatalog = $exerciseCatalog;
+    }
 
     public function mount(): void
     {
@@ -68,6 +81,7 @@ new class extends Component
 
         $this->selectedUserId = $userId;
         $this->selectedTab = 'training';
+        $this->showProgressionAnalysis = false;
         $this->showUserDetail = true;
     }
 
@@ -83,6 +97,36 @@ new class extends Component
     public function closeUserDetail(): void
     {
         $this->showUserDetail = false;
+        $this->showProgressionAnalysis = false;
+    }
+
+    public function openProgressionAnalysis(): void
+    {
+        if ($this->selectedUser === null) {
+            return;
+        }
+
+        $this->showProgressionAnalysis = true;
+    }
+
+    public function closeProgressionAnalysis(): void
+    {
+        $this->showProgressionAnalysis = false;
+    }
+
+    #[Computed]
+    public function progressionAnalysis(): ?ProgressionAnalysis
+    {
+        $user = $this->selectedUser;
+
+        if ($user === null) {
+            return null;
+        }
+
+        return new WorkoutProgressionAnalyzer(
+            new TrainingHistory($user),
+            $this->exerciseCatalog,
+        )->analyze();
     }
 };
 ?>
@@ -144,7 +188,12 @@ new class extends Component
 
     @if ($this->selectedUser)
         <flux:modal wire:model="showUserDetail" flyout position="right" :closable="false" class="w-full max-w-none p-0 sm:w-[34rem]">
-            <x-dashboard.user-detail-panel :user="$this->selectedUser" :active-tab="$selectedTab" />
+            <x-dashboard.user-detail-panel
+                :user="$this->selectedUser"
+                :active-tab="$selectedTab"
+                :progression-analysis="$this->showProgressionAnalysis ? $this->progressionAnalysis : null"
+                :show-progression-analysis="$showProgressionAnalysis"
+            />
         </flux:modal>
     @endif
 </div>

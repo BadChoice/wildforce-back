@@ -1,7 +1,10 @@
-@props(['client', 'activeTab'])
+@props(['client', 'activeTab', 'progressionAnalysis' => null, 'showProgressionAnalysis' => false])
 
 <div class="max-h-[80vh] overflow-y-auto">
     <header class="border-zinc-200 p-5 dark:border-zinc-700">
+        @if ($showProgressionAnalysis)
+            <flux:button size="sm" variant="ghost" icon="arrow-left" wire:click="closeProgressionAnalysis" class="-ml-2 mb-3">{{ __('Training') }}</flux:button>
+        @endif
         <div class="flex items-start gap-3">
             <x-user-avatar :user="$client" size="lg" />
             <div class="min-w-0 flex-1">
@@ -11,23 +14,28 @@
             <flux:button variant="ghost" icon="x-mark" size="sm" wire:click="closeClientDetail" aria-label="{{ __('Close client details') }}" />
         </div>
 
-        <nav aria-label="{{ __('Client details') }}" role="tablist" class="mt-5 flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
-            @foreach (['info' => __('Info'), 'training' => __('Training'), 'nutrition' => __('Nutrition'), 'body-metrics' => __('Body metrics')] as $tab => $label)
-                <button
-                    type="button"
-                    role="tab"
-                    wire:click="selectTab('{{ $tab }}')"
-                    aria-selected="{{ $activeTab === $tab ? 'true' : 'false' }}"
-                    class="shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition {{ $activeTab === $tab ? 'border-zinc-950 text-zinc-950 dark:border-white dark:text-white' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100' }}"
-                >
-                    {{ $label }}
-                </button>
-            @endforeach
-        </nav>
+        @unless ($showProgressionAnalysis)
+            <nav aria-label="{{ __('Client details') }}" role="tablist" class="mt-5 flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
+                @foreach (['info' => __('Info'), 'training' => __('Training'), 'nutrition' => __('Nutrition'), 'body-metrics' => __('Body metrics')] as $tab => $label)
+                    <button
+                        type="button"
+                        role="tab"
+                        wire:click="selectTab('{{ $tab }}')"
+                        aria-selected="{{ $activeTab === $tab ? 'true' : 'false' }}"
+                        class="shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition {{ $activeTab === $tab ? 'border-zinc-950 text-zinc-950 dark:border-white dark:text-white' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100' }}"
+                    >
+                        {{ $label }}
+                    </button>
+                @endforeach
+            </nav>
+        @endunless
     </header>
 
     <div class="p-5">
-        @switch($activeTab)
+        @if ($showProgressionAnalysis && $progressionAnalysis)
+            <x-dashboard.progression-analysis :analysis="$progressionAnalysis" />
+        @else
+            @switch($activeTab)
             @case('info')
                 <dl class="grid gap-3 sm:grid-cols-2">
                     <x-dashboard.detail-item :label="__('Name')" :value="$client->name" />
@@ -48,7 +56,10 @@
                             <flux:heading size="sm">{{ __('Workout plans') }}</flux:heading>
                             <flux:text variant="subtle">{{ __('Build and manage this client’s training plans.') }}</flux:text>
                         </div>
-                        <flux:button size="sm" variant="primary" icon="plus" wire:click="openWorkoutPlanForm">{{ __('Workout plan') }}</flux:button>
+                        <div class="flex shrink-0 items-center gap-2">
+                            <flux:button size="sm" variant="ghost" icon="chart-bar" wire:click="openProgressionAnalysis">{{ __('Progression analysis') }}</flux:button>
+                            <flux:button size="sm" variant="primary" icon="plus" wire:click="openWorkoutPlanForm">{{ __('Workout plan') }}</flux:button>
+                        </div>
                     </div>
 
                     <x-dashboard.workout-plan-list :workout-plans="$client->workoutPlans" editable />
@@ -62,6 +73,7 @@
             @case('body-metrics')
                 <x-dashboard.placeholder-tab :title="__('Body metrics')" :description="__('Body metrics will be available here soon.')" />
                 @break
-        @endswitch
+            @endswitch
+        @endif
     </div>
 </div>

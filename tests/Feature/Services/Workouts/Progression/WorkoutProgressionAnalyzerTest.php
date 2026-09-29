@@ -33,7 +33,34 @@ test('returns the progression state from a user training history', function () {
         ->and($analysis->completionRate)->toBe(1.0)
         ->and($analysis->recentCompletedWorkouts)->toBe(3)
         ->and($analysis->readinessLevel)->toBe('high')
-        ->and($analysis->recentFeedbackBreakdown)->toBe(['justRight' => 3]);
+        ->and($analysis->recentFeedbackBreakdown)->toBe(['justRight' => 3])
+        ->and($analysis->recentMesocycles)->toBe([
+            [
+                'number' => 1,
+                'phase' => 'accumulation',
+                'completionRate' => 1.0,
+                'completedWorkouts' => 1,
+            ],
+            [
+                'number' => 2,
+                'phase' => 'accumulation',
+                'completionRate' => 1.0,
+                'completedWorkouts' => 1,
+            ],
+            [
+                'number' => 3,
+                'phase' => 'accumulation',
+                'completionRate' => 1.0,
+                'completedWorkouts' => 1,
+            ],
+        ])
+        ->and($analysis->recommendations)->toBe([
+            [
+                'title' => 'Continue progressive overload',
+                'description' => 'Recent training signals do not point to a specific adjustment for the next block.',
+                'tone' => 'green',
+            ],
+        ]);
 });
 
 test('returns low readiness when recent exercise feedback is predominantly hard', function () {
@@ -55,6 +82,11 @@ test('returns low readiness when recent exercise feedback is predominantly hard'
             'hard' => 1,
             'veryHard' => 1,
             'justRight' => 1,
+        ])
+        ->and($analysis->recommendations)->toContain([
+            'title' => 'Review training load',
+            'description' => 'Recent adherence or perceived difficulty suggests keeping the next block manageable.',
+            'tone' => 'amber',
         ]);
 });
 

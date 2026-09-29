@@ -38,7 +38,7 @@ final class TrainingHistory
             ->get();
 
         $this->recentPlans = $this->user->workoutPlans()
-            ->select(['id', 'user_id', 'phase', 'created_at'])
+            ->select(['id', 'user_id', 'mesocycle_number', 'phase', 'created_at'])
             ->with([
                 'workoutDays' => fn (HasMany $query) => $query
                     ->select(['id', 'workout_plan_id', 'status', 'order_index'])

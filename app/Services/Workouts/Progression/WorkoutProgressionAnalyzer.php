@@ -42,13 +42,36 @@ final class WorkoutProgressionAnalyzer
                 $feedbackBreakdown,
             ),
             recentFeedbackBreakdown: $feedbackBreakdown,
+            recentMesocycles: $this->recentMesocycles($recentPlans),
+            recommendations: (new WorkoutProgressionRecommendations($this))->all(
+                $completionRate,
+                $feedbackBreakdown,
+                $muscleGroupBalance,
+            ),
         );
+    }
+
+    /**
+     * @param  Collection<int, WorkoutPlan>  $plans
+     * @return list<array{number: int, phase: ?string, completionRate: float, completedWorkouts: int}>
+     */
+    private function recentMesocycles(Collection $plans): array
+    {
+        return $plans
+            ->values()
+            ->map(fn (WorkoutPlan $plan, int $index): array => [
+                'number' => $plan->mesocycle_number ?? $index + 1,
+                'phase' => $plan->phase,
+                'completionRate' => $this->completionRate(collect([$plan])),
+                'completedWorkouts' => $plan->workoutDays->where('status', 'completed')->count(),
+            ])
+            ->all();
     }
 
     /**
      * @return array<string, string>
      */
-    private function exerciseTrends(): array
+    public function exerciseTrends(): array
     {
         return $this->trainingHistory->exerciseProfiles()
             ->mapWithKeys(fn ($profile) => [
