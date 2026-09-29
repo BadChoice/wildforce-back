@@ -1,5 +1,9 @@
 <?php
 
+use App\Enums\SubscriptionPlan;
+use App\Enums\SubscriptionProvider;
+use App\Enums\SubscriptionStatus;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Services\Stripe\StripeCheckoutService;
 use Mockery\MockInterface;
@@ -25,6 +29,33 @@ test('it displays monthly and yearly Checkout options', function () {
         ->get(route('billing.index'))
         ->assertSee('Continue monthly')
         ->assertSee('Continue yearly');
+});
+
+test('it shows an existing subscription and prevents another Stripe Checkout', function () {
+    $user = User::factory()->create();
+    $user->replaceSubscription(new Subscription([
+        'plan' => SubscriptionPlan::MemberMonthly,
+        'provider' => SubscriptionProvider::Stripe,
+        'status' => SubscriptionStatus::Active,
+        'auto_renews' => true,
+        'provider_reference' => 'sub_friend',
+        'starts_at' => now()->subMonth(),
+        'renews_at' => now()->addMonth(),
+    ]));
+    $this->mock(StripeCheckoutService::class, function (MockInterface $mock): void {
+        $mock->shouldNotReceive('create');
+    });
+
+    $this->actingAs($user)
+        ->get(route('billing.index'))
+        ->assertSee('You already have a subscription.')
+        ->assertSee('Member Monthly')
+        ->assertDontSee('Continue monthly')
+        ->assertDontSee('Continue yearly');
+
+    $this->actingAs($user)
+        ->post(route('billing.checkout', ['interval' => 'monthly']))
+        ->assertRedirectToRoute('billing.index');
 });
 
 test('it redirects an authenticated user to the yearly Stripe Checkout', function () {

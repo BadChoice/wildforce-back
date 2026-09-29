@@ -13,6 +13,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
+/**
+ * @property SubscriptionPlan $plan
+ * @property SubscriptionProvider $provider
+ * @property SubscriptionStatus $status
+ * @property bool $auto_renews
+ * @property Carbon|null $starts_at
+ * @property Carbon|null $renews_at
+ * @property Carbon|null $cancelled_at
+ */
 #[Fillable([
     'user_id',
     'demo_code_id',
@@ -72,11 +81,17 @@ class Subscription extends Model implements Syncable
         ]);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<DemoCode, $this>
+     */
     public function demoCode(): BelongsTo
     {
         return $this->belongsTo(DemoCode::class);

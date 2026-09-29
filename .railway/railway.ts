@@ -89,7 +89,8 @@ export default defineRailway(() => {
       // -------------------------
       STRIPE_SECRET: preserve(),
       STRIPE_WEBHOOK_SECRET: preserve(),
-
+      STRIPE_FRIEND_MONTHLY_PRICE_ID: "price_1UKwyNFI3Ev7T3Cmp0cpFv5K",
+      STRIPE_FRIEND_YEARLY_PRICE_ID: "price_1UKwyhFI3Ev7T3CmhzLOUpVd",
       // -------------------------
       // AI Providers
       // -------------------------

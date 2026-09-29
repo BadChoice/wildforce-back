@@ -50,11 +50,11 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         'friend_prices' => [
             'monthly' => [
-                'price_id' => env('STRIPE_FRIEND_MONTHLY_PRICE_ID', 'prod_VLdT0Jus7aRiKs'),
+                'price_id' => env('STRIPE_FRIEND_MONTHLY_PRICE_ID', 'price_1UKwmiFI3Ev7T3CmXupSr5Zh'),
                 'plan' => 'member_monthly',
             ],
             'yearly' => [
-                'price_id' => env('STRIPE_FRIEND_YEARLY_PRICE_ID', 'prod_VLdVKKt9d9bgW6'),
+                'price_id' => env('STRIPE_FRIEND_YEARLY_PRICE_ID', 'price_1UKwEFFI3Ev7T3CmXwt2wQyG'),
                 'plan' => 'member_yearly',
             ],
         ],

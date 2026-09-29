@@ -174,6 +174,9 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
         return $this->hasMany(WorkoutDay::class);
     }
 
+    /**
+     * @return HasOne<Subscription, $this>
+     */
     public function subscription(): HasOne
     {
         return $this->hasOne(Subscription::class);
