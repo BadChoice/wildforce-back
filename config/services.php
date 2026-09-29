@@ -45,6 +45,21 @@ return [
         ],
     ],
 
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'friend_prices' => [
+            'monthly' => [
+                'price_id' => env('STRIPE_FRIEND_MONTHLY_PRICE_ID', 'prod_VLdT0Jus7aRiKs'),
+                'plan' => 'member_monthly',
+            ],
+            'yearly' => [
+                'price_id' => env('STRIPE_FRIEND_YEARLY_PRICE_ID', 'prod_VLdVKKt9d9bgW6'),
+                'plan' => 'member_yearly',
+            ],
+        ],
+    ],
+
     'feedback' => [
         'recipient' => env('FEEDBACK_MAIL_TO', 'hello@codepassion.io'),
     ],

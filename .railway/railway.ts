@@ -85,6 +85,12 @@ export default defineRailway(() => {
       GOOGLE_CLIENT_ID: preserve(),
 
       // -------------------------
+      // Stripe
+      // -------------------------
+      STRIPE_SECRET: preserve(),
+      STRIPE_WEBHOOK_SECRET: preserve(),
+
+      // -------------------------
       // AI Providers
       // -------------------------
       GEMINI_API_KEY: preserve(),
