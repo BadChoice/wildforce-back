@@ -4,7 +4,9 @@ use App\Http\Controllers\Api\Access\RedeemDemoCodeController;
 use App\Http\Controllers\Api\Account\AppleIdentityController;
 use App\Http\Controllers\Api\Account\AvatarController;
 use App\Http\Controllers\Api\Account\CoachController;
+use App\Http\Controllers\Api\Account\GoogleIdentityController;
 use App\Http\Controllers\Api\Auth\AppleAuthenticationController;
+use App\Http\Controllers\Api\Auth\GoogleAuthenticationController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\BodyProgressPhotoController;
@@ -23,12 +25,15 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/register', RegisterController::class)->middleware('throttle:5,1');
 Route::post('/auth/login', LoginController::class)->middleware('throttle:5,1');
 Route::post('/auth/apple', AppleAuthenticationController::class)->middleware('throttle:5,1');
+Route::post('/auth/google', GoogleAuthenticationController::class)->middleware('throttle:5,1');
 Route::post('/webhooks/app-store', AppStoreServerNotificationController::class)->middleware('throttle:120,1');
 
 Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::get('/account/identities', [AppleIdentityController::class, 'index']);
     Route::post('/account/identities/apple', [AppleIdentityController::class, 'store']);
     Route::delete('/account/identities/apple', [AppleIdentityController::class, 'destroy']);
+    Route::post('/account/identities/google', [GoogleIdentityController::class, 'store']);
+    Route::delete('/account/identities/google', [GoogleIdentityController::class, 'destroy']);
     Route::post('/users/avatar', AvatarController::class);
     Route::post('/subscription/redeem-code', RedeemDemoCodeController::class);
     Route::post('/subscription/app-store/transactions', SyncAppStoreTransactionController::class);

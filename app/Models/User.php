@@ -108,6 +108,15 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
     }
 
     /**
+     * @return HasOne<UserIdentity, $this>
+     */
+    public function googleIdentity(): HasOne
+    {
+        return $this->hasOne(UserIdentity::class)
+            ->where('provider', UserIdentity::GoogleProvider);
+    }
+
+    /**
      * @return HasMany<UserIdentity, $this>
      */
     public function identities(): HasMany

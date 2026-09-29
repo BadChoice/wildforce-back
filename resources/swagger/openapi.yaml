@@ -10,6 +10,7 @@ servers:
 tags:
   - name: Authentication
   - name: Media
+  - name: Account
   - name: Feedback
   - name: Subscriptions
   - name: Coaching
@@ -53,6 +54,156 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/auth/google:
+    post:
+      tags: [Authentication]
+      summary: Sign in with Google and issue a bearer token
+      description: Verifies a Google OpenID Connect ID token before signing in or creating the user.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleAuthenticationRequest'
+      responses:
+        '200':
+          description: Existing user authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '201':
+          description: User registered and authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: The verified email already belongs to an account with another sign-in method.
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/auth/apple:
+    post:
+      tags: [Authentication]
+      summary: Sign in with Apple and issue a bearer token
+      description: Exchanges the native Apple authorization code on the server. The optional full name is only used while creating a new user, because Apple may provide it only once.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppleAuthenticationRequest'
+      responses:
+        '200':
+          description: Existing Apple identity authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '201':
+          description: New user created from an Apple identity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/account/identities:
+    get:
+      tags: [Account]
+      summary: List the authenticated user's linked sign-in identities
+      responses:
+        '200':
+          description: Linked identities
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIdentityCollection'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+  /api/account/identities/apple:
+    post:
+      tags: [Account]
+      summary: Link Apple to the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkAppleIdentityRequest'
+      responses:
+        '200':
+          description: Apple was already linked to this user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIdentity'
+        '201':
+          description: Apple linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIdentity'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Account]
+      summary: Unlink Apple from the authenticated user
+      responses:
+        '204':
+          description: Apple unlinked, or was not linked
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/account/identities/google:
+    post:
+      tags: [Account]
+      summary: Link Google to the authenticated user
+      description: Verifies the Google OpenID Connect ID token before linking the Google account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleIdentityRequest'
+      responses:
+        '200':
+          description: Google account already linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIdentityResponse'
+        '201':
+          description: Google account linked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIdentityResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '409':
+          description: The Google account is linked to another user.
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags: [Account]
+      summary: Unlink Google from the authenticated user
+      responses:
+        '204':
+          description: Google account unlinked
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
         '422':
           $ref: '#/components/responses/ValidationError'
   /api/user:
@@ -357,11 +508,22 @@ components:
     Unauthenticated:
       description: Authentication is required.
     ValidationError:
-      description: The request payload is invalid.
+      description: The request payload is invalid. Field-specific messages are returned in `errors`.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ValidationError'
+          example:
+            message: The given data was invalid.
+            errors:
+              password:
+                - The password must be at least 12 characters.
+    Conflict:
+      description: The requested identity cannot be linked.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
     User:
       type: object
@@ -387,7 +549,11 @@ components:
       properties:
         name: {type: string, maxLength: 255}
         email: {type: string, format: email, maxLength: 255}
-        password: {type: string, format: password}
+        password:
+          type: string
+          format: password
+          minLength: 12
+          description: Must contain uppercase and lowercase letters, a number, a symbol, and must not appear in a known data leak.
         password_confirmation: {type: string, format: password}
         device_name: {type: string, maxLength: 255}
     LoginRequest:
@@ -397,6 +563,41 @@ components:
         email: {type: string, format: email, maxLength: 255}
         password: {type: string, format: password}
         device_name: {type: string, maxLength: 255}
+    AppleAuthenticationRequest:
+      type: object
+      required: [authorization_code, device_name]
+      properties:
+        authorization_code:
+          type: string
+          description: Single-use authorization code returned by Apple's native authorization flow.
+          maxLength: 8192
+        device_name: {type: string, maxLength: 255}
+        full_name: {type: string, maxLength: 255}
+    GoogleAuthenticationRequest:
+      type: object
+      required: [id_token, device_name]
+      properties:
+        id_token:
+          type: string
+          maxLength: 8192
+          description: Google OpenID Connect ID token returned by Google Sign-In.
+        device_name: {type: string, maxLength: 255}
+    GoogleIdentityRequest:
+      type: object
+      required: [id_token]
+      properties:
+        id_token:
+          type: string
+          maxLength: 8192
+          description: Google OpenID Connect ID token returned by Google Sign-In.
+    LinkAppleIdentityRequest:
+      type: object
+      required: [authorization_code]
+      properties:
+        authorization_code:
+          type: string
+          description: A newly issued, single-use Apple authorization code.
+          maxLength: 8192
     AuthResponse:
       type: object
       required: [user, token, token_type]
@@ -404,6 +605,36 @@ components:
         user: {$ref: '#/components/schemas/User'}
         token: {type: string}
         token_type: {type: string, example: Bearer}
+    UserIdentityResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: object
+          required: [provider, email, linked_at]
+          properties:
+            provider: {type: string, example: google}
+            email: {type: [string, 'null'], format: email}
+            linked_at: {type: string, format: date-time}
+    UserIdentity:
+      type: object
+      required: [provider, email, linked_at]
+      properties:
+        provider: {type: string, example: apple}
+        email: {type: [string, 'null'], format: email}
+        linked_at: {type: string, format: date-time}
+    UserIdentityCollection:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items: {$ref: '#/components/schemas/UserIdentity'}
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: {type: string}
     FeedbackRequest:
       type: object
       required: [category, message]

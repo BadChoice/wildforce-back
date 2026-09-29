@@ -29,6 +29,10 @@ return [
         'private_key' => env('APPLE_PRIVATE_KEY'),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+    ],
+
     'app_store' => [
         'bundle_id' => env('APP_STORE_BUNDLE_ID', 'io.codepassion.doublegym'),
         'root_certificate_fingerprints' => [

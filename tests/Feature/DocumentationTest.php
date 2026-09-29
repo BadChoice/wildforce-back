@@ -12,6 +12,8 @@ test('it renders the API documentation and its OpenAPI document locally', functi
     $openApiDocument->assertOk()
         ->assertJsonPath('openapi', '3.1.0')
         ->assertJsonPath('info.title', 'Wildforce API')
+        ->assertJsonPath('paths./api/auth/google.post.summary', 'Sign in with Google and issue a bearer token')
+        ->assertJsonPath('paths./api/account/identities/google.post.summary', 'Link Google to the authenticated user')
         ->assertJsonPath('paths./api/subscription/redeem-code.post.summary', 'Redeem a demo access code')
         ->assertJsonPath('paths./api/account/coaches.get.summary', "Get the authenticated user's active coaches")
         ->assertJsonPath('paths./api/users/avatar.post.summary', "Upload the authenticated user's public avatar")

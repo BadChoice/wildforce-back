@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Contracts\AppleAuthentication;
+use App\Contracts\GoogleAuthentication;
 use App\Models\User;
 use App\Services\Apple\Auth\AppleAuthenticator;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Google\Auth\GoogleAuthenticator;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(AppleAuthentication::class, AppleAuthenticator::class);
+        $this->app->bind(GoogleAuthentication::class, GoogleAuthenticator::class);
     }
 
     /**

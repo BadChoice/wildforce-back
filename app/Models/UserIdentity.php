@@ -24,6 +24,8 @@ class UserIdentity extends Model
 
     public const AppleProvider = 'apple';
 
+    public const GoogleProvider = 'google';
+
     protected $table = 'user_identities';
 
     /**
