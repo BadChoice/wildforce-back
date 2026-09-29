@@ -24,15 +24,16 @@ class AvatarController extends Controller
         /** @var UploadedFile $image */
         $image = $validated['image'];
         $path = 'avatars/'.Str::lower($user->id).'.png';
+        $disk = Storage::disk((string) config('filesystems.public_storage_disc'));
 
-        if (Storage::disk('supabase')->putFileAs('avatars', $image, Str::lower($user->id).'.png', ['visibility' => 'public']) === false) {
+        if ($disk->putFileAs('avatars', $image, Str::lower($user->id).'.png', ['visibility' => 'public']) === false) {
             throw new RuntimeException('Unable to store the avatar.');
         }
 
         return response()->json([
             'data' => [
                 'path' => $path,
-                'url' => Storage::disk('supabase')->url($path),
+                'url' => $disk->url($path),
             ],
         ]);
     }

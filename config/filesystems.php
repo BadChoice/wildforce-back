@@ -15,6 +15,8 @@ return [
 
     'default' => env('FILESYSTEM_DISK', 's3'),
 
+    'public_storage_disc' => env('PUBLIC_STORAGE_DISK', 'supabase'),
+
     /*
     |--------------------------------------------------------------------------
     | Filesystem Disks
@@ -61,7 +63,7 @@ return [
         ],
 
         'supabase' => [
-            'driver' => env('SUPABASE_DRIVER', 's3'),
+            'driver' => 's3',
             'key' => env('SUPABASE_S3_KEY'),
             'secret' => env('SUPABASE_S3_SECRET'),
             'region' => env('SUPABASE_S3_REGION', 'eu-west-1'),
