@@ -78,6 +78,19 @@ export default defineRailway(() => {
       APPLE_TEAM_ID: "SV3ZXK4PZF",
       APPLE_KEY_ID:"AC3X8Q3LP3",
       APPLE_PRIVATE_KEY: preserve(),
+
+      // -------------------------
+      // Google
+      // -------------------------
+      GOOGLE_CLIENT_ID: preserve(),
+
+      // -------------------------
+      // AI Providers
+      // -------------------------
+      GEMINI_API_KEY: preserve(),
+      OPENAI_API_KEY: preserve(),
+      MISTRAL_API_KEY: preserve(),
+      GROQ_API_KEY: preserve(),
     },
   });
 
