@@ -61,7 +61,7 @@ return [
         ],
 
         'supabase' => [
-            'driver' => 's3',
+            'driver' => env('SUPABASE_DRIVER', 's3'),
             'key' => env('SUPABASE_S3_KEY'),
             'secret' => env('SUPABASE_S3_SECRET'),
             'region' => env('SUPABASE_S3_REGION', 'eu-west-1'),
