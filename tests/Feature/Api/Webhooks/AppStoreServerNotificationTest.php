@@ -100,6 +100,8 @@ function webhookTransaction(string $appAccountToken): array
         'productId' => 'io.codepassion.wildforce.subscription.year',
         'originalTransactionId' => '1000001234567890',
         'appAccountToken' => $appAccountToken,
+        'price' => 42000,
+        'currency' => 'EUR',
         'purchaseDate' => now()->subMinute()->getTimestamp() * 1000,
         'expiresDate' => now()->addYear()->getTimestamp() * 1000,
     ];

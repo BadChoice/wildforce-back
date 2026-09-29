@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\BillingInterval;
 use App\Enums\SubscriptionPlan;
 use App\Enums\SubscriptionProvider;
 use App\Enums\SubscriptionStatus;
@@ -30,7 +31,11 @@ test('it stores a verified App Store subscription for the authenticated account'
         ->plan->toBe(SubscriptionPlan::MemberYearly)
         ->provider->toBe(SubscriptionProvider::AppStore)
         ->provider_reference->toBe('1000001234567890')
-        ->auto_renews->toBeTrue();
+        ->auto_renews->toBeTrue()
+        ->billing_amount->toBe('42.000')
+        ->billing_currency->toBe('EUR')
+        ->billing_interval->toBe(BillingInterval::Year)
+        ->billing_interval_count->toBe(1);
 });
 
 test('it rejects a transaction already associated with another account', function () {
@@ -79,6 +84,8 @@ function appStoreTransaction(string $appAccountToken): array
         'productId' => 'io.codepassion.wildforce.subscription.year',
         'originalTransactionId' => '1000001234567890',
         'appAccountToken' => $appAccountToken,
+        'price' => 42000,
+        'currency' => 'EUR',
         'purchaseDate' => now()->subMinute()->getTimestamp() * 1000,
         'expiresDate' => now()->addYear()->getTimestamp() * 1000,
     ];

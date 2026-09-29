@@ -40,8 +40,16 @@ return [
             '63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179',
         ],
         'product_plans' => [
-            'io.codepassion.wildforce.subscription.standard' => 'member_monthly',
-            'io.codepassion.wildforce.subscription.year' => 'member_yearly',
+            'io.codepassion.wildforce.subscription.standard' => [
+                'plan' => 'member_monthly',
+                'billing_interval' => 'month',
+                'billing_interval_count' => 1,
+            ],
+            'io.codepassion.wildforce.subscription.year' => [
+                'plan' => 'member_yearly',
+                'billing_interval' => 'year',
+                'billing_interval_count' => 1,
+            ],
         ],
     ],
 

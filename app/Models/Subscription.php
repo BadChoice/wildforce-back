@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\BillingInterval;
 use App\Enums\SubscriptionPlan;
 use App\Enums\SubscriptionProvider;
 use App\Enums\SubscriptionStatus;
@@ -18,6 +19,10 @@ use Illuminate\Support\Carbon;
  * @property SubscriptionProvider $provider
  * @property SubscriptionStatus $status
  * @property bool $auto_renews
+ * @property string|null $billing_amount
+ * @property string|null $billing_currency
+ * @property BillingInterval|null $billing_interval
+ * @property int|null $billing_interval_count
  * @property Carbon|null $starts_at
  * @property Carbon|null $renews_at
  * @property Carbon|null $cancelled_at
@@ -29,6 +34,10 @@ use Illuminate\Support\Carbon;
     'provider',
     'status',
     'auto_renews',
+    'billing_amount',
+    'billing_currency',
+    'billing_interval',
+    'billing_interval_count',
     'provider_reference',
     'starts_at',
     'renews_at',
@@ -46,6 +55,9 @@ class Subscription extends Model implements Syncable
             'provider' => SubscriptionProvider::class,
             'status' => SubscriptionStatus::class,
             'auto_renews' => 'boolean',
+            'billing_amount' => 'decimal:3',
+            'billing_interval' => BillingInterval::class,
+            'billing_interval_count' => 'integer',
             'starts_at' => 'datetime',
             'renews_at' => 'datetime',
             'cancelled_at' => 'datetime',

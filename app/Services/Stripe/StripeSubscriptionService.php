@@ -2,6 +2,7 @@
 
 namespace App\Services\Stripe;
 
+use App\Enums\BillingInterval;
 use App\Enums\SubscriptionPlan;
 use App\Enums\SubscriptionProvider;
 use App\Enums\SubscriptionStatus;
@@ -66,6 +67,7 @@ class StripeSubscriptionService
             'provider' => SubscriptionProvider::Stripe,
             'status' => $status,
             'auto_renews' => $autoRenews,
+            ...$this->billingDetailsFor($stripeSubscription),
             'provider_reference' => $subscriptionId,
             'starts_at' => $this->timestamp($stripeSubscription['start_date'] ?? null),
             'renews_at' => $this->timestamp($stripeSubscription['current_period_end'] ?? null),
@@ -124,6 +126,25 @@ class StripeSubscriptionService
         return null;
     }
 
+    /**
+     * @param  array<string, mixed>  $stripeSubscription
+     * @return array{billing_amount: string|null, billing_currency: string|null, billing_interval: BillingInterval|null, billing_interval_count: int|null}
+     */
+    private function billingDetailsFor(array $stripeSubscription): array
+    {
+        $amount = data_get($stripeSubscription, 'items.data.0.price.unit_amount_decimal');
+        $currency = data_get($stripeSubscription, 'items.data.0.price.currency');
+        $interval = data_get($stripeSubscription, 'items.data.0.price.recurring.interval');
+        $intervalCount = data_get($stripeSubscription, 'items.data.0.price.recurring.interval_count');
+
+        return [
+            'billing_amount' => $this->amountFromCents($amount),
+            'billing_currency' => $this->currency($currency),
+            'billing_interval' => is_string($interval) ? BillingInterval::tryFrom($interval) : null,
+            'billing_interval_count' => is_numeric($intervalCount) ? (int) $intervalCount : null,
+        ];
+    }
+
     private function statusFor(mixed $status): SubscriptionStatus
     {
         return match ($status) {
@@ -137,6 +158,20 @@ class StripeSubscriptionService
     private function timestamp(mixed $timestamp): ?Carbon
     {
         return is_numeric($timestamp) ? Carbon::createFromTimestampUTC((int) $timestamp) : null;
+    }
+
+    private function amountFromCents(mixed $amount): ?string
+    {
+        return is_numeric($amount) && (float) $amount >= 0
+            ? number_format((float) $amount / 100, 3, '.', '')
+            : null;
+    }
+
+    private function currency(mixed $currency): ?string
+    {
+        return is_string($currency) && mb_strlen($currency) === 3
+            ? mb_strtoupper($currency)
+            : null;
     }
 
     private function webhookSecret(): string

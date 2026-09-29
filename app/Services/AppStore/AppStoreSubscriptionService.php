@@ -2,6 +2,7 @@
 
 namespace App\Services\AppStore;
 
+use App\Enums\BillingInterval;
 use App\Enums\SubscriptionPlan;
 use App\Enums\SubscriptionProvider;
 use App\Enums\SubscriptionStatus;
@@ -65,10 +66,7 @@ class AppStoreSubscriptionService
         });
     }
 
-    /**
-     * @param  array<string, mixed>  $transaction
-     * @param  array<string, mixed>|null  $renewalInfo
-     */
+    /** @param array<string, mixed> $transaction */
     private function persist(
         User $user,
         array $transaction,
@@ -90,11 +88,16 @@ class AppStoreSubscriptionService
             ]);
         }
 
+        $product = $this->productFor($this->requiredString($transaction, 'productId'));
         $attributes = [
-            'plan' => $this->planForProduct($this->requiredString($transaction, 'productId')),
+            'plan' => $product['plan'],
             'provider' => SubscriptionProvider::AppStore,
             'status' => $status ?? $this->statusForTransaction($transaction),
             'auto_renews' => $autoRenews ?? $this->expiresAt($transaction)?->isFuture(),
+            'billing_amount' => $this->amountFromMilliunits($transaction['price'] ?? null),
+            'billing_currency' => $this->currency($transaction['currency'] ?? null),
+            'billing_interval' => $product['billing_interval'],
+            'billing_interval_count' => $product['billing_interval_count'],
             'provider_reference' => $originalTransactionID,
             'starts_at' => $this->purchaseDate($transaction),
             'renews_at' => $this->expiresAt($transaction),
@@ -109,7 +112,12 @@ class AppStoreSubscriptionService
 
         $user->subscription()->lockForUpdate()->first()?->delete();
 
-        return $user->subscription()->save(new Subscription($attributes));
+        $subscription = $user->subscription()->save(new Subscription($attributes));
+        if ($subscription === false) {
+            throw new \LogicException('Could not store the App Store subscription.');
+        }
+
+        return $subscription;
     }
 
     /** @param array<string, mixed> $transaction */
@@ -151,7 +159,9 @@ class AppStoreSubscriptionService
         };
     }
 
-    /** @param array<string, mixed>|null $data */
+    /** @param array<string, mixed>|null $data
+     * @return array<string, mixed>|null
+     */
     private function renewalInfo(?array $data): ?array
     {
         $signedRenewalInfo = $data['signedRenewalInfo'] ?? null;
@@ -169,19 +179,30 @@ class AppStoreSubscriptionService
         return (int) $renewalInfo['autoRenewStatus'] === 1;
     }
 
-    private function planForProduct(string $productID): SubscriptionPlan
+    /**
+     * @return array{plan: SubscriptionPlan, billing_interval: BillingInterval, billing_interval_count: int}
+     */
+    private function productFor(string $productID): array
     {
         $plans = config('services.app_store.product_plans', []);
-        $plan = is_array($plans) ? $plans[$productID] ?? null : null;
+        $product = is_array($plans) ? $plans[$productID] ?? null : null;
+        $plan = is_array($product) ? $product['plan'] ?? null : null;
+        $interval = is_array($product) ? $product['billing_interval'] ?? null : null;
+        $intervalCount = is_array($product) ? $product['billing_interval_count'] ?? null : null;
         $subscriptionPlan = is_string($plan) ? SubscriptionPlan::tryFrom($plan) : null;
+        $billingInterval = is_string($interval) ? BillingInterval::tryFrom($interval) : null;
 
-        if ($subscriptionPlan === null) {
+        if ($subscriptionPlan === null || $billingInterval === null || ! is_int($intervalCount) || $intervalCount < 1) {
             throw ValidationException::withMessages([
                 'signed_transaction' => ['This App Store product is not configured for Wildforce.'],
             ]);
         }
 
-        return $subscriptionPlan;
+        return [
+            'plan' => $subscriptionPlan,
+            'billing_interval' => $billingInterval,
+            'billing_interval_count' => $intervalCount,
+        ];
     }
 
     /** @param array<string, mixed> $transaction */
@@ -207,6 +228,20 @@ class AppStoreSubscriptionService
         }
 
         return Carbon::createFromTimestampUTC(((int) $value) / 1000);
+    }
+
+    private function amountFromMilliunits(mixed $amount): ?string
+    {
+        return is_numeric($amount) && (float) $amount >= 0
+            ? number_format((float) $amount / 1000, 3, '.', '')
+            : null;
+    }
+
+    private function currency(mixed $currency): ?string
+    {
+        return is_string($currency) && mb_strlen($currency) === 3
+            ? mb_strtoupper($currency)
+            : null;
     }
 
     /** @param array<string, mixed> $claims */

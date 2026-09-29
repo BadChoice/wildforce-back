@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\BillingInterval;
 use App\Enums\SubscriptionPlan;
 use App\Enums\SubscriptionProvider;
 use App\Enums\SubscriptionStatus;
@@ -23,6 +24,10 @@ test('it stores a verified monthly Stripe subscription for the referenced user',
         ->provider->toBe(SubscriptionProvider::Stripe)
         ->status->toBe(SubscriptionStatus::Active)
         ->auto_renews->toBeTrue()
+        ->billing_amount->toBe('4.200')
+        ->billing_currency->toBe('EUR')
+        ->billing_interval->toBe(BillingInterval::Month)
+        ->billing_interval_count->toBe(1)
         ->provider_reference->toBe('sub_friend');
     expect($user->fresh()->subscription?->id)->toBe($subscription?->id);
 });
@@ -65,7 +70,15 @@ function stripeSubscriptionPayload(User $user, string $eventType, array $attribu
                 'metadata' => ['user_id' => $user->id],
                 'items' => [
                     'data' => [[
-                        'price' => ['id' => 'price_friend_monthly'],
+                        'price' => [
+                            'id' => 'price_friend_monthly',
+                            'unit_amount_decimal' => '420',
+                            'currency' => 'eur',
+                            'recurring' => [
+                                'interval' => 'month',
+                                'interval_count' => 1,
+                            ],
+                        ],
                     ]],
                 ],
             ], $attributes),
