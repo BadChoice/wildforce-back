@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $billing_currency
  * @property BillingInterval|null $billing_interval
  * @property int|null $billing_interval_count
+ * @property string|null $provider_reference
  * @property Carbon|null $starts_at
  * @property Carbon|null $renews_at
  * @property Carbon|null $cancelled_at

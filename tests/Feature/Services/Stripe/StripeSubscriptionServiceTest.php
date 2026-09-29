@@ -9,7 +9,7 @@ use App\Services\Stripe\StripeSubscriptionService;
 
 test('it stores a verified monthly Stripe subscription for the referenced user', function () {
     config()->set('services.stripe.webhook_secret', 'whsec_test');
-    config()->set('services.stripe.friend_prices.monthly.price_id', 'price_friend_monthly');
+    config()->set('services.stripe.prices.friends.monthly.price_id', 'price_friend_monthly');
 
     $user = User::factory()->create();
     $payload = stripeSubscriptionPayload($user, 'customer.subscription.created');
@@ -20,7 +20,7 @@ test('it stores a verified monthly Stripe subscription for the referenced user',
     );
 
     expect($subscription)
-        ->plan->toBe(SubscriptionPlan::MemberMonthly)
+        ->plan->toBe(SubscriptionPlan::Friends)
         ->provider->toBe(SubscriptionProvider::Stripe)
         ->status->toBe(SubscriptionStatus::Active)
         ->auto_renews->toBeTrue()
@@ -34,7 +34,7 @@ test('it stores a verified monthly Stripe subscription for the referenced user',
 
 test('it updates a Stripe subscription when Stripe disables renewal', function () {
     config()->set('services.stripe.webhook_secret', 'whsec_test');
-    config()->set('services.stripe.friend_prices.monthly.price_id', 'price_friend_monthly');
+    config()->set('services.stripe.prices.friends.monthly.price_id', 'price_friend_monthly');
 
     $user = User::factory()->create();
     $createdPayload = stripeSubscriptionPayload($user, 'customer.subscription.created');

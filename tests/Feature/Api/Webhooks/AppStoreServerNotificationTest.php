@@ -12,7 +12,7 @@ use Mockery\MockInterface;
 test('it applies an App Store renewal notification to the linked subscription', function () {
     $user = User::factory()->create();
     $user->replaceSubscription(new Subscription([
-        'plan' => SubscriptionPlan::MemberYearly,
+        'plan' => SubscriptionPlan::Premium,
         'provider' => SubscriptionProvider::AppStore,
         'status' => SubscriptionStatus::Active,
         'auto_renews' => true,
@@ -46,7 +46,7 @@ test('it applies an App Store renewal notification to the linked subscription', 
 test('it marks a subscription to end when App Store disables renewal', function () {
     $user = User::factory()->create();
     $user->replaceSubscription(new Subscription([
-        'plan' => SubscriptionPlan::MemberYearly,
+        'plan' => SubscriptionPlan::Premium,
         'provider' => SubscriptionProvider::AppStore,
         'status' => SubscriptionStatus::Active,
         'auto_renews' => true,

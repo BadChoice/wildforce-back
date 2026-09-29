@@ -23,12 +23,12 @@ test('it stores a verified App Store subscription for the authenticated account'
         'signed_transaction' => 'signed-transaction',
     ])
         ->assertOk()
-        ->assertJsonPath('data.plan', 'member_yearly')
+        ->assertJsonPath('data.plan', 'premium')
         ->assertJsonPath('data.provider', 'app_store')
         ->assertJsonPath('data.status', 'active');
 
     expect($user->fresh()->subscription)
-        ->plan->toBe(SubscriptionPlan::MemberYearly)
+        ->plan->toBe(SubscriptionPlan::Premium)
         ->provider->toBe(SubscriptionProvider::AppStore)
         ->provider_reference->toBe('1000001234567890')
         ->auto_renews->toBeTrue()
@@ -42,7 +42,7 @@ test('it rejects a transaction already associated with another account', functio
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
     $otherUser->replaceSubscription(new Subscription([
-        'plan' => SubscriptionPlan::MemberYearly,
+        'plan' => SubscriptionPlan::Premium,
         'provider' => SubscriptionProvider::AppStore,
         'status' => SubscriptionStatus::Active,
         'provider_reference' => '1000001234567890',

@@ -41,12 +41,12 @@ return [
         ],
         'product_plans' => [
             'io.codepassion.wildforce.subscription.standard' => [
-                'plan' => 'member_monthly',
+                'plan' => 'premium',
                 'billing_interval' => 'month',
                 'billing_interval_count' => 1,
             ],
             'io.codepassion.wildforce.subscription.year' => [
-                'plan' => 'member_yearly',
+                'plan' => 'premium',
                 'billing_interval' => 'year',
                 'billing_interval_count' => 1,
             ],
@@ -56,14 +56,22 @@ return [
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-        'friend_prices' => [
-            'monthly' => [
-                'price_id' => env('STRIPE_FRIEND_MONTHLY_PRICE_ID', 'price_1UKwmiFI3Ev7T3CmXupSr5Zh'),
-                'plan' => 'member_monthly',
+        'prices' => [
+            'friends' => [
+                'monthly' => [
+                    'price_id' => env('STRIPE_FRIEND_MONTHLY_PRICE_ID', 'price_1UKwmiFI3Ev7T3CmXupSr5Zh'),
+                ],
+                'yearly' => [
+                    'price_id' => env('STRIPE_FRIEND_YEARLY_PRICE_ID', 'price_1UKwEFFI3Ev7T3CmXwt2wQyG'),
+                ],
             ],
-            'yearly' => [
-                'price_id' => env('STRIPE_FRIEND_YEARLY_PRICE_ID', 'price_1UKwEFFI3Ev7T3CmXwt2wQyG'),
-                'plan' => 'member_yearly',
+            'premium' => [
+                'monthly' => [
+                    'price_id' => env('STRIPE_PREMIUM_MONTHLY_PRICE_ID'),
+                ],
+                'yearly' => [
+                    'price_id' => env('STRIPE_PREMIUM_YEARLY_PRICE_ID'),
+                ],
             ],
         ],
     ],

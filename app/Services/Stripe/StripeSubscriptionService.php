@@ -16,6 +16,8 @@ use Stripe\Webhook;
 
 class StripeSubscriptionService
 {
+    public function __construct(private StripePriceCatalog $stripePrices) {}
+
     /**
      * Synchronize a Stripe subscription event with the user's app access.
      */
@@ -108,22 +110,7 @@ class StripeSubscriptionService
             return null;
         }
 
-        $prices = config('services.stripe.friend_prices', []);
-        if (! is_array($prices)) {
-            return null;
-        }
-
-        foreach ($prices as $price) {
-            if (! is_array($price) || ($price['price_id'] ?? null) !== $priceId) {
-                continue;
-            }
-
-            return is_string($price['plan'] ?? null)
-                ? SubscriptionPlan::tryFrom($price['plan'])
-                : null;
-        }
-
-        return null;
+        return $this->stripePrices->planForPriceId($priceId);
     }
 
     /**

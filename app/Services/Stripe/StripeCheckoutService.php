@@ -2,15 +2,18 @@
 
 namespace App\Services\Stripe;
 
+use App\Enums\SubscriptionPlan;
 use App\Models\User;
 use LogicException;
 use Stripe\StripeClient;
 
 class StripeCheckoutService
 {
-    public function create(User $user, string $interval): string
+    public function __construct(private StripePriceCatalog $stripePrices) {}
+
+    public function create(User $user, SubscriptionPlan $plan, string $interval): string
     {
-        $priceId = $this->priceIdFor($interval);
+        $priceId = $this->stripePrices->priceIdFor($plan, $interval);
         $checkoutSession = $this->stripe()->checkout->sessions->create([
             'client_reference_id' => $user->id,
             'customer_email' => $user->email,
@@ -41,15 +44,5 @@ class StripeCheckoutService
         }
 
         return new StripeClient($secret);
-    }
-
-    private function priceIdFor(string $interval): string
-    {
-        $priceId = config("services.stripe.friend_prices.{$interval}.price_id");
-        if (! is_string($priceId) || $priceId === '') {
-            throw new LogicException("The Stripe {$interval} price is not configured.");
-        }
-
-        return $priceId;
     }
 }

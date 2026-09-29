@@ -7,29 +7,23 @@
 
         @if ($canCheckout)
             <div class="grid gap-4 md:grid-cols-2">
-                <flux:card class="flex flex-col gap-4">
-                    <div class="flex flex-col gap-1">
-                        <flux:heading size="lg">{{ __('Monthly') }}</flux:heading>
-                        <flux:text>{{ __('Flexible month-to-month access.') }}</flux:text>
-                    </div>
+                @foreach ($checkoutPlans as $checkoutPlan)
+                    <flux:card class="flex flex-col gap-4">
+                        <div class="flex flex-col gap-1">
+                            <flux:heading size="lg">{{ str($checkoutPlan['plan']->value)->title() }}</flux:heading>
+                            <flux:text>{{ __('Choose a billing period for your :plan subscription.', ['plan' => str($checkoutPlan['plan']->value)->title()]) }}</flux:text>
+                        </div>
 
-                    <form method="POST" action="{{ route('billing.checkout', ['interval' => 'monthly']) }}">
-                        @csrf
-                        <flux:button type="submit" variant="primary" class="w-full">{{ __('Continue monthly') }}</flux:button>
-                    </form>
-                </flux:card>
-
-                <flux:card class="flex flex-col gap-4">
-                    <div class="flex flex-col gap-1">
-                        <flux:heading size="lg">{{ __('Yearly') }}</flux:heading>
-                        <flux:text>{{ __('One year of uninterrupted access.') }}</flux:text>
-                    </div>
-
-                    <form method="POST" action="{{ route('billing.checkout', ['interval' => 'yearly']) }}">
-                        @csrf
-                        <flux:button type="submit" variant="primary" class="w-full">{{ __('Continue yearly') }}</flux:button>
-                    </form>
-                </flux:card>
+                        <div class="flex flex-col gap-2">
+                            @foreach ($checkoutPlan['intervals'] as $interval)
+                                <form method="POST" action="{{ route('billing.checkout', ['plan' => $checkoutPlan['plan']->value, 'interval' => $interval]) }}">
+                                    @csrf
+                                    <flux:button type="submit" variant="primary" class="w-full">{{ __('Continue :interval', ['interval' => str($interval)->title()]) }}</flux:button>
+                                </form>
+                            @endforeach
+                        </div>
+                    </flux:card>
+                @endforeach
             </div>
         @else
             <flux:callout variant="success" icon="check-circle" heading="{{ __('You already have a subscription.') }}">
