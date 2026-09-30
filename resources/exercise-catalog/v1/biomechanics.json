@@ -988,38 +988,50 @@
         ]
     },
     "cableHipAdduction": {
-        "phase": "closed/crossed endRange",
+        "phase": "endRange",
         "bodyPosition": [
-            "standing side-on to a low cable machine",
-            "support leg planted and stable",
+            "standing sideways immediately next to a low cable machine",
+            "the cable machine is on the athlete's LEFT side",
             "torso upright",
-            "pelvis square and level"
+            "pelvis facing forward",
+            "right leg is the stationary support leg"
         ],
+
         "equipment": [
-            "ankle strap attached to the working ankle",
-            "cable attached at the lowest pulley setting"
+            "ankle strap attached to the LEFT ankle",
+            "LEFT ankle is the ankle closest to the cable machine",
+            "exactly one cable connects the LEFT ankle strap to the lowest pulley"
         ],
+
         "workingLeg": [
-            "working leg is the leg closer to the cable machine",
-            "working knee straight or only slightly bent",
-            "working leg moves inward across the front of the support leg"
+            "LEFT leg is the working leg",
+            "LEFT leg starts beside the cable machine",
+            "LEFT leg moves RIGHTWARD toward the center of the athlete's body",
+            "LEFT leg passes in front of the stationary RIGHT leg",
+            "at end range the LEFT foot is slightly to the RIGHT of the body's center line"
         ],
+
         "movement": [
-            "working leg moves inward toward the body's midline",
-            "working leg continues slightly across the body's midline",
-            "movement occurs primarily in the frontal plane"
+            "the strapped LEFT leg moves FROM the cable-machine side TOWARD the opposite side",
+            "the distance between the strapped ankle and the cable machine INCREASES during the movement",
+            "the legs CLOSE together during the movement",
+            "the working leg crosses the body's center line"
         ],
+
         "camera": {
             "angle": "front 3/4",
-            "priority": "the inward movement and slight crossing of the working leg must be unmistakable"
+            "priority": "the LEFT strapped leg crossing inward in front of the stationary RIGHT leg must be unmistakable"
         },
+
         "mustNot": [
-            "working leg moving laterally outward away from the body",
+            "LEFT strapped leg moving left toward the cable machine",
+            "LEFT strapped leg moving outward away from the body's center line",
+            "legs opening apart",
             "hip abduction",
-            "leg moving backward like a glute kickback",
-            "significant torso leaning",
-            "pelvis rotating",
-            "dedicated hip adduction machine"
+            "working leg extending sideways away from the other leg",
+            "working leg moving backward",
+            "glute kickback",
+            "ankle strap on the RIGHT leg"
         ]
     }
 }

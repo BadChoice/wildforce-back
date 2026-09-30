@@ -7,6 +7,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Files;
 use Laravel\Ai\Image;
 
@@ -21,7 +22,13 @@ class GenerateVerticalExerciseShotImage extends Command
     private function prompt(array $exercise, ?array $biomechanics = null): string
     {
         $base = '
-Create a vertical (4:5) high-resolution fitness studio photograph of the attached athlete model performing:
+Create a vertical (4:5) high-resolution fitness studio photograph.
+
+Use the EXACT SAME PERSON from the attached reference image as the athlete.
+This is an identity-preservation task, not a request to create a new fitness model.
+
+The referenced athlete is performing:
+
 [EXERCISE_NAME]
 
 [BIOMECHANICS]
@@ -65,6 +72,31 @@ Correct anatomical proportions (no distortions)
 Realistic interaction with equipment
 Consistent lighting and shadows with environment
 No texts at all
+
+### ATHLETE IDENTITY — CRITICAL:
+The attached athlete image is the identity reference for the person in the generated photograph.
+
+You MUST depict the EXACT SAME PERSON shown in the attached reference image.
+
+Preserve her/his identity with very high fidelity:
+- same face and facial structure
+- same eyes, nose, mouth and jawline
+- same apparent age
+- same skin tone
+- same hair color, hairstyle and hair length
+- same body type and proportions
+- same overall physical appearance
+
+Do NOT create a different fitness model.
+Do NOT beautify, reinterpret, or redesign the person.
+Do NOT change facial features.
+Do NOT change apparent age.
+Do NOT change hair or body type.
+
+The exercise, pose, camera angle, clothing and environment may change,
+but the athlete\'s identity must remain visually consistent with the attached reference.
+
+IDENTITY PRESERVATION HAS HIGH PRIORITY.
 
 ### EQUIPMENT PHYSICS — CRITICAL:
 All exercise equipment must be mechanically realistic and physically connected.
@@ -120,7 +152,7 @@ No artifacts, no extra limbs, no warped equipment';
                 Files\Image::fromPath(resource_path("assetModels/{$gender}.png")),
             ])
             ->portrait()
-            ->generate();
+            ->generate(provider: Lab::OpenAI);
 
         $image->storeAs('vertical/'.$exerciseId.'_'.$gender.'.jpeg');
 
