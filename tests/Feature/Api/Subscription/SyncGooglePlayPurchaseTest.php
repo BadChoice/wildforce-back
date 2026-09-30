@@ -55,7 +55,7 @@ function googlePlayPurchase(string $accountId): array
         'subscriptionState' => 'SUBSCRIPTION_STATE_ACTIVE',
         'externalAccountIdentifiers' => ['obfuscatedExternalAccountId' => $accountId],
         'lineItems' => [[
-            'productId' => 'io.codepassion.wildforce.subscription.year',
+            'productId' => 'io.codepassion.wildforce.premium.year',
             'expiryTime' => now()->addYear()->toISOString(),
             'autoRenewingPlan' => ['autoRenewEnabled' => true],
         ]],

@@ -39,10 +39,10 @@ return [
         // store. It must never be bundled into the Android application.
         'service_account_json' => env('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON'),
         'product_plans' => [
-            'io.codepassion.wildforce.subscription.standard' => [
+            'io.codepassion.wildforce.premium' => [
                 'plan' => 'premium', 'billing_interval' => 'month', 'billing_interval_count' => 1,
             ],
-            'io.codepassion.wildforce.subscription.year' => [
+            'io.codepassion.wildforce.premium.year' => [
                 'plan' => 'premium', 'billing_interval' => 'year', 'billing_interval_count' => 1,
             ],
         ],
