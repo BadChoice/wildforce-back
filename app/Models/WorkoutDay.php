@@ -49,6 +49,10 @@ class WorkoutDay extends Model implements Syncable
         return $this->hasMany(PlannedExercise::class);
     }
 
+    public function exercisesCount() : int {
+        return $this->blocks->sum(fn($block) => $block->exercises->count()) + $this->directExercises()->count();
+    }
+
     public function directExercises(): HasMany
     {
         return $this->hasMany(PlannedExercise::class)->whereNull('workout_block_id');

@@ -90,13 +90,13 @@
                                         <flux:button size="sm" variant="ghost" icon="trash" wire:click="removeExercise('{{ $block['id'] }}', '{{ $exercise['id'] }}')" aria-label="{{ __('Remove :exercise', ['exercise' => $exercise['name']]) }}" />
                                     </div>
                                     <flux:textarea wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.notes" rows="1" class="mt-3" placeholder="{{ __('Exercise notes') }}" />
-                                    <div class="mt-3 grid gap-3 sm:grid-cols-4">
+                                    <div class="mt-3 grid gap-3 sm:grid-cols-5">
                                         <flux:field><flux:label>{{ __('Sets') }}</flux:label><flux:input type="number" min="1" wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.sets" /></flux:field>
                                         <flux:field><flux:label>{{ __('Min reps') }}</flux:label><flux:input type="number" min="0" wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.reps_min" /></flux:field>
                                         <flux:field><flux:label>{{ __('Max reps') }}</flux:label><flux:input type="number" min="0" wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.reps_max" /></flux:field>
                                         <flux:field><flux:label>{{ __('Weight (kg)') }}</flux:label><flux:input type="number" min="0" step="0.5" wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.target_weight_kg" /></flux:field>
+                                        <flux:field><flux:label>{{ __('Rest (seconds)') }}</flux:label><flux:input type="number" min="0" wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.rest_seconds" /></flux:field>
                                     </div>
-                                    <flux:field class="mt-3"><flux:label>{{ __('Rest (seconds)') }}</flux:label><flux:input type="number" min="0" wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.rest_seconds" /></flux:field>
                                 </article>
                             @empty
                                 <p class="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">{{ __('Select this block, then add exercises from the catalog.') }}</p>

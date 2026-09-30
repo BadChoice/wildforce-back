@@ -417,9 +417,15 @@ new class extends Component
                         <flux:heading size="sm">{{ $template->title }}</flux:heading>
                         <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
                             <span>{{ str($template->focus)->headline() }}</span>
+
+                            <flux:separator vertical="true" />
+
                             @if ($template->estimated_duration_minutes)
                                 <span>{{ trans_choice(':count min', $template->estimated_duration_minutes, ['count' => $template->estimated_duration_minutes]) }}</span>
                             @endif
+
+                            <flux:separator vertical="true" />
+                            {{ $template->exercisesCount() }} {{ __('Exercises') }}
                         </div>
                     </div>
                     <div class="flex items-center gap-1">
@@ -434,7 +440,7 @@ new class extends Component
                             <p class="mb-3 text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('Block :number', ['number' => $blockIndex + 1]) }}</p>
                             <div class="flex gap-3 overflow-x-auto">
                                 @forelse ($block->exercises as $exercise)
-                                    <div class="w-20 shrink-0 text-center" title="{{ $exercise->exercise }}">
+                                    <div class="w-20 shrink-0 text-left" title="{{ $exercise->exercise }}">
                                         <img src="{{ $exercise->imageUrl() }}" alt="" class="h-16 w-14 rounded-md bg-zinc-200 object-cover dark:bg-zinc-700" loading="lazy" />
                                         <p class="mt-1 line-clamp-2 text-xs font-medium text-zinc-700 dark:text-zinc-200">{{ $this->exerciseNames[$exercise->exercise] ?? $exercise->exercise }}</p>
                                     </div>
