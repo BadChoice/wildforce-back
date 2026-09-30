@@ -1,0 +1,1025 @@
+{
+    "_meta": {
+        "purpose": "Visual biomechanics constraints for exercise image generation. Entries are gender-independent and keyed by ExerciseCatalog exercise id.",
+        "usage": "Merge these constraints into the image prompt only when an exercise id exists here. ExerciseCatalog remains the source for general instructions/tips.",
+        "version": 1
+    },
+    "chinUp": {
+        "phase": "top",
+        "bodyPosition": [
+            "hanging vertically from a pull-up bar",
+            "chin clearly above the bar",
+            "torso mostly vertical",
+            "legs controlled below the body"
+        ],
+        "hands": [
+            "supinated grip",
+            "palms facing the athlete",
+            "hands approximately shoulder-width apart"
+        ],
+        "movement": [
+            "vertical pull",
+            "elbows driven down toward the ribs"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "make the supinated grip and both palms visually unmistakable"
+        },
+        "mustNot": [
+            "pronated pull-up grip",
+            "palms facing away",
+            "neutral grip",
+            "wide pull-up grip",
+            "kipping or swinging"
+        ]
+    },
+    "doorwayChestStretch": {
+        "phase": "stretch",
+        "bodyPosition": [
+            "standing in a doorway",
+            "one or both forearms supported on the door frame",
+            "chest gently moving forward through the doorway"
+        ],
+        "arms": [
+            "elbows bent approximately 90 degrees",
+            "upper arms around shoulder height or slightly below"
+        ],
+        "movement": [
+            "passive chest and anterior-shoulder stretch",
+            "torso advances forward while arm position remains supported"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "door frame contact and forward chest position must be obvious"
+        },
+        "mustNot": [
+            "push-up position",
+            "arms hanging freely",
+            "overhead lat stretch",
+            "aggressive spinal arch"
+        ]
+    },
+    "dumbbellBenchPress": {
+        "phase": "mid-to-bottom",
+        "bodyPosition": [
+            "lying supine on a flat bench",
+            "feet planted on floor",
+            "head and upper back supported"
+        ],
+        "equipment": [
+            "one dumbbell in each hand",
+            "flat bench"
+        ],
+        "arms": [
+            "elbows roughly 45 degrees from torso",
+            "forearms approximately vertical"
+        ],
+        "movement": [
+            "dumbbells press vertically above mid-chest"
+        ],
+        "camera": {
+            "angle": "front-side 3/4",
+            "priority": "flat bench and two independent dumbbells clearly visible"
+        },
+        "mustNot": [
+            "incline bench",
+            "decline bench",
+            "barbell",
+            "dumbbell fly arc",
+            "palms facing each other throughout like a fly"
+        ]
+    },
+    "dumbbellDeclineBenchPress": {
+        "phase": "mid-to-bottom",
+        "bodyPosition": [
+            "lying supine on a clearly declined bench",
+            "head lower than hips",
+            "legs secured by decline bench support"
+        ],
+        "equipment": [
+            "one dumbbell in each hand",
+            "decline bench"
+        ],
+        "arms": [
+            "elbows bent beside lower chest",
+            "forearms approximately vertical"
+        ],
+        "movement": [
+            "dumbbells press upward from lower-chest line"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "the downward bench angle with head lower than hips must be unmistakable"
+        },
+        "mustNot": [
+            "flat bench",
+            "incline bench",
+            "barbell",
+            "dumbbell fly",
+            "head higher than hips"
+        ]
+    },
+    "hammerCurl": {
+        "phase": "mid-curl",
+        "bodyPosition": [
+            "standing upright",
+            "upper arms close to torso",
+            "no torso swing"
+        ],
+        "hands": [
+            "neutral grip throughout",
+            "palms facing inward toward each other",
+            "thumbs pointing upward"
+        ],
+        "movement": [
+            "elbow flexion only",
+            "dumbbells travel toward shoulders without wrist rotation"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "neutral hammer grip must be clearly visible"
+        },
+        "mustNot": [
+            "supinated palms-up curl",
+            "pronated reverse curl",
+            "wrist rotation",
+            "elbows drifting far forward"
+        ]
+    },
+    "handReleasePushUp": {
+        "phase": "bottom hand-release",
+        "bodyPosition": [
+            "prone on floor",
+            "chest in contact with floor",
+            "body aligned from head to heels"
+        ],
+        "hands": [
+            "both hands visibly lifted slightly off the floor beside the chest"
+        ],
+        "movement": [
+            "bottom of push-up with a deliberate hand release before pressing up"
+        ],
+        "camera": {
+            "angle": "side-front 3/4",
+            "priority": "both hands must visibly lose contact with the floor"
+        },
+        "mustNot": [
+            "standard push-up with hands planted",
+            "kneeling push-up",
+            "cobra pose",
+            "hips raised"
+        ]
+    },
+    "cableFly": {
+        "phase": "contracted",
+        "bodyPosition": [
+            "standing centered between two cable columns",
+            "slight forward step or staggered stance",
+            "slight forward torso lean"
+        ],
+        "equipment": [
+            "two cable handles",
+            "pulleys set approximately chest height"
+        ],
+        "arms": [
+            "slight fixed elbow bend",
+            "hands meet or nearly meet in front of mid-chest"
+        ],
+        "movement": [
+            "horizontal adduction in a wide hugging arc"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "both chest-height cables and fly arc must be obvious"
+        },
+        "mustNot": [
+            "low-to-high cable path",
+            "high-to-low cable path",
+            "cable press with strong elbow extension",
+            "single-arm cable movement"
+        ]
+    },
+    "machineGluteKickback": {
+        "phase": "endRange",
+        "bodyPosition": [
+            "supported in a dedicated glute kickback machine",
+            "pelvis stable",
+            "core braced"
+        ],
+        "equipment": [
+            "dedicated glute kickback machine",
+            "working foot pressing the machine platform or pad"
+        ],
+        "movement": [
+            "one leg drives backward and slightly upward through hip extension"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "dedicated machine and backward hip extension must be unmistakable"
+        },
+        "mustNot": [
+            "cable ankle strap",
+            "standing cable machine",
+            "hip abduction sideways",
+            "donkey kick on floor",
+            "excessive lumbar arch"
+        ]
+    },
+    "lowToHighCableFly": {
+        "phase": "contracted",
+        "bodyPosition": [
+            "standing centered between two low cable pulleys",
+            "slight forward step",
+            "torso stable"
+        ],
+        "equipment": [
+            "two handles attached to pulleys at the lowest setting"
+        ],
+        "arms": [
+            "slight elbow bend",
+            "hands finish together in front of upper chest"
+        ],
+        "movement": [
+            "both handles travel diagonally upward and inward from low beside the hips toward upper chest"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "low pulley origin and upward diagonal cable path must be clearly visible"
+        },
+        "mustNot": [
+            "horizontal chest-height cable fly",
+            "high-to-low fly",
+            "cable lateral raise",
+            "cable front raise",
+            "pressing motion"
+        ]
+    },
+    "machineHipAbduction": {
+        "phase": "open/endRange",
+        "bodyPosition": [
+            "seated upright in a hip abduction machine",
+            "back supported",
+            "pelvis centered"
+        ],
+        "equipment": [
+            "outer thighs or knees pressing against the machine pads"
+        ],
+        "movement": [
+            "both knees move outward away from the body midline",
+            "legs visibly spread apart against resistance"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "OPEN leg position must be unmistakable"
+        },
+        "mustNot": [
+            "knees together",
+            "hip adduction machine action",
+            "standing cable abduction",
+            "feet crossing"
+        ]
+    },
+    "machineHipAdduction": {
+        "phase": "closed/endRange",
+        "bodyPosition": [
+            "seated upright in a hip adduction machine",
+            "back supported",
+            "pelvis centered"
+        ],
+        "equipment": [
+            "inner thighs or knees pressing against the machine pads"
+        ],
+        "movement": [
+            "both knees move inward toward the body midline",
+            "legs finish close together against resistance"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "CLOSED leg position must be unmistakable"
+        },
+        "mustNot": [
+            "legs spread wide at end range",
+            "hip abduction action",
+            "standing cable adduction",
+            "legs crossing unnaturally"
+        ]
+    },
+    "neckCircles": {
+        "phase": "side/front portion of circle",
+        "bodyPosition": [
+            "standing or seated tall",
+            "shoulders relaxed and level",
+            "torso stationary"
+        ],
+        "movement": [
+            "head gently follows a slow circular path",
+            "neck movement only"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "head tilt/rotation should communicate neck mobility without implying torso rotation"
+        },
+        "mustNot": [
+            "full-body rotation",
+            "shoulder circles",
+            "extreme forced neck extension",
+            "hands pulling on head"
+        ]
+    },
+    "outdoorRunning": {
+        "phase": "mid-stride",
+        "bodyPosition": [
+            "upright running posture with slight natural forward lean",
+            "one leg in stance or push-off and the other advancing",
+            "opposite arm-leg coordination"
+        ],
+        "environment": [
+            "clearly outdoors",
+            "running path, track, road or park context"
+        ],
+        "movement": [
+            "natural running stride",
+            "elbows bent and arms driving front-to-back"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "clear running gait and outdoor setting"
+        },
+        "mustNot": [
+            "walking",
+            "treadmill",
+            "static jogging pose",
+            "both feet planted symmetrically",
+            "sprinting blocks"
+        ]
+    },
+    "rearDeltFly": {
+        "phase": "top/endRange",
+        "bodyPosition": [
+            "standing or seated with torso hinged forward",
+            "back flat",
+            "neck neutral"
+        ],
+        "equipment": [
+            "one dumbbell in each hand"
+        ],
+        "arms": [
+            "slight elbow bend",
+            "arms raised wide to the sides approximately in line with shoulders"
+        ],
+        "movement": [
+            "horizontal shoulder abduction driven by rear delts"
+        ],
+        "camera": {
+            "angle": "rear 3/4",
+            "priority": "hinged torso and wide lateral dumbbell path must be clear"
+        },
+        "mustNot": [
+            "upright lateral raise",
+            "chest fly lying on bench",
+            "rowing motion with elbows tucked",
+            "shrug"
+        ]
+    },
+    "tricepsDip": {
+        "phase": "bottom",
+        "bodyPosition": [
+            "body suspended between parallel dip bars",
+            "torso mostly upright",
+            "feet off floor"
+        ],
+        "equipment": [
+            "parallel dip bars"
+        ],
+        "arms": [
+            "elbows bent and tracking backward",
+            "hands supporting body on bars"
+        ],
+        "movement": [
+            "vertical bodyweight dip emphasizing elbow extension"
+        ],
+        "camera": {
+            "angle": "front-side 3/4",
+            "priority": "parallel bars and suspended body must be obvious"
+        },
+        "mustNot": [
+            "bench dip",
+            "ring dip",
+            "push-up",
+            "feet supporting body weight on floor",
+            "extreme forward chest lean"
+        ]
+    },
+    "shoulderMobilityFlow": {
+        "phase": "overhead mobility position",
+        "bodyPosition": [
+            "standing tall",
+            "ribcage controlled",
+            "shoulders moving through comfortable range"
+        ],
+        "arms": [
+            "both arms elevated overhead or sweeping through a controlled shoulder mobility arc"
+        ],
+        "movement": [
+            "bilateral shoulder mobility flow rather than loaded strength work"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "clearly communicate shoulder range-of-motion work"
+        },
+        "mustNot": [
+            "dumbbells",
+            "barbell overhead press",
+            "resistance machine",
+            "neck-only mobility",
+            "ballistic arm swinging"
+        ]
+    },
+    "scorpions": {
+        "phase": "rotated/endRange",
+        "bodyPosition": [
+            "lying prone on floor",
+            "arms extended out to sides for stability",
+            "chest largely facing floor"
+        ],
+        "movement": [
+            "one leg bends and reaches across behind the body toward the opposite side",
+            "pelvis and lower torso rotate while shoulders remain relatively grounded"
+        ],
+        "camera": {
+            "angle": "rear/top 3/4",
+            "priority": "cross-body scorpion leg reach must be obvious"
+        },
+        "mustNot": [
+            "supine windshield wipers",
+            "quadruped donkey kick",
+            "plank",
+            "standing stretch",
+            "both legs moving together"
+        ]
+    },
+    "skiErgWork": {
+        "phase": "power/pull phase",
+        "bodyPosition": [
+            "standing facing a SkiErg machine",
+            "hips and knees slightly flexed",
+            "torso hinging slightly forward"
+        ],
+        "equipment": [
+            "SkiErg with two independent overhead handles/cords"
+        ],
+        "arms": [
+            "handles being pulled down from overhead toward hips"
+        ],
+        "movement": [
+            "bilateral downward ski-pole pulling action coordinated with trunk and hip flexion"
+        ],
+        "camera": {
+            "angle": "side-front 3/4",
+            "priority": "SkiErg tower, overhead cords and downward pull must all be recognizable"
+        },
+        "mustNot": [
+            "rowing machine",
+            "lat pulldown",
+            "cable triceps pushdown",
+            "elliptical",
+            "cross-country skis outdoors"
+        ]
+    },
+    "smithMachineBenchPress": {
+        "phase": "bottom-to-mid",
+        "bodyPosition": [
+            "lying supine on a flat bench centered inside a Smith machine",
+            "feet planted"
+        ],
+        "equipment": [
+            "Smith machine guided bar",
+            "flat bench"
+        ],
+        "movement": [
+            "bar travels on fixed rails toward and away from mid-chest"
+        ],
+        "camera": {
+            "angle": "side-front 3/4",
+            "priority": "flat bench and Smith machine rails must be obvious"
+        },
+        "mustNot": [
+            "free barbell rack",
+            "incline bench",
+            "decline bench",
+            "dumbbells"
+        ]
+    },
+    "smithMachineDeclineBenchPress": {
+        "phase": "bottom-to-mid",
+        "bodyPosition": [
+            "lying on a decline bench inside a Smith machine",
+            "head clearly lower than hips",
+            "body secured on bench"
+        ],
+        "equipment": [
+            "Smith machine guided bar",
+            "decline bench"
+        ],
+        "movement": [
+            "guided bar lowers toward lower chest and presses upward"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "Smith rails plus clear head-lower-than-hips decline angle"
+        },
+        "mustNot": [
+            "flat bench",
+            "incline bench",
+            "free barbell",
+            "dumbbells",
+            "head higher than hips"
+        ]
+    },
+    "smithMachineOverheadPress": {
+        "phase": "mid-press",
+        "bodyPosition": [
+            "seated or standing directly under a Smith machine bar",
+            "torso upright",
+            "core braced"
+        ],
+        "equipment": [
+            "Smith machine guided bar"
+        ],
+        "arms": [
+            "grip slightly wider than shoulder width",
+            "bar between shoulder level and overhead"
+        ],
+        "movement": [
+            "vertical guided overhead press"
+        ],
+        "camera": {
+            "angle": "front-side 3/4",
+            "priority": "Smith rails and vertical overhead bar path must be visible"
+        },
+        "mustNot": [
+            "bench press",
+            "behind-the-neck press",
+            "free barbell rack",
+            "dumbbells",
+            "excessive lumbar arch"
+        ]
+    },
+    "sprawl": {
+        "phase": "low/plank transition",
+        "bodyPosition": [
+            "hands planted on floor",
+            "legs kicked back into a strong plank-like position",
+            "hips relatively low and aligned"
+        ],
+        "movement": [
+            "rapid transition from athletic standing/squat stance to hands-down legs-back position"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "hands-down legs-back sprawl position must be clear"
+        },
+        "mustNot": [
+            "push-up repetition",
+            "burpee jump as the focal phase",
+            "kneeling",
+            "hips extremely high like downward dog"
+        ]
+    },
+    "threadTheNeedle": {
+        "phase": "threaded/endRange",
+        "bodyPosition": [
+            "starting from all fours",
+            "hips above knees and kept relatively square",
+            "supporting hand planted"
+        ],
+        "arms": [
+            "working arm reaches under the torso across to the opposite side",
+            "back of working hand/arm near floor"
+        ],
+        "movement": [
+            "thoracic rotation with working shoulder and ear lowering toward floor"
+        ],
+        "camera": {
+            "angle": "front-side 3/4",
+            "priority": "one arm visibly threaded underneath the torso"
+        },
+        "mustNot": [
+            "child's pose",
+            "side plank rotation",
+            "standing rotation",
+            "both shoulders remaining square to floor"
+        ]
+    },
+    "barbellDeclineBenchPress": {
+        "phase": "bottom-to-mid",
+        "bodyPosition": [
+            "lying on a decline bench",
+            "head clearly lower than hips",
+            "legs secured"
+        ],
+        "equipment": [
+            "single Olympic barbell",
+            "decline bench or decline rack"
+        ],
+        "movement": [
+            "bar lowers toward lower chest and presses upward"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "decline angle and barbell must both be unmistakable"
+        },
+        "mustNot": [
+            "flat bench",
+            "incline bench",
+            "dumbbells",
+            "Smith machine rails",
+            "head higher than hips"
+        ]
+    },
+    "bayesianCableCurl": {
+        "phase": "mid-curl",
+        "bodyPosition": [
+            "standing facing away from or slightly ahead of a low cable pulley",
+            "working upper arm positioned slightly behind torso",
+            "torso upright"
+        ],
+        "equipment": [
+            "single low cable handle held in one hand"
+        ],
+        "arms": [
+            "working elbow remains behind or near torso",
+            "forearm curls forward/up while upper arm stays back"
+        ],
+        "movement": [
+            "unilateral elbow flexion from a lengthened behind-the-body biceps position"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "cable must originate behind the athlete and working upper arm must remain behind torso"
+        },
+        "mustNot": [
+            "facing the cable stack",
+            "two-arm cable curl",
+            "cable lateral raise",
+            "triceps extension",
+            "upper arm drifting far forward"
+        ]
+    },
+    "boxJump": {
+        "phase": "landing",
+        "bodyPosition": [
+            "both feet fully on top of a sturdy plyometric box",
+            "knees and hips flexed in a soft partial-squat landing",
+            "torso balanced"
+        ],
+        "equipment": [
+            "plyometric box"
+        ],
+        "movement": [
+            "two-foot jump from floor onto top of box"
+        ],
+        "camera": {
+            "angle": "side-front 3/4",
+            "priority": "both feet clearly landed on top surface of box"
+        },
+        "mustNot": [
+            "step-up",
+            "jumping down from box",
+            "one foot only on box",
+            "knees collapsing dramatically inward"
+        ]
+    },
+    "cableGluteKickback": {
+        "phase": "endRange",
+        "bodyPosition": [
+            "standing facing a low cable machine",
+            "support leg planted with slight knee bend",
+            "torso mostly upright and pelvis square"
+        ],
+        "equipment": [
+            "ankle strap attached to the working ankle",
+            "cable attached at the lowest pulley setting"
+        ],
+        "workingLeg": [
+            "working leg extended backward and slightly upward behind the body",
+            "knee straight or only slightly bent"
+        ],
+        "movement": [
+            "hip extension backward, not sideways"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "ankle strap, low cable, and backward leg extension must all be clearly visible"
+        },
+        "mustNot": [
+            "hip abduction to the side",
+            "hip adduction across body",
+            "dedicated glute kickback machine",
+            "quadruped donkey kick",
+            "large lumbar arch",
+            "cable attached to hand"
+        ]
+    },
+    "cableRearDeltFly": {
+        "phase": "contracted/endRange",
+        "bodyPosition": [
+            "standing centered at a dual cable station",
+            "torso upright or slightly hinged",
+            "chest stable"
+        ],
+        "equipment": [
+            "two cable handles or cable ends crossing in front of body"
+        ],
+        "arms": [
+            "slight elbow bend",
+            "arms opened wide approximately at shoulder height"
+        ],
+        "movement": [
+            "horizontal shoulder abduction, pulling cables outward and backward"
+        ],
+        "camera": {
+            "angle": "front-rear 3/4",
+            "priority": "cross-body cable setup and wide rear-delt opening must be obvious"
+        },
+        "mustNot": [
+            "cable chest fly bringing hands together",
+            "face pull",
+            "row with elbows tucked",
+            "dumbbells"
+        ]
+    },
+    "chestFly": {
+        "phase": "lowered/stretch",
+        "bodyPosition": [
+            "lying supine on a flat bench",
+            "feet planted",
+            "head and back supported"
+        ],
+        "equipment": [
+            "one dumbbell in each hand",
+            "flat bench"
+        ],
+        "arms": [
+            "arms opened wide to sides",
+            "slight fixed elbow bend",
+            "palms generally facing each other"
+        ],
+        "movement": [
+            "wide hugging arc around shoulder joint with minimal elbow-angle change"
+        ],
+        "camera": {
+            "angle": "front-side 3/4",
+            "priority": "wide dumbbell fly arc must be clearly different from a dumbbell press"
+        },
+        "mustNot": [
+            "pec deck machine",
+            "cable machine",
+            "bench press with elbows bending deeply",
+            "incline or decline bench"
+        ]
+    },
+    "jumpingJacks": {
+        "phase": "open",
+        "bodyPosition": [
+            "standing upright",
+            "feet jumped wide apart",
+            "both arms raised overhead"
+        ],
+        "movement": [
+            "symmetric jumping-jack open position with arms and legs moving laterally together"
+        ],
+        "camera": {
+            "angle": "front",
+            "priority": "wide feet and overhead arms make the exercise instantly recognizable"
+        },
+        "mustNot": [
+            "feet together with arms down",
+            "star jump with deep squat",
+            "lunge",
+            "one-sided movement"
+        ]
+    },
+    "latPulldown": {
+        "phase": "contracted",
+        "bodyPosition": [
+            "seated at a lat pulldown machine",
+            "thighs secured under knee pads",
+            "torso slightly leaned back"
+        ],
+        "equipment": [
+            "wide pulldown bar attached to overhead cable"
+        ],
+        "hands": [
+            "pronated overhand grip wider than shoulder width"
+        ],
+        "movement": [
+            "bar pulled down in front of body toward upper chest",
+            "elbows driven downward"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "overhead cable, thigh pads, wide bar and bar-to-upper-chest position must be clear"
+        },
+        "mustNot": [
+            "bar behind neck",
+            "chin-up or pull-up",
+            "seated cable row",
+            "supinated narrow grip"
+        ]
+    },
+    "romanianDeadlift": {
+        "phase": "bottom/stretch",
+        "bodyPosition": [
+            "standing hip hinge",
+            "hips pushed far backward",
+            "spine neutral",
+            "knees only slightly bent"
+        ],
+        "equipment": [
+            "barbell held close to legs"
+        ],
+        "movement": [
+            "bar travels down close to thighs and shins through hip hinge",
+            "shins remain nearly vertical"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "hip hinge, nearly vertical shins and slight knee bend must distinguish it from a squat/deadlift"
+        },
+        "mustNot": [
+            "deep squat",
+            "bar starting from floor as conventional deadlift",
+            "large knee bend",
+            "rounded lower back",
+            "bar drifting far from legs"
+        ]
+    },
+    "seatedCableRow": {
+        "phase": "contracted",
+        "bodyPosition": [
+            "seated facing a low cable stack",
+            "feet braced on foot platforms",
+            "knees slightly bent",
+            "torso upright without chest support"
+        ],
+        "equipment": [
+            "low cable row station",
+            "cable handle pulled toward lower ribs"
+        ],
+        "movement": [
+            "horizontal pull with elbows traveling backward close to torso"
+        ],
+        "camera": {
+            "angle": "side-front 3/4",
+            "priority": "low cable and lack of chest-support pad must distinguish it from a seated machine row"
+        },
+        "mustNot": [
+            "chest-supported row machine",
+            "lat pulldown",
+            "standing cable row",
+            "excessive torso rocking"
+        ]
+    },
+    "pecDeckFly": {
+        "phase": "contracted",
+        "bodyPosition": [
+            "seated upright with back and head against pec-deck seat"
+        ],
+        "equipment": [
+            "dedicated pec deck/chest fly machine",
+            "forearms or arms contacting padded levers/handles"
+        ],
+        "movement": [
+            "both machine arms close inward in front of chest"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "dedicated pec-deck machine must be unmistakable"
+        },
+        "mustNot": [
+            "dumbbells",
+            "flat bench dumbbell fly",
+            "standing cable fly",
+            "rear-delt reverse pec deck"
+        ]
+    },
+    "seatedLegCurl": {
+        "phase": "contracted",
+        "bodyPosition": [
+            "seated upright in a leg curl machine",
+            "thighs secured by lap/thigh pad",
+            "back supported"
+        ],
+        "equipment": [
+            "padded lever positioned behind lower legs/ankles"
+        ],
+        "movement": [
+            "knees flex so lower legs curl downward and backward underneath the seat"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "seated posture, thigh restraint and downward/backward lower-leg curl must be obvious"
+        },
+        "mustNot": [
+            "lying/prone leg curl",
+            "standing leg curl",
+            "leg extension",
+            "Romanian deadlift"
+        ]
+    },
+    "seatedMachineRow": {
+        "phase": "contracted",
+        "bodyPosition": [
+            "seated facing a dedicated row machine",
+            "chest firmly supported against a chest pad",
+            "torso stationary"
+        ],
+        "equipment": [
+            "dedicated seated row machine with handles",
+            "chest-support pad"
+        ],
+        "movement": [
+            "handles pulled backward toward torso while chest remains on pad"
+        ],
+        "camera": {
+            "angle": "side-front 3/4",
+            "priority": "chest-support pad and dedicated machine must distinguish it from a cable row"
+        },
+        "mustNot": [
+            "low cable row station",
+            "unsupported torso",
+            "lat pulldown",
+            "standing row"
+        ]
+    },
+    "cableHipAbduction": {
+        "phase": "open/endRange",
+        "bodyPosition": [
+            "standing side-on to a low cable machine",
+            "support leg planted and stable",
+            "torso upright",
+            "pelvis square and level"
+        ],
+        "equipment": [
+            "ankle strap attached to the working ankle",
+            "cable attached at the lowest pulley setting"
+        ],
+        "workingLeg": [
+            "working leg is the leg farther from the cable machine",
+            "working knee straight or only slightly bent",
+            "working leg visibly separated laterally from the support leg"
+        ],
+        "movement": [
+            "working leg moves laterally outward away from the body's midline",
+            "movement occurs primarily in the frontal plane"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "the outward movement and visible separation between the legs must be unmistakable"
+        },
+        "mustNot": [
+            "working leg crossing in front of or behind the support leg",
+            "hip adduction",
+            "leg moving backward like a glute kickback",
+            "significant torso leaning",
+            "pelvis rotating",
+            "dedicated hip abduction machine"
+        ]
+    },
+    "cableHipAdduction": {
+        "phase": "closed/crossed endRange",
+        "bodyPosition": [
+            "standing side-on to a low cable machine",
+            "support leg planted and stable",
+            "torso upright",
+            "pelvis square and level"
+        ],
+        "equipment": [
+            "ankle strap attached to the working ankle",
+            "cable attached at the lowest pulley setting"
+        ],
+        "workingLeg": [
+            "working leg is the leg closer to the cable machine",
+            "working knee straight or only slightly bent",
+            "working leg moves inward across the front of the support leg"
+        ],
+        "movement": [
+            "working leg moves inward toward the body's midline",
+            "working leg continues slightly across the body's midline",
+            "movement occurs primarily in the frontal plane"
+        ],
+        "camera": {
+            "angle": "front 3/4",
+            "priority": "the inward movement and slight crossing of the working leg must be unmistakable"
+        },
+        "mustNot": [
+            "working leg moving laterally outward away from the body",
+            "hip abduction",
+            "leg moving backward like a glute kickback",
+            "significant torso leaning",
+            "pelvis rotating",
+            "dedicated hip adduction machine"
+        ]
+    }
+}

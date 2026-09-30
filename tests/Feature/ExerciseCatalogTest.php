@@ -72,3 +72,4 @@ test('the exercise catalog filters exercises by category and muscle', function (
         ->assertSee('Walking')
         ->assertDontSee('Barbell Back Squat');
 });
+

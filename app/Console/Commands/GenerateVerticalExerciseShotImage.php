@@ -15,13 +15,16 @@ use Laravel\Ai\Image;
 class GenerateVerticalExerciseShotImage extends Command
 {
     /**
-     * @param  array<string, mixed>  $exercise
+     * @param array<string, mixed> $exercise
+     * @param array<string, mixed>|null $biomechanics
      */
-    private function prompt(array $exercise): string
+    private function prompt(array $exercise, ?array $biomechanics = null): string
     {
         $base = '
 Create a vertical (4:5) high-resolution fitness studio photograph of the attached athlete model performing:
 [EXERCISE_NAME]
+
+[BIOMECHANICS]
 
 ### FRAMING & LAYOUT (STRICT):
 Portrait orientation (4:5 ratio)
@@ -63,6 +66,20 @@ Realistic interaction with equipment
 Consistent lighting and shadows with environment
 No texts at all
 
+### EQUIPMENT PHYSICS — CRITICAL:
+All exercise equipment must be mechanically realistic and physically connected.
+
+Cables, ropes, bars, straps, pulleys and handles must form physically
+possible connections.
+
+For cable exercises:
+- Every cable must have a clear origin and attachment point.
+- A cable must be one continuous line between attachment points.
+- Cables must remain under realistic tension.
+- Cables must never pass through the athlete, limbs, clothing or equipment.
+- Never create duplicate, branching, floating or disconnected cables.
+- Pulley routing must be mechanically plausible.
+
 ### STYLE:
 Professional fitness photography
 Sharp subject focus, especially glutes and legs
@@ -70,11 +87,12 @@ Clean commercial look
 No artifacts, no extra limbs, no warped equipment';
 
         return str_replace(
-            ['[EXERCISE_NAME]', '[EQUIPMENT]', '[INSTRUCTIONS]'],
+            ['[EXERCISE_NAME]', '[EQUIPMENT]', '[INSTRUCTIONS]', '[BIOMECHANICS]'],
             [
                 $exercise['name'],
                 $this->equipment($exercise),
                 $this->instructions($exercise),
+                $this->biomechanics($biomechanics),
             ],
             $base,
         );
@@ -95,7 +113,9 @@ No artifacts, no extra limbs, no warped equipment';
             return self::FAILURE;
         }
 
-        $image = Image::of($this->prompt($exercise))
+        $biomechanics = $exerciseCatalog->biomechanics($exerciseId);
+
+        $image = Image::of($this->prompt($exercise, $biomechanics))
             ->attachments([
                 Files\Image::fromPath(resource_path("assetModels/{$gender}.png")),
             ])
@@ -127,4 +147,74 @@ No artifacts, no extra limbs, no warped equipment';
     {
         return implode("\n", [...$exercise['instructions'], ...$exercise['tips']]);
     }
+
+    /**
+     * @param array<string, mixed>|null $biomechanics
+     */
+    private function biomechanics(?array $biomechanics): string
+    {
+        if (empty($biomechanics)) {
+            return '';
+        }
+
+        return <<<PROMPT
+### VISUAL BIOMECHANICS — STRICT
+
+The following constraints define exactly how the exercise must
+look in the generated image.
+
+These constraints have priority over generic assumptions about
+the exercise name.
+
+{$this->formatBiomechanics($biomechanics)}
+
+IMPORTANT:
+- Follow these biomechanical constraints literally.
+- The final pose must clearly communicate the specified exercise.
+- Do not substitute a visually similar exercise.
+- Anything listed under MUST NOT must not appear in the image.
+PROMPT;
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function formatBiomechanics(
+        array $data,
+        int $level = 0
+    ): string {
+        $lines = [];
+
+        foreach ($data as $key => $value) {
+            $label = Str::headline($key);
+
+            if ($key === 'mustNot') {
+                $label = 'MUST NOT';
+            }
+
+            if (is_array($value)) {
+                if (array_is_list($value)) {
+                    $lines[] = strtoupper($label).':';
+
+                    foreach ($value as $item) {
+                        $lines[] = "- {$item}";
+                    }
+                } else {
+                    $lines[] = strtoupper($label).':';
+
+                    foreach ($value as $subKey => $subValue) {
+                        $subLabel = Str::headline($subKey);
+                        $lines[] = "- {$subLabel}: {$subValue}";
+                    }
+                }
+
+                continue;
+            }
+
+            $lines[] = strtoupper($label).": {$value}";
+        }
+
+        return implode("\n", $lines);
+    }
 }
+

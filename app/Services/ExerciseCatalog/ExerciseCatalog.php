@@ -48,6 +48,16 @@ class ExerciseCatalog
     }
 
     /**
+     * @return array<string, mixed>|null
+     *
+     * @throws JsonException
+     */
+    public function biomechanics(string $id): ?array
+    {
+        return json_decode(file_get_contents(resource_path('exercise-catalog/v1/biomechanics.json')), true, depth: 512, flags: JSON_THROW_ON_ERROR)[$id] ?? null;
+    }
+
+    /**
      * @param  array<string, mixed>  $exercise
      */
     public function imageUrl(string $exercise, string $gender = 'female'): string
