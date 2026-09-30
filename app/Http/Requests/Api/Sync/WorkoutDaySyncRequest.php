@@ -2,12 +2,14 @@
 
 namespace App\Http\Requests\Api\Sync;
 
+use App\Enums\WorkoutKind;
 use App\Models\ExerciseResult;
 use App\Models\PlannedExercise;
 use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
 
 class WorkoutDaySyncRequest extends FormRequest
@@ -29,6 +31,8 @@ class WorkoutDaySyncRequest extends FormRequest
             'records.*.created_at' => ['required', 'date'],
             'records.*.updated_at' => ['required', 'date'],
             'records.*.deleted_at' => ['nullable', 'date'],
+            'records.*.kind' => ['sometimes', new Enum(WorkoutKind::class)],
+            'records.*.workout_plan_id' => ['sometimes', 'nullable', 'uuid'],
             'records.*.blocks' => ['present', 'array'],
             'records.*.exercises' => ['present', 'array'],
             'records.*.blocks.*' => ['array'],
@@ -72,6 +76,10 @@ class WorkoutDaySyncRequest extends FormRequest
                 }
 
                 $this->validateRecord($validator, "records.{$recordIndex}", $record, WorkoutDay::class, [], ['blocks', 'exercises']);
+
+                if (($record['kind'] ?? null) === WorkoutKind::Template->value && ($record['workout_plan_id'] ?? null) !== null) {
+                    $validator->errors()->add("records.{$recordIndex}.workout_plan_id", 'Workout templates cannot belong to a workout plan.');
+                }
 
                 foreach ($record['blocks'] ?? [] as $blockIndex => $block) {
                     if (! is_array($block)) {

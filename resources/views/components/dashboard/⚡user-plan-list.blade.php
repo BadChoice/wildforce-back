@@ -45,7 +45,7 @@ new class extends Component
             ->with('subscription')
             ->withCount([
                 'workoutPlans',
-                'workoutDays as custom_workouts_count' => fn (Builder $query): Builder => $query->whereNull('workout_plan_id'),
+                'workoutDays as custom_workouts_count' => fn (Builder $query): Builder => $query->customWorkouts(),
                 'nutritionPlans',
             ])
             ->orderBy('name')

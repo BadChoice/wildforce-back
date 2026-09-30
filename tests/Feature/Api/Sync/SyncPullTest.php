@@ -136,6 +136,7 @@ test('it pulls a complete workout day when an exercise result changed', function
     $response->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $workoutDay->id)
+        ->assertJsonPath('data.0.kind', 'workout')
         ->assertJsonPath('data.0.blocks.0.id', $block->id)
         ->assertJsonPath('data.0.blocks.0.exercises.0.id', $exercise->id)
         ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.id', $result->id)

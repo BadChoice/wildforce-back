@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\BodyProgressPhotoController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\Subscription\SubscriptionAccessController;
 use App\Http\Controllers\Api\Subscription\SyncAppStoreTransactionController;
+use App\Http\Controllers\Api\Sync\BatchSyncPullController;
 use App\Http\Controllers\Api\Sync\NutritionPlanSyncController;
 use App\Http\Controllers\Api\Sync\SyncPullController;
 use App\Http\Controllers\Api\Sync\SyncPushController;
@@ -50,6 +51,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
             ->whereIn('angle', ['profile', 'front', 'torso']);
         Route::post('/sync/push', SyncPushController::class);
         Route::get('/sync/pull', SyncPullController::class);
+        Route::post('/sync/pull/batch', BatchSyncPullController::class);
         Route::apiResource('/sync/workout-days', WorkoutDaySyncController::class)->only(['index', 'store']);
         Route::apiResource('/sync/nutrition-plans', NutritionPlanSyncController::class)->only(['index', 'store']);
     });

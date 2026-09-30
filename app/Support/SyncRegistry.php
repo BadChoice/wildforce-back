@@ -97,6 +97,23 @@ class SyncRegistry
     /**
      * @return list<string>
      */
+    public function batchPullResources(): array
+    {
+        return array_values(array_diff(array_keys(self::MODELS), [
+            'nutrition-log-media',
+            'nutrition-plans',
+            'nutrition-days',
+            'nutrition-meals',
+            'workout-days',
+            'workout-blocks',
+            'planned-exercises',
+            'exercise-results',
+        ]));
+    }
+
+    /**
+     * @return list<string>
+     */
     public function pushResources(): array
     {
         return self::PUSH_RESOURCES;

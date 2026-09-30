@@ -15,6 +15,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('clients', 'clients.index')->name('clients.index');
     Route::get('exercises', [ExerciseCatalogController::class, 'index'])->name('exercises.index');
     Route::get('workout-plans', [WorkoutPlansController::class, 'index'])->name('workout-plans.index');
+    Route::view('workout-templates', 'workout-templates.index')->name('workout-templates.index');
     Route::post('billing/checkout/{plan}/{interval}', StripeCheckoutController::class)
         ->whereIn('interval', ['monthly', 'yearly'])
         ->name('billing.checkout');

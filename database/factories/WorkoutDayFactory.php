@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\WorkoutKind;
 use App\Models\User;
 use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
@@ -22,6 +23,7 @@ class WorkoutDayFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'kind' => WorkoutKind::Workout,
             'title' => 'Full body',
             'focus' => 'fullBody',
             'status' => 'planned',

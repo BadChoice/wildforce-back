@@ -683,12 +683,50 @@
         }
       }
     },
+    "/api/sync/pull/batch": {
+      "post": {
+        "tags": [
+          "Sync"
+        ],
+        "summary": "Pull changed flat-resource records in stable, paginated order",
+        "description": "The first request supplies the resources and their watermarks. Later requests\nsupply only the opaque `cursor` returned by the prior response. Workout-day\nand nutrition-plan graphs, plus nutrition-log media, are not available here.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchSyncPullRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A page of changed records. `next_cursor` is null on the final page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchSyncPullResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
     "/api/sync/workout-days": {
       "get": {
         "tags": [
           "Sync"
         ],
-        "summary": "Pull workout days with their blocks, exercises, and results",
+        "summary": "Pull workout days and templates with their blocks, exercises, and results",
+        "description": "Each workout day includes `kind`: `workout` for an executable workout or `template` for a reusable coach-owned workout day.",
         "parameters": [
           {
             "$ref": "#/components/parameters/UpdatedAfter"
@@ -714,7 +752,8 @@
         "tags": [
           "Sync"
         ],
-        "summary": "Push workout days with their blocks, exercises, and results",
+        "summary": "Push workout days and templates with their blocks, exercises, and results",
+        "description": "Set `kind` to `template` for a reusable coach-owned workout day. It must not be attached to a workout plan.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1263,6 +1302,114 @@
           }
         }
       },
+      "BatchSyncPullRequest": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "resources"
+            ],
+            "properties": {
+              "resources": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 20,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "resource",
+                    "updated_after"
+                  ],
+                  "properties": {
+                    "resource": {
+                      "type": "string",
+                      "enum": [
+                        "users",
+                        "user-app-settings",
+                        "training-preferences",
+                        "training-locations",
+                        "body-metric-entries",
+                        "body-progress-photo-sessions",
+                        "exercise-profiles",
+                        "nutrition-profiles",
+                        "nutrition-log-entries",
+                        "nutrition-log-items",
+                        "workout-plans",
+                        "subscriptions"
+                      ]
+                    },
+                    "updated_after": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "cursor"
+            ],
+            "properties": {
+              "cursor": {
+                "type": "string",
+                "description": "Opaque, user-bound continuation cursor."
+              }
+            }
+          }
+        ]
+      },
+      "BatchSyncPullResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "resource",
+                "record"
+              ],
+              "properties": {
+                "resource": {
+                  "type": "string"
+                },
+                "record": {
+                  "$ref": "#/components/schemas/SyncRecord"
+                }
+              }
+            }
+          },
+          "meta": {
+            "type": "object",
+            "required": [
+              "as_of",
+              "next_cursor"
+            ],
+            "properties": {
+              "as_of": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "next_cursor": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      },
       "SyncResponse": {
         "type": "object",
         "required": [
@@ -1328,12 +1475,21 @@
             "type": "object",
             "required": [
               "title",
+              "kind",
               "blocks",
               "exercises"
             ],
             "properties": {
               "title": {
                 "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "workout",
+                  "template"
+                ],
+                "description": "`template` is a reusable coach-owned workout day; `workout` is an executable workout day."
               },
               "blocks": {
                 "type": "array",
