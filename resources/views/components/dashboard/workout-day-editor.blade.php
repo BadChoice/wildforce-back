@@ -76,17 +76,20 @@
                         <div class="space-y-3 p-4">
                             <flux:field>
                                 <flux:label>{{ __('Block notes') }}</flux:label>
-                                <flux:input wire:model="workoutDayBlocks.{{ $blockIndex }}.notes" />
+                                <flux:input placeholder="{{ __('Block notes') }}" wire:model="workoutDayBlocks.{{ $blockIndex }}.notes" />
                             </flux:field>
 
                             @forelse ($block['exercises'] as $exerciseIndex => $exercise)
                                 <article wire:key="planned-exercise-{{ $exercise['id'] }}" class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
                                     <div class="flex items-center gap-3">
-                                        <img src="{{ app(\App\Services\ExerciseCatalog\ExerciseCatalog::class)->imageUrl($exercise['exercise']) }}" alt="" class="h-16 w-12 rounded-md bg-zinc-100 object-cover dark:bg-zinc-800" loading="lazy" />
-                                        <div class="min-w-0 flex-1 font-medium">{{ $exercise['name'] }}</div>
+                                        <img src="{{ app(\App\Services\ExerciseCatalog\ExerciseCatalog::class)->imageUrl($exercise['exercise']) }}" alt="" class="h-14 w-10 rounded-md bg-zinc-100 object-cover dark:bg-zinc-800" loading="lazy" />
+                                        <div class="flex flex-col flex-1">
+                                            <div class="min-w-0 flex-1 font-medium">{{ $exercise['name'] }}</div>
+                                            <x-exercises.muscles-list :exercise="app(\App\Services\ExerciseCatalog\ExerciseCatalog::class)->exercise($exercise['exercise'])" />
+                                        </div>
                                         <flux:button size="sm" variant="ghost" icon="trash" wire:click="removeExercise('{{ $block['id'] }}', '{{ $exercise['id'] }}')" aria-label="{{ __('Remove :exercise', ['exercise' => $exercise['name']]) }}" />
                                     </div>
-                                    <flux:textarea wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.notes" rows="2" class="mt-3" placeholder="{{ __('Exercise notes') }}" />
+                                    <flux:textarea wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.notes" rows="1" class="mt-3" placeholder="{{ __('Exercise notes') }}" />
                                     <div class="mt-3 grid gap-3 sm:grid-cols-4">
                                         <flux:field><flux:label>{{ __('Sets') }}</flux:label><flux:input type="number" min="1" wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.sets" /></flux:field>
                                         <flux:field><flux:label>{{ __('Min reps') }}</flux:label><flux:input type="number" min="0" wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.reps_min" /></flux:field>
