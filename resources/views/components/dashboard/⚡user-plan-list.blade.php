@@ -68,6 +68,9 @@ new class extends Component
                     ->with([
                         'workoutDays' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
                     ]),
+                'bodyMetrics' => fn (HasMany $query): HasMany => $query
+                    ->select(['id', 'user_id', 'type', 'value', 'recorded_at'])
+                    ->orderBy('recorded_at'),
                 'subscription',
             ])
             ->find($this->selectedUserId);
@@ -87,7 +90,7 @@ new class extends Component
 
     public function selectTab(string $tab): void
     {
-        if (! in_array($tab, ['training', 'exercise-profiles', 'nutrition', 'subscription'], true)) {
+        if (! in_array($tab, ['training', 'exercise-profiles', 'nutrition', 'body-metrics', 'subscription'], true)) {
             return;
         }
 

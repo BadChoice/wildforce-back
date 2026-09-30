@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\BodyMetricEntry;
 use App\Models\ExerciseResult;
 use App\Models\NutritionDay;
 use App\Models\NutritionMeal;
@@ -35,6 +36,25 @@ test('it returns changed records and soft-deleted tombstones for the authenticat
         ->assertJsonMissing(['id' => $otherLocation->id]);
 
     expect($response->json('data.1.deleted_at'))->not->toBeNull();
+});
+
+test('it pulls only the authenticated user body metric entries', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $bodyMetricEntry = makeBodyMetricEntry($user, '2026-09-30T12:00:00Z');
+    $otherBodyMetricEntry = makeBodyMetricEntry($otherUser, '2026-09-30T12:00:00Z');
+    Sanctum::actingAs($user);
+
+    $response = $this->getJson('/api/sync/pull?resource=body-metric-entries&updated_after=2026-09-30T11%3A00%3A00Z');
+
+    $response->assertOk()
+        ->assertJsonPath('meta.resource', 'body-metric-entries')
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $bodyMetricEntry->id)
+        ->assertJsonPath('data.0.type', 'weight')
+        ->assertJsonPath('data.0.value', 74.5)
+        ->assertJsonPath('data.0.recorded_at', '2026-09-30T07:30:00.000000Z')
+        ->assertJsonMissing(['id' => $otherBodyMetricEntry->id]);
 });
 
 test('it returns 401 when no token is provided', function () {
@@ -164,6 +184,25 @@ function makeTrainingLocation(User $user, string $name, string $updatedAt): Trai
     $location->save();
 
     return $location;
+}
+
+function makeBodyMetricEntry(User $user, string $updatedAt): BodyMetricEntry
+{
+    $bodyMetricEntry = new BodyMetricEntry;
+    $bodyMetricEntry->forceFill([
+        'id' => (string) Str::uuid(),
+        'user_id' => $user->id,
+        'type' => 'weight',
+        'value' => 74.5,
+        'recorded_at' => Carbon::parse('2026-09-30T07:30:00Z'),
+        'source' => 'manual',
+        'created_at' => Carbon::parse($updatedAt),
+        'updated_at' => Carbon::parse($updatedAt),
+    ]);
+    $bodyMetricEntry->timestamps = false;
+    $bodyMetricEntry->save();
+
+    return $bodyMetricEntry;
 }
 
 function makeWorkoutDay(User $user, string $updatedAt): WorkoutDay

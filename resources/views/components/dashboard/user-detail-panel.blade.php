@@ -16,7 +16,7 @@
 
         @unless ($showProgressionAnalysis)
             <nav aria-label="{{ __('User details') }}" role="tablist" class="mt-5 flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
-                @foreach (['training' => __('Training'), 'exercise-profiles' => __('Exercise Profiles'), 'nutrition' => __('Nutrition'), 'subscription' => __('Subscription')] as $tab => $label)
+                @foreach (['training' => __('Training'), 'exercise-profiles' => __('Exercise Profiles'), 'nutrition' => __('Nutrition'), 'body-metrics' => __('Body metrics'), 'subscription' => __('Subscription')] as $tab => $label)
                     <button
                         type="button"
                         role="tab"
@@ -52,6 +52,10 @@
 
             @case('nutrition')
                 <x-dashboard.placeholder-tab :title="__('Nutrition')" :description="__('Nutrition details will be available here soon.')" />
+                @break
+
+            @case('body-metrics')
+                <x-dashboard.user-body-metrics :user="$user" />
                 @break
 
             @case('subscription')

@@ -8,12 +8,22 @@
     };
     $completionPercentage = (int) round($analysis->completionRate * 100);
     $volume = match ($analysis->overallVolumeTrend) {
-        'increasing' => ['label' => __('Increasing'), 'color' => 'green'],
-        'decreasing' => ['label' => __('Decreasing'), 'color' => 'amber'],
-        'stable' => ['label' => __('Stable'), 'color' => 'zinc'],
-        default => ['label' => __('Not enough data'), 'color' => 'zinc'],
+        'increasing' => ['label' => __('Increasing'), 'color' => 'green', 'icon' => 'arrow-trending-up'],
+        'decreasing' => ['label' => __('Decreasing'), 'color' => 'amber', 'icon' => 'arrow-trending-down'],
+        'stable' => ['label' => __('Stable'), 'color' => 'zinc', 'icon' => 'equals'],
+        default => ['label' => __('Not enough data'), 'color' => 'zinc', 'icon' => 'minus'],
     };
-    $trendColors = ['improving' => 'green', 'plateau' => 'amber', 'regressing' => 'red', 'insufficient' => 'zinc'];
+    $trendIndicators = [
+        'improving' => ['color' => 'green', 'icon' => 'arrow-trending-up', 'class' => 'text-green-600 dark:text-green-400'],
+        'plateau' => ['color' => 'amber', 'icon' => 'equals', 'class' => 'text-amber-600 dark:text-amber-400'],
+        'regressing' => ['color' => 'red', 'icon' => 'arrow-trending-down', 'class' => 'text-red-600 dark:text-red-400'],
+        'insufficient' => ['color' => 'zinc', 'icon' => 'minus', 'class' => 'text-zinc-500 dark:text-zinc-400'],
+    ];
+    $phaseIndicators = [
+        'accumulation' => ['icon' => 'circle-stack', 'class' => 'text-indigo-600 dark:text-indigo-400'],
+        'intensification' => ['icon' => 'arrow-trending-up', 'class' => 'text-emerald-600 dark:text-emerald-400'],
+        'deload' => ['icon' => 'arrow-trending-down', 'class' => 'text-amber-600 dark:text-amber-400'],
+    ];
 @endphp
 
 <section aria-labelledby="progression-analysis-heading" class="space-y-5 text-sm">
@@ -50,11 +60,12 @@
             <flux:heading size="sm" class="text-base">{{ __('Mesocycle timeline') }}</flux:heading>
             <flux:text variant="subtle" class="text-sm">{{ __('Recent training blocks and the next proposed mesocycle.') }}</flux:text>
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="flex gap-2 overflow-x-auto pb-1">
             @forelse ($analysis->recentMesocycles as $mesocycle)
-                <div class="relative min-w-0 rounded-lg border border-zinc-200 p-2.5 dark:border-zinc-700">
+                @php($phase = $phaseIndicators[$mesocycle['phase']] ?? ['icon' => 'chart-bar', 'class' => 'text-zinc-500 dark:text-zinc-400'])
+                <div class="w-36 shrink-0 rounded-lg border border-zinc-200 p-2.5 dark:border-zinc-700">
                     <span class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('Mesocycle :number', ['number' => $mesocycle['number']]) }}</span>
-                    <div class="mt-1 text-sm font-medium">{{ $mesocycle['phase'] ? str($mesocycle['phase'])->headline() : __('Training block') }}</div>
+                    <div class="mt-1 flex items-center gap-1.5 text-sm font-medium"><flux:icon :name="$phase['icon']" class="size-4 {{ $phase['class'] }}" />{{ $mesocycle['phase'] ? str($mesocycle['phase'])->headline() : __('Training block') }}</div>
                     <flux:badge size="sm" class="mt-2" :color="$mesocycle['completionRate'] >= 0.8 ? 'green' : 'amber'">{{ __(':rate% complete', ['rate' => (int) round($mesocycle['completionRate'] * 100)]) }}</flux:badge>
                 </div>
             @empty
@@ -62,7 +73,7 @@
                     {{ __('No completed training blocks yet.') }}
                 </div>
             @endforelse
-            <div class="rounded-lg border border-indigo-300 bg-indigo-50 p-2.5 dark:border-indigo-700 dark:bg-indigo-950/30">
+            <div class="w-36 shrink-0 rounded-lg border border-indigo-300 bg-indigo-50 p-2.5 dark:border-indigo-700 dark:bg-indigo-950/30">
                 <span class="text-xs text-indigo-700 dark:text-indigo-300">{{ __('Next') }}</span>
                 <div class="mt-1 text-sm font-medium text-indigo-950 dark:text-indigo-100">{{ __('Mesocycle :number', ['number' => $analysis->mesocycleNumber]) }}</div>
                 <flux:badge size="sm" color="indigo" class="mt-2">{{ __('To plan') }}</flux:badge>
@@ -92,14 +103,15 @@
         </div>
 
         <details class="group rounded-xl border border-zinc-200 dark:border-zinc-700">
-            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-3 marker:hidden"><div><div class="text-sm font-medium">{{ __('Training volume trend') }}</div><flux:text variant="subtle" class="text-sm">{{ __('Volume across recent non-deload plans.') }}</flux:text></div><flux:badge size="sm" :color="$volume['color']">{{ $volume['label'] }}</flux:badge></summary>
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-3 marker:hidden"><div><div class="text-sm font-medium">{{ __('Training volume trend') }}</div><flux:text variant="subtle" class="text-sm">{{ __('Volume across recent non-deload plans.') }}</flux:text></div><flux:badge size="sm" :color="$volume['color']" :icon="$volume['icon']">{{ $volume['label'] }}</flux:badge></summary>
         </details>
 
         <details class="group rounded-xl border border-zinc-200 dark:border-zinc-700">
             <summary class="flex cursor-pointer list-none items-center justify-between gap-3 p-3 marker:hidden"><div><div class="text-sm font-medium">{{ __('Exercise trends') }}</div><flux:text variant="subtle" class="text-sm">{{ __('Progression status across tracked exercises.') }}</flux:text></div><flux:icon name="chevron-down" class="size-4 transition-transform group-open:rotate-180" /></summary>
             <div class="space-y-2 border-t border-zinc-200 p-3 dark:border-zinc-700">
                 @forelse ($analysis->exerciseTrends as $exercise => $trend)
-                    <div class="flex items-center justify-between gap-3"><span>{{ str($exercise)->headline() }}</span><flux:badge size="sm" :color="$trendColors[$trend]">{{ str($trend)->headline() }}</flux:badge></div>
+                    @php($indicator = $trendIndicators[$trend] ?? $trendIndicators['insufficient'])
+                    <div class="flex items-center justify-between gap-3"><span>{{ str($exercise)->headline() }}</span><div class="flex items-center gap-1.5"><flux:icon :name="$indicator['icon']" class="size-4 {{ $indicator['class'] }}" /><flux:badge size="sm" :color="$indicator['color']">{{ str($trend)->headline() }}</flux:badge></div></div>
                 @empty
                     <flux:text variant="subtle">{{ __('No exercise history is available yet.') }}</flux:text>
                 @endforelse

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\CoachingEnrollmentStatus;
+use App\Models\BodyMetricEntry;
 use App\Models\CoachingEnrollment;
 use App\Models\PlannedExercise;
 use App\Models\User;
@@ -65,7 +66,32 @@ test('it displays a selected client details and workout plans', function () {
         ->call('selectTab', 'nutrition')
         ->assertSee('Nutrition details will be available here soon.')
         ->call('selectTab', 'body-metrics')
-        ->assertSee('Body metrics will be available here soon.');
+        ->assertSee('No body metrics yet');
+});
+
+test('it displays body metric charts for a selected client', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    $bodyMetric = new BodyMetricEntry;
+    $bodyMetric->forceFill([
+        'user_id' => $client->id,
+        'type' => 'weight',
+        'value' => 72.5,
+        'recorded_at' => '2026-09-20 10:00:00',
+    ])->save();
+    $this->actingAs($coach);
+
+    Livewire::test('dashboard.clients')
+        ->call('selectClient', $client->id)
+        ->call('selectTab', 'body-metrics')
+        ->assertSee('Weight')
+        ->assertSee('Latest: 72.500');
 });
 
 test('it does not allow a coach to inspect a user who is not their client', function () {

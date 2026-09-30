@@ -71,7 +71,7 @@
                 @break
 
             @case('body-metrics')
-                <x-dashboard.placeholder-tab :title="__('Body metrics')" :description="__('Body metrics will be available here soon.')" />
+                <x-dashboard.user-body-metrics :user="$client" />
                 @break
             @endswitch
         @endif

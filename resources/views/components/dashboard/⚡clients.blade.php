@@ -92,6 +92,9 @@ new class extends Component
                     ->with([
                         'workoutDays' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
                     ]),
+                'bodyMetrics' => fn (HasMany $query): HasMany => $query
+                    ->select(['id', 'user_id', 'type', 'value', 'recorded_at'])
+                    ->orderBy('recorded_at'),
             ])
             ->whereKey($this->selectedClientId)
             ->first();

@@ -37,6 +37,40 @@ test('it creates a user-owned record and returns its synchronized state', functi
     ]);
 });
 
+test('it synchronizes a body metric entry for the authenticated user', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+    $bodyMetricEntryId = (string) Str::uuid();
+
+    $response = $this->postJson('/api/sync/push', [
+        'resource' => 'body-metric-entries',
+        'records' => [[
+            'id' => $bodyMetricEntryId,
+            'created_at' => '2026-09-30T12:00:00Z',
+            'updated_at' => '2026-09-30T12:00:00Z',
+            'type' => 'weight',
+            'value' => 74.5,
+            'recorded_at' => '2026-09-30T07:30:00Z',
+            'source' => 'manual',
+        ]],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.0.id', $bodyMetricEntryId)
+        ->assertJsonPath('data.0.type', 'weight')
+        ->assertJsonPath('data.0.value', 74.5)
+        ->assertJsonPath('data.0.recorded_at', '2026-09-30T07:30:00.000000Z')
+        ->assertJsonPath('meta.resource', 'body-metric-entries');
+
+    $this->assertDatabaseHas('body_metric_entries', [
+        'id' => $bodyMetricEntryId,
+        'user_id' => $user->id,
+        'type' => 'weight',
+        'value' => 74.5,
+        'source' => 'manual',
+    ]);
+});
+
 test('it keeps the server version when it is newer than the pushed record', function () {
     $user = User::factory()->create();
     Sanctum::actingAs($user);

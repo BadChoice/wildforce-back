@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\BodyMetricEntry;
 use App\Models\ExerciseProfile;
 use App\Models\NutritionPlan;
 use App\Models\TrainingPreference;
@@ -157,4 +158,23 @@ test('dashboard displays subscription information for a selected user', function
         ->assertSee('Trial')
         ->assertSee('Internal')
         ->assertSee('Access ends');
+});
+
+test('dashboard displays body metric charts for a selected user', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+    $bodyMetric = new BodyMetricEntry;
+    $bodyMetric->forceFill([
+        'user_id' => $user->id,
+        'type' => 'bodyFatPercentage',
+        'value' => 18.4,
+        'recorded_at' => '2026-09-20 10:00:00',
+    ])->save();
+    $this->actingAs($admin);
+
+    Livewire::test('dashboard.user-plan-list')
+        ->call('selectUser', $user->id)
+        ->call('selectTab', 'body-metrics')
+        ->assertSee('Body Fat Percentage')
+        ->assertSee('Latest: 18.400');
 });
