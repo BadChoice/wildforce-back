@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use Database\Factories\ExerciseResultFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,7 +14,8 @@ use Illuminate\Support\Arr;
 
 class ExerciseResult extends Model implements Syncable
 {
-    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey {
+    /** @use HasFactory<ExerciseResultFactory> */
+    use HasFactory, SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey {
         SyncsWithUser::syncPayload as private baseSyncPayload;
     }
 

@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\CoachingEnrollmentStatus;
+use App\Enums\Generated\MajorMuscleGroup;
+use App\Enums\Generated\MuscleGroup;
 use App\Models\PlannedExercise;
 use App\Models\User;
 use App\Models\WorkoutBlock;
@@ -131,7 +133,9 @@ new class extends Component
             );
             $matchesCategory = $this->exerciseCategory === '' || ($exercise['category'] ?? null) === $this->exerciseCategory;
             $muscles = array_merge($exercise['primaryMuscles'] ?? [], $exercise['secondaryMuscles'] ?? []);
-            $matchesMuscle = $this->exerciseMuscle === '' || in_array($this->exerciseMuscle, $muscles, true);
+            $selectedMajorMuscleGroup = MajorMuscleGroup::tryFrom($this->exerciseMuscle);
+            $matchesMuscle = $this->exerciseMuscle === '' || in_array($this->exerciseMuscle, $muscles, true)
+                || ($selectedMajorMuscleGroup !== null && collect($muscles)->map(fn (string $muscle): ?MuscleGroup => MuscleGroup::tryFrom($muscle))->contains(fn (?MuscleGroup $muscle): bool => $muscle?->majorGroup() === $selectedMajorMuscleGroup));
 
             return $matchesSearch && $matchesCategory && $matchesMuscle;
         }));
@@ -156,7 +160,7 @@ new class extends Component
     public function muscleGroups(): array
     {
         /** @var list<array<string, mixed>> $muscleGroups */
-        $muscleGroups = Arr::get($this->exerciseCatalog->all(), 'referenceData.muscleGroups', []);
+        $muscleGroups = array_merge(Arr::get($this->exerciseCatalog->all(), 'referenceData.majorMuscleGroups', []), Arr::get($this->exerciseCatalog->all(), 'referenceData.muscleGroups', []));
 
         return $muscleGroups;
     }

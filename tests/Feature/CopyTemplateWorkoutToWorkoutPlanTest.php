@@ -44,7 +44,7 @@ test('it deep copies a template workout into a user workout plan', function () {
     PlannedExercise::factory()->for($templateWorkout, 'workoutDay')->create(['exercise' => 'plank']);
     $workoutPlan = WorkoutPlan::factory()->for($client)->create();
 
-    $job = new CopyTemplateWorkoutToWorkoutPlan($templateWorkout, $workoutPlan);
+    $job = new CopyTemplateWorkoutToWorkoutPlan($templateWorkout, $workoutPlan, '2026-10-06');
     $job->handle();
 
     $copiedWorkout = $workoutPlan->workoutDays()
@@ -58,6 +58,7 @@ test('it deep copies a template workout into a user workout plan', function () {
         ->and($copiedWorkout->title)->toBe('Lower-body strength')
         ->and($copiedWorkout->notes)->toBe('Controlled tempo.')
         ->and($copiedWorkout->intended_weekday)->toBe('monday')
+        ->and($copiedWorkout->scheduled_for?->toDateString())->toBe('2026-10-06')
         ->and($copiedWorkout->estimated_duration_minutes)->toBe(55)
         ->and($copiedWorkout->blocks)->toHaveCount(1)
         ->and($copiedWorkout->blocks->sole()->notes)->toBe('Main lift')
@@ -81,4 +82,18 @@ test('it does not copy a template into a plan owned by a non-client', function (
     (new CopyTemplateWorkoutToWorkoutPlan($templateWorkout, $workoutPlan))->handle();
 
     expect($workoutPlan->workoutDays()->count())->toBe(0);
+});
+
+test('it copies a user template into their own workout plan', function () {
+    $user = User::factory()->create();
+    $templateWorkout = WorkoutDay::factory()->for($user)->create(['kind' => WorkoutKind::Template]);
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create();
+
+    (new CopyTemplateWorkoutToWorkoutPlan($templateWorkout, $workoutPlan, '2026-10-08'))->handle();
+
+    $this->assertDatabaseHas('workout_days', [
+        'workout_plan_id' => $workoutPlan->id,
+        'source_workout_day_id' => $templateWorkout->id,
+        'scheduled_for' => '2026-10-08 00:00:00',
+    ]);
 });

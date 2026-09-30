@@ -26,11 +26,12 @@ class CopyTemplateWorkoutToWorkoutPlan implements ShouldBeUnique, ShouldQueue
     public function __construct(
         public WorkoutDay $templateWorkout,
         public WorkoutPlan $userWorkoutPlan,
+        public ?string $scheduledFor = null,
     ) {}
 
     public function uniqueId(): string
     {
-        return "{$this->templateWorkout->getKey()}:{$this->userWorkoutPlan->getKey()}";
+        return "{$this->templateWorkout->getKey()}:{$this->userWorkoutPlan->getKey()}:{$this->scheduledFor}";
     }
 
     public function handle(): void
@@ -41,7 +42,8 @@ class CopyTemplateWorkoutToWorkoutPlan implements ShouldBeUnique, ShouldQueue
         if ($templateWorkout === null
             || $userWorkoutPlan === null
             || $templateWorkout->kind !== WorkoutKind::Template
-            || ! $templateWorkout->user->clients(CoachingEnrollmentStatus::Active)->whereKey($userWorkoutPlan->user_id)->exists()) {
+            || ($templateWorkout->user_id !== $userWorkoutPlan->user_id
+                && ! $templateWorkout->user->clients(CoachingEnrollmentStatus::Active)->whereKey($userWorkoutPlan->user_id)->exists())) {
             return;
         }
 
@@ -58,6 +60,7 @@ class CopyTemplateWorkoutToWorkoutPlan implements ShouldBeUnique, ShouldQueue
                 'did_count_toward_streak' => false,
                 'order_index' => ((int) $userWorkoutPlan->workoutDays()->max('order_index')) + 1,
                 'intended_weekday' => $templateWorkout->intended_weekday,
+                'scheduled_for' => $this->scheduledFor,
                 'day_type' => $templateWorkout->day_type,
                 'estimated_duration_minutes' => $templateWorkout->estimated_duration_minutes,
                 'creation_source' => 'template',

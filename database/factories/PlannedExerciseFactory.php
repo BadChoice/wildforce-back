@@ -20,7 +20,7 @@ class PlannedExerciseFactory extends Factory
     {
         return [
             'workout_day_id' => WorkoutDay::factory(),
-            'exercise' => 'benchPress',
+            'exercise' => fake()->randomElement(['benchPress', 'barbellBackSquat', 'latPulldown', 'romanianDeadlift', 'dumbbellShoulderPress']),
             'order_index' => 0,
             'sets' => 3,
             'reps_min' => 8,

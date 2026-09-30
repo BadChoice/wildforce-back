@@ -65,6 +65,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the user should be created without the default trial subscription.
+     */
+    public function withoutSubscription(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            $user->subscription()->delete();
+        });
+    }
+
+    /**
      * Indicate that the model has two-factor authentication configured.
      */
     public function withTwoFactor(): static
