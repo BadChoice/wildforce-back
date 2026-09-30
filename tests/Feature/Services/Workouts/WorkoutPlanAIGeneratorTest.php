@@ -83,7 +83,34 @@ test('returns an unsaved workout plan generated from the client context', functi
     WorkoutPlanGeneratorAgent::assertPrompted(fn ($prompt): bool => $prompt
         ->contains('Goal: buildMuscle')
         && $prompt->contains('Next plan number: 1')
-        && $prompt->contains('Recent workout history:')
+        && $prompt->contains('## Recent workout history')
         && $prompt->contains('targets:')
         && $prompt->contains('pushUp'));
+});
+
+test('returns the generation prompt and response schema without prompting the AI', function () {
+    $user = User::factory()->create();
+    TrainingPreference::factory()->for($user)->create([
+        'workout_days' => ['monday'],
+        'goal' => 'buildMuscle',
+    ]);
+    TrainingLocation::factory()->for($user)->create([
+        'equipment' => ['bodyweight'],
+    ]);
+    WorkoutPlanGeneratorAgent::fake()->preventStrayPrompts();
+
+    $preview = app(WorkoutPlanAIGenerator::class)->preview($user);
+    $schema = json_decode($preview['schema'], true, flags: JSON_THROW_ON_ERROR);
+
+    expect($preview['instructions'])->toContain('expert strength and conditioning coach')
+        ->and($preview['prompt'])->toContain('## Client context')
+        ->and($preview['prompt'])->toContain('Goal: buildMuscle')
+        ->and($preview['prompt'])->toContain('## Allowed exercises')
+        ->and($preview['prompt'])->toContain('```text')
+        ->and($schema)->toHaveKey('properties.workoutDays')
+        ->and($schema['properties']['workoutDays']['minItems'])->toBe(1)
+        ->and($schema['properties']['workoutDays']['maxItems'])->toBe(1)
+        ->and($schema['additionalProperties'])->toBeFalse();
+
+    WorkoutPlanGeneratorAgent::assertNeverPrompted();
 });

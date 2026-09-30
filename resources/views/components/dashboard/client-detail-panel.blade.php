@@ -58,6 +58,7 @@
                         </div>
                         <div class="flex shrink-0 items-center gap-2">
                             <flux:button size="sm" variant="ghost" icon="chart-bar" wire:click="openProgressionAnalysis">{{ __('Progression analysis') }}</flux:button>
+                            <flux:button size="sm" variant="ghost" icon="document-text" wire:click="openNextPlanPrompt">{{ __('Next plan prompt') }}</flux:button>
                             <flux:button size="sm" variant="primary" icon="plus" wire:click="openWorkoutPlanForm">{{ __('Workout plan') }}</flux:button>
                         </div>
                     </div>

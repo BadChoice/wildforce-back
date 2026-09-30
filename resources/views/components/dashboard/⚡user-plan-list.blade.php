@@ -2,6 +2,7 @@
 
 use App\Models\User;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Workouts\WorkoutPlanAIGenerator;
 use App\Services\Workouts\Progression\ProgressionAnalysis;
 use App\Services\Workouts\Progression\TrainingHistory;
 use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
@@ -21,6 +22,16 @@ new class extends Component
     public bool $showUserDetail = false;
 
     public bool $showProgressionAnalysis = false;
+
+    public bool $showNextPlanPrompt = false;
+
+    public string $nextPlanInstructions = '';
+
+    public string $nextPlanPrompt = '';
+
+    public string $nextPlanSchema = '';
+
+    public ?string $nextPlanPromptError = null;
 
     protected ExerciseCatalog $exerciseCatalog;
 
@@ -85,6 +96,7 @@ new class extends Component
         $this->selectedUserId = $userId;
         $this->selectedTab = 'training';
         $this->showProgressionAnalysis = false;
+        $this->resetNextPlanPromptPreview();
         $this->showUserDetail = true;
     }
 
@@ -101,6 +113,7 @@ new class extends Component
     {
         $this->showUserDetail = false;
         $this->showProgressionAnalysis = false;
+        $this->resetNextPlanPromptPreview();
     }
 
     public function openProgressionAnalysis(): void
@@ -115,6 +128,40 @@ new class extends Component
     public function closeProgressionAnalysis(): void
     {
         $this->showProgressionAnalysis = false;
+    }
+
+    public function openNextPlanPrompt(WorkoutPlanAIGenerator $generator): void
+    {
+        $user = $this->selectedUser;
+
+        if ($user === null) {
+            return;
+        }
+
+        $this->nextPlanPromptError = null;
+
+        try {
+            $preview = $generator->preview($user);
+            $this->nextPlanInstructions = $preview['instructions'];
+            $this->nextPlanPrompt = $preview['prompt'];
+            $this->nextPlanSchema = $preview['schema'];
+        } catch (RuntimeException $exception) {
+            $this->nextPlanInstructions = '';
+            $this->nextPlanPrompt = '';
+            $this->nextPlanSchema = '';
+            $this->nextPlanPromptError = $exception->getMessage();
+        }
+
+        $this->showNextPlanPrompt = true;
+    }
+
+    private function resetNextPlanPromptPreview(): void
+    {
+        $this->showNextPlanPrompt = false;
+        $this->nextPlanInstructions = '';
+        $this->nextPlanPrompt = '';
+        $this->nextPlanSchema = '';
+        $this->nextPlanPromptError = null;
     }
 
     #[Computed]
@@ -199,4 +246,12 @@ new class extends Component
             />
         </flux:modal>
     @endif
+
+    <x-dashboard.next-plan-prompt-preview
+        wire:model="showNextPlanPrompt"
+        :instructions="$nextPlanInstructions"
+        :prompt="$nextPlanPrompt"
+        :schema="$nextPlanSchema"
+        :error="$nextPlanPromptError"
+    />
 </div>

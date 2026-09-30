@@ -13,7 +13,9 @@ use App\Services\Workouts\Progression\MesocyclePhaseRules;
 use App\Services\Workouts\Progression\ProgressionAnalysis;
 use App\Services\Workouts\Progression\TrainingHistory;
 use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
+use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Illuminate\Support\Collection;
+use Laravel\Ai\ObjectSchema;
 use Laravel\Ai\Responses\StructuredAgentResponse;
 use RuntimeException;
 
@@ -22,6 +24,51 @@ final class WorkoutPlanAIGenerator
     public function __construct(private readonly ExerciseCatalog $exerciseCatalog) {}
 
     public function generate(User $user): WorkoutPlan
+    {
+        $context = $this->generationContext($user);
+        $agent = $this->agent($context['exercises'], $context['workoutDays']);
+
+        $response = $agent->prompt(
+            $this->prompt($user, $context['trainingHistory'], $context['analysis'], $context['exercises']),
+        );
+
+        if (! $response instanceof StructuredAgentResponse) {
+            throw new RuntimeException('The workout plan generator did not return structured data.');
+        }
+
+        return $this->planFromResponse($user, $context['analysis']->mesocycleNumber, $response->toArray());
+    }
+
+    /**
+     * Return the exact prompt and structured-output schema used for generation,
+     * without sending a request to the AI provider.
+     *
+     * @return array{instructions: string, prompt: string, schema: string}
+     */
+    public function preview(User $user): array
+    {
+        $context = $this->generationContext($user);
+        $agent = $this->agent($context['exercises'], $context['workoutDays']);
+        $schema = json_encode(
+            (new ObjectSchema($agent->schema(new JsonSchemaTypeFactory)))->toSchema(),
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+        );
+
+        if (! is_string($schema)) {
+            throw new RuntimeException('The workout plan response schema could not be encoded.');
+        }
+
+        return [
+            'instructions' => $agent->instructions(),
+            'prompt' => $this->prompt($user, $context['trainingHistory'], $context['analysis'], $context['exercises']),
+            'schema' => $schema,
+        ];
+    }
+
+    /**
+     * @return array{trainingHistory: TrainingHistory, analysis: ProgressionAnalysis, exercises: Collection<int, array<string, mixed>>, workoutDays: list<string>}
+     */
+    private function generationContext(User $user): array
     {
         $user->loadMissing(['trainingPreferences', 'trainingLocations', 'exerciseProfiles']);
 
@@ -37,15 +84,21 @@ final class WorkoutPlanAIGenerator
             throw new RuntimeException('Workout plan generation requires preferred workout days and compatible exercises.');
         }
 
-        $response = (new WorkoutPlanGeneratorAgent($exercises->pluck('id')->all(), $workoutDays))->prompt(
-            $this->prompt($user, $trainingHistory, $analysis, $exercises),
-        );
+        return [
+            'trainingHistory' => $trainingHistory,
+            'analysis' => $analysis,
+            'exercises' => $exercises,
+            'workoutDays' => $workoutDays,
+        ];
+    }
 
-        if (! $response instanceof StructuredAgentResponse) {
-            throw new RuntimeException('The workout plan generator did not return structured data.');
-        }
-
-        return $this->planFromResponse($user, $analysis->mesocycleNumber, $response->toArray());
+    /**
+     * @param  Collection<int, array<string, mixed>>  $exercises
+     * @param  list<string>  $workoutDays
+     */
+    private function agent(Collection $exercises, array $workoutDays): WorkoutPlanGeneratorAgent
+    {
+        return new WorkoutPlanGeneratorAgent($exercises->pluck('id')->all(), $workoutDays);
     }
 
     /**
@@ -62,7 +115,7 @@ final class WorkoutPlanAIGenerator
         $phaseDescription = $phase === null
             ? 'Not periodized'
             : $phase['phase'].' (week '.$phase['weekInPhase'].' of '.$phase['cycleLength'].')';
-        $profiles = $user->exerciseProfiles
+        $profiles = $this->markdownList($user->exerciseProfiles
             ->map(fn ($profile): string => implode(' | ', array_filter([
                 $profile->exercise,
                 $profile->working_weight === null ? null : $profile->working_weight.' kg',
@@ -70,7 +123,7 @@ final class WorkoutPlanAIGenerator
                     ? null
                     : $profile->preferred_rep_range_min.'-'.$profile->preferred_rep_range_max.' reps',
             ])))
-            ->implode("\n");
+            ->all());
         $exerciseList = $exercises
             ->map(fn (array $exercise): string => implode(' | ', array_filter([
                 $exercise['id'],
@@ -82,7 +135,7 @@ final class WorkoutPlanAIGenerator
             ->implode("\n");
 
         return <<<PROMPT
-Client context:
+## Client context
 - Goal: {$preferences?->goal}
 - Training level: {$preferences?->general_training_level}
 - Age: {$user->birth_date?->age}
@@ -104,7 +157,7 @@ Client context:
 - Body composition phase: {$preferences?->body_composition_phase}
 - Coach notes: {$preferences?->workout_planner_notes}
 
-Progression context:
+## Progression context
 - Next plan number: {$analysis->mesocycleNumber}
 - Phase: {$phaseDescription}
 - Phase prescription: {$this->phaseGuidance($phase['phase'] ?? null, $preferences?->goal)}
@@ -117,14 +170,17 @@ Progression context:
 - Underworked muscles: {$this->list($analysis->neglectedMuscleGroups)}
 - Overworked muscles: {$this->list($analysis->overworkedMuscleGroups)}
 
-Exercise profiles:
+## Exercise profiles
 {$profiles}
 
-Recent workout history:
-{$this->recentWorkoutHistory($trainingHistory)}
+## Recent workout history
+{$this->markdownList(explode("\n", $this->recentWorkoutHistory($trainingHistory)))}
 
-Allowed exercises (ID | name | target metrics | movement patterns | planning note):
+## Allowed exercises
+```text
+ID | name | target metrics | movement patterns | planning note
 {$exerciseList}
+```
 
 Create exactly one workout for each preferred workout day.
 PROMPT;
@@ -328,5 +384,15 @@ PROMPT;
                 return 'Plan '.$plan->mesocycle_number.' ('.$plan->phase.'): '.$workouts;
             })
             ->implode("\n") ?: 'None';
+    }
+
+    /**
+     * @param  list<string>  $lines
+     */
+    private function markdownList(array $lines): string
+    {
+        return $lines === [] ? '- None' : collect($lines)
+            ->map(fn (string $line): string => '- '.$line)
+            ->implode("\n");
     }
 }

@@ -38,8 +38,9 @@
             @switch($activeTab)
             @case('training')
                 <div class="space-y-8">
-                    <div class="flex justify-end">
+                    <div class="flex justify-end gap-2">
                         <flux:button size="sm" variant="ghost" icon="chart-bar" wire:click="openProgressionAnalysis">{{ __('Progression analysis') }}</flux:button>
+                        <flux:button size="sm" variant="ghost" icon="document-text" wire:click="openNextPlanPrompt">{{ __('Next plan prompt') }}</flux:button>
                     </div>
                     <x-dashboard.training-profile :profile="$user->trainingPreferences" />
                     <x-dashboard.workout-plan-list :workout-plans="$user->workoutPlans" />

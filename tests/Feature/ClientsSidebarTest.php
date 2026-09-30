@@ -4,6 +4,8 @@ use App\Enums\CoachingEnrollmentStatus;
 use App\Models\BodyMetricEntry;
 use App\Models\CoachingEnrollment;
 use App\Models\PlannedExercise;
+use App\Models\TrainingLocation;
+use App\Models\TrainingPreference;
 use App\Models\User;
 use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
@@ -92,6 +94,35 @@ test('it displays body metric charts for a selected client', function () {
         ->call('selectTab', 'body-metrics')
         ->assertSee('Weight')
         ->assertSee('Latest: 72.500');
+});
+
+test('it previews the next plan prompt and response schema for a selected client', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    TrainingPreference::factory()->for($client)->create([
+        'goal' => 'buildMuscle',
+        'workout_days' => ['monday'],
+    ]);
+    TrainingLocation::factory()->for($client)->create([
+        'equipment' => ['bodyweight'],
+    ]);
+    $this->actingAs($coach);
+
+    Livewire::test('dashboard.clients')
+        ->call('selectClient', $client->id)
+        ->call('selectTab', 'training')
+        ->assertSee('Next plan prompt')
+        ->call('openNextPlanPrompt')
+        ->assertSet('showNextPlanPrompt', true)
+        ->assertSee('Client context')
+        ->assertSee('Response schema')
+        ->assertSee('workoutDays');
 });
 
 test('it does not allow a coach to inspect a user who is not their client', function () {
