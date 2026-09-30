@@ -33,6 +33,21 @@ return [
         'client_id' => env('GOOGLE_CLIENT_ID'),
     ],
 
+    'google_play' => [
+        'package_name' => env('GOOGLE_PLAY_PACKAGE_NAME', 'io.codepassion.wildforce.android'),
+        // Keep this JSON service-account credential in the deployment secret
+        // store. It must never be bundled into the Android application.
+        'service_account_json' => env('GOOGLE_PLAY_SERVICE_ACCOUNT_JSON'),
+        'product_plans' => [
+            'io.codepassion.wildforce.subscription.standard' => [
+                'plan' => 'premium', 'billing_interval' => 'month', 'billing_interval_count' => 1,
+            ],
+            'io.codepassion.wildforce.subscription.year' => [
+                'plan' => 'premium', 'billing_interval' => 'year', 'billing_interval_count' => 1,
+            ],
+        ],
+    ],
+
     'app_store' => [
         'bundle_id' => env('APP_STORE_BUNDLE_ID', 'io.codepassion.doublegym'),
         'root_certificate_fingerprints' => [
