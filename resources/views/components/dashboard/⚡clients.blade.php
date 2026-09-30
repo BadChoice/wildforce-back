@@ -48,9 +48,15 @@ new class extends Component
 
     public string $workoutDayFocus = 'fullBody';
 
+    public string $workoutDayEstimatedDurationMinutes = '';
+
     public ?string $selectedWorkoutBlockId = null;
 
     public string $exerciseSearch = '';
+
+    public string $exerciseCategory = '';
+
+    public string $exerciseMuscle = '';
 
     /**
      * @var list<array{id: string, type: string, notes: string, exercises: list<array{id: string, exercise: string, name: string, notes: string, sets: int, reps_min: int, reps_max: int, target_weight_kg: string, rest_seconds: int}>}>
@@ -119,11 +125,40 @@ new class extends Component
                 return false;
             }
 
-            return $search === '' || Str::contains(
+            $matchesSearch = $search === '' || Str::contains(
                 Str::lower(implode(' ', [(string) ($exercise['id'] ?? ''), (string) ($exercise['name'] ?? '')])),
                 $search,
             );
+            $matchesCategory = $this->exerciseCategory === '' || ($exercise['category'] ?? null) === $this->exerciseCategory;
+            $muscles = array_merge($exercise['primaryMuscles'] ?? [], $exercise['secondaryMuscles'] ?? []);
+            $matchesMuscle = $this->exerciseMuscle === '' || in_array($this->exerciseMuscle, $muscles, true);
+
+            return $matchesSearch && $matchesCategory && $matchesMuscle;
         }));
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    #[Computed]
+    public function categories(): array
+    {
+        /** @var list<array<string, mixed>> $categories */
+        $categories = Arr::get($this->exerciseCatalog->all(), 'referenceData.exerciseCategories', []);
+
+        return $categories;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    #[Computed]
+    public function muscleGroups(): array
+    {
+        /** @var list<array<string, mixed>> $muscleGroups */
+        $muscleGroups = Arr::get($this->exerciseCatalog->all(), 'referenceData.muscleGroups', []);
+
+        return $muscleGroups;
     }
 
     public function selectClient(string $clientId): void
@@ -239,9 +274,12 @@ new class extends Component
         $this->workoutDayTitle = '';
         $this->workoutDayNotes = '';
         $this->workoutDayFocus = 'fullBody';
+        $this->workoutDayEstimatedDurationMinutes = '';
         $this->workoutDayBlocks = [];
         $this->addWorkoutBlock();
         $this->exerciseSearch = '';
+        $this->exerciseCategory = '';
+        $this->exerciseMuscle = '';
         $this->showWorkoutDayEditor = true;
     }
 
@@ -274,6 +312,7 @@ new class extends Component
         $this->workoutDayTitle = $workoutDay->title;
         $this->workoutDayNotes = $workoutDay->notes ?? '';
         $this->workoutDayFocus = $workoutDay->focus;
+        $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
         $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => [
             'id' => $block->id,
             'type' => $block->type,
@@ -292,6 +331,8 @@ new class extends Component
         ])->all();
         $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
         $this->exerciseSearch = '';
+        $this->exerciseCategory = '';
+        $this->exerciseMuscle = '';
         $this->showWorkoutDayEditor = true;
     }
 
@@ -386,6 +427,7 @@ new class extends Component
             'workoutDayTitle' => ['required', 'string', 'max:255'],
             'workoutDayNotes' => ['nullable', 'string'],
             'workoutDayFocus' => ['required', 'string', 'max:255'],
+            'workoutDayEstimatedDurationMinutes' => ['nullable', 'integer', 'min:1', 'max:1440'],
             'workoutDayBlocks' => ['required', 'array'],
             'workoutDayBlocks.*.id' => ['required', 'uuid'],
             'workoutDayBlocks.*.type' => ['required', 'string', 'max:255'],
@@ -422,6 +464,7 @@ new class extends Component
                 'title' => $validated['workoutDayTitle'],
                 'focus' => $validated['workoutDayFocus'],
                 'status' => 'planned',
+                'estimated_duration_minutes' => $validated['workoutDayEstimatedDurationMinutes'] === '' ? null : $validated['workoutDayEstimatedDurationMinutes'],
                 'notes' => $validated['workoutDayNotes'] ?: null,
             ]);
 
@@ -574,6 +617,8 @@ new class extends Component
         <x-dashboard.workout-day-editor
             :blocks="$workoutDayBlocks"
             :available-exercises="$this->availableExercises"
+            :categories="$this->categories"
+            :muscle-groups="$this->muscleGroups"
             :selected-workout-block-id="$selectedWorkoutBlockId"
         />
     </flux:modal>

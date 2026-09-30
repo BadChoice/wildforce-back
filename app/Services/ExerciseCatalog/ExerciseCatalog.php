@@ -2,7 +2,6 @@
 
 namespace App\Services\ExerciseCatalog;
 
-use Illuminate\Support\Arr;
 use JsonException;
 
 class ExerciseCatalog
@@ -30,6 +29,22 @@ class ExerciseCatalog
         $this->catalog = json_decode($contents, true, 512, JSON_THROW_ON_ERROR);
 
         return $this->catalog;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     *
+     * @throws JsonException
+     */
+    public function exercise(string $id): ?array
+    {
+        foreach ($this->all()['exercises'] as $exercise) {
+            if (is_array($exercise) && ($exercise['id'] ?? null) === $id) {
+                return $exercise;
+            }
+        }
+
+        return null;
     }
 
     /**

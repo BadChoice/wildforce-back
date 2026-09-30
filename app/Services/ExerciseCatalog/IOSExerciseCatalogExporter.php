@@ -72,42 +72,6 @@ class IOSExerciseCatalogExporter
             func remoteTutorialImage(gender: Gender = .female) -> URL? {
                 Supabase.url(folder: "tutorial", for: "\(rawValue)_\(gender.rawValue)", fileExtension: "png")
             }
-
-            func generateIconPrompt() -> String {
-                let equipment = metadata.requiredEquipment.map { $0.englishName }.joined(separator: ", ")
-                let instructions = metadata.instructions.joined(separator: ", ")
-                let tips = metadata.tips.joined(separator: ", ")
-
-                if equipment.isEmpty {
-                    return "art app:generate-icon \"\(rawValue)\" \"\(instructions) \(tips)\""
-                }
-
-                return "art app:generate-icon \"\(rawValue)\" \"\(instructions) \(tips), using equipment: \(equipment)\""
-            }
-
-            func generatePortraitPrompt(gender: Gender) -> String {
-                let equipment = metadata.requiredEquipment.map { $0.englishName }.joined(separator: ", ")
-                let instructions = metadata.instructions.joined(separator: ", ")
-                let tips = metadata.tips.joined(separator: ", ")
-
-                if equipment.isEmpty {
-                    return "art app:generate-vertical-shot \"\(gender.rawValue)\" \"\(rawValue)\" \"No required equipment\" \"\(instructions) \(tips)\""
-                }
-
-                return "art app:generate-vertical-shot \"\(gender.rawValue)\" \"\(rawValue)\" \"\(equipment)\" \"\(instructions) \(tips)\""
-            }
-
-            func generateTutorialPrompt() -> String {
-                let equipment = metadata.requiredEquipment.map { $0.englishName }.joined(separator: ", ")
-                let instructions = metadata.instructions.joined(separator: ", ")
-                let tips = metadata.tips.joined(separator: ", ")
-
-                if equipment.isEmpty {
-                    return "art app:generate-exercise-tutorial \"\(rawValue)\" \"No required equipment\" \"\(instructions) \(tips)\""
-                }
-
-                return "art app:generate-exercise-tutorial \"\(rawValue)\" \"\(equipment)\" \"\(instructions) \(tips)\""
-            }
         }
         SWIFT;
     }

@@ -24,8 +24,15 @@ test('it lets a coach create and delete workout templates from the sidebar page'
 
     Livewire::test('workout-templates.index')
         ->call('openWorkoutDayEditor')
+        ->set('exerciseCategory', 'strength')
+        ->assertSee('Bench Press')
+        ->assertDontSee('Push-Up')
+        ->set('exerciseMuscle', 'glutes')
+        ->assertDontSee('Bench Press')
         ->set('workoutDayTitle', 'Upper-body strength')
         ->set('workoutDayFocus', 'upperBody')
+        ->set('exerciseCategory', '')
+        ->set('exerciseMuscle', '')
         ->call('addExercise', 'benchPress')
         ->call('saveWorkoutDay')
         ->assertSet('showWorkoutDayEditor', false)
@@ -36,6 +43,21 @@ test('it lets a coach create and delete workout templates from the sidebar page'
     expect($template->user_id)->toBe($coach->id)
         ->and($template->workout_plan_id)->toBeNull()
         ->and($template->kind)->toBe(WorkoutKind::Template)
+        ->and($template->blocks()->sole()->exercises()->sole()->exercise)->toBe('benchPress');
+
+    Livewire::test('workout-templates.index')
+        ->call('openExistingWorkoutDayEditor', $template->id)
+        ->assertSet('workoutDayTitle', 'Upper-body strength')
+        ->set('workoutDayTitle', 'Upper-body hypertrophy')
+        ->set('workoutDayEstimatedDurationMinutes', '50')
+        ->call('saveWorkoutDay')
+        ->assertSet('showWorkoutDayEditor', false)
+        ->assertSee('Upper-body hypertrophy');
+
+    $template->refresh();
+
+    expect($template->title)->toBe('Upper-body hypertrophy')
+        ->and($template->estimated_duration_minutes)->toBe(50)
         ->and($template->blocks()->sole()->exercises()->sole()->exercise)->toBe('benchPress');
 
     Livewire::test('workout-templates.index')
