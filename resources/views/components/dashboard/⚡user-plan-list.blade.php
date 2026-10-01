@@ -2,10 +2,12 @@
 
 use App\Models\User;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Nutrition\NutritionPlanAIGenerator;
 use App\Services\Workouts\WorkoutPlanAIGenerator;
 use App\Services\Workouts\Progression\ProgressionAnalysis;
 use App\Services\Workouts\Progression\TrainingHistory;
 use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
+use App\ViewModels\PlanPromptPreview;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,15 +25,7 @@ new class extends Component
 
     public bool $showProgressionAnalysis = false;
 
-    public bool $showNextPlanPrompt = false;
-
-    public string $nextPlanInstructions = '';
-
-    public string $nextPlanPrompt = '';
-
-    public string $nextPlanSchema = '';
-
-    public ?string $nextPlanPromptError = null;
+    public PlanPromptPreview $planPromptPreview;
 
     protected ExerciseCatalog $exerciseCatalog;
 
@@ -42,6 +36,7 @@ new class extends Component
 
     public function mount(): void
     {
+        $this->planPromptPreview = new PlanPromptPreview;
         Gate::authorize('viewDashboard');
     }
 
@@ -138,30 +133,31 @@ new class extends Component
             return;
         }
 
-        $this->nextPlanPromptError = null;
-
         try {
-            $preview = $generator->preview($user);
-            $this->nextPlanInstructions = $preview['instructions'];
-            $this->nextPlanPrompt = $preview['prompt'];
-            $this->nextPlanSchema = $preview['schema'];
+            $this->planPromptPreview->show(__('Next plan prompt'), $generator->preview($user));
         } catch (RuntimeException $exception) {
-            $this->nextPlanInstructions = '';
-            $this->nextPlanPrompt = '';
-            $this->nextPlanSchema = '';
-            $this->nextPlanPromptError = $exception->getMessage();
+            $this->planPromptPreview->showError(__('Next plan prompt'), $exception->getMessage());
+        }
+    }
+
+    public function openNutritionPlanPrompt(NutritionPlanAIGenerator $generator): void
+    {
+        $user = $this->selectedUser;
+
+        if ($user === null) {
+            return;
         }
 
-        $this->showNextPlanPrompt = true;
+        try {
+            $this->planPromptPreview->show(__('Nutrition plan prompt'), $generator->preview($user));
+        } catch (RuntimeException $exception) {
+            $this->planPromptPreview->showError(__('Nutrition plan prompt'), $exception->getMessage());
+        }
     }
 
     private function resetNextPlanPromptPreview(): void
     {
-        $this->showNextPlanPrompt = false;
-        $this->nextPlanInstructions = '';
-        $this->nextPlanPrompt = '';
-        $this->nextPlanSchema = '';
-        $this->nextPlanPromptError = null;
+        $this->planPromptPreview->reset();
     }
 
     #[Computed]
@@ -248,10 +244,11 @@ new class extends Component
     @endif
 
     <x-dashboard.next-plan-prompt-preview
-        wire:model="showNextPlanPrompt"
-        :instructions="$nextPlanInstructions"
-        :prompt="$nextPlanPrompt"
-        :schema="$nextPlanSchema"
-        :error="$nextPlanPromptError"
+        wire:model="planPromptPreview.isOpen"
+        :title="$planPromptPreview->title"
+        :instructions="$planPromptPreview->instructions"
+        :prompt="$planPromptPreview->prompt"
+        :schema="$planPromptPreview->schema"
+        :error="$planPromptPreview->error"
     />
 </div>

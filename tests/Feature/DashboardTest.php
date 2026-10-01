@@ -177,7 +177,7 @@ test('dashboard previews the next plan prompt and response schema for a selected
         ->call('selectUser', $user->id)
         ->assertSee('Next plan prompt')
         ->call('openNextPlanPrompt')
-        ->assertSet('showNextPlanPrompt', true)
+        ->assertSet('planPromptPreview.isOpen', true)
         ->assertSee('Client context')
         ->assertSee('Response schema')
         ->assertSee('workoutDays');

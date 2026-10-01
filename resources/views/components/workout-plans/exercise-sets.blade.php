@@ -1,5 +1,5 @@
 @php
-    $setConfiguration = $plannedExercise->set_style_configuration ?? [];
+    $setConfiguration = $plannedExercise->set_style_configuration?->toArray() ?? [];
     $configuredSets = is_array($setConfiguration) && array_is_list($setConfiguration)
         ? $setConfiguration
         : data_get($setConfiguration, 'sets', []);
@@ -28,8 +28,8 @@
                 @php
                     $setDetails = data_get($configuredSets, $setIndex, []);
                     $setDetails = is_array($setDetails) ? $setDetails : [];
-                    $setType = $setDetails['type'] ?? $valueForSet(data_get($setConfiguration, 'set_types') ?? data_get($setConfiguration, 'types') ?? data_get($setConfiguration, 'set_type') ?? data_get($setConfiguration, 'type'), $setIndex) ?? 'standard';
-                    $rir = $setDetails['rir'] ?? $valueForSet(data_get($setConfiguration, 'rirs') ?? data_get($setConfiguration, 'rir') ?? data_get($setConfiguration, 'rir_targets'), $setIndex);
+                    $setType = $setDetails['type'] ?? $valueForSet(data_get($setConfiguration, 'style') ?? data_get($setConfiguration, 'set_types') ?? data_get($setConfiguration, 'types') ?? data_get($setConfiguration, 'set_type') ?? data_get($setConfiguration, 'type'), $setIndex) ?? 'standard';
+                    $rir = $setDetails['rir'] ?? $valueForSet(data_get($setConfiguration, 'target_rir') ?? data_get($setConfiguration, 'rirs') ?? data_get($setConfiguration, 'rir') ?? data_get($setConfiguration, 'rir_targets'), $setIndex);
                     $weight = $setDetails['weight_kg'] ?? $setDetails['weight'] ?? $valueForSet($plannedExercise->target_weights_kg, $setIndex) ?? $plannedExercise->target_weight_kg;
                     $reps = $formatReps($setDetails['reps'] ?? $valueForSet($defaultReps, $setIndex));
                     $rest = $formatRest($setDetails['rest_seconds'] ?? $plannedExercise->rest_seconds);

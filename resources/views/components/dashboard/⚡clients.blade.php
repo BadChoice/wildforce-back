@@ -9,10 +9,12 @@ use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Nutrition\NutritionPlanAIGenerator;
 use App\Services\Workouts\WorkoutPlanAIGenerator;
 use App\Services\Workouts\Progression\ProgressionAnalysis;
 use App\Services\Workouts\Progression\TrainingHistory;
 use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
+use App\ViewModels\PlanPromptPreview;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
@@ -33,15 +35,7 @@ new class extends Component
 
     public bool $showProgressionAnalysis = false;
 
-    public bool $showNextPlanPrompt = false;
-
-    public string $nextPlanInstructions = '';
-
-    public string $nextPlanPrompt = '';
-
-    public string $nextPlanSchema = '';
-
-    public ?string $nextPlanPromptError = null;
+    public PlanPromptPreview $planPromptPreview;
 
     public string $workoutPlanName = '';
 
@@ -77,6 +71,11 @@ new class extends Component
     public array $workoutDayBlocks = [];
 
     protected ExerciseCatalog $exerciseCatalog;
+
+    public function mount(): void
+    {
+        $this->planPromptPreview = new PlanPromptPreview;
+    }
 
     public function boot(ExerciseCatalog $exerciseCatalog): void
     {
@@ -229,30 +228,31 @@ new class extends Component
             return;
         }
 
-        $this->nextPlanPromptError = null;
-
         try {
-            $preview = $generator->preview($client);
-            $this->nextPlanInstructions = $preview['instructions'];
-            $this->nextPlanPrompt = $preview['prompt'];
-            $this->nextPlanSchema = $preview['schema'];
+            $this->planPromptPreview->show(__('Next plan prompt'), $generator->preview($client));
         } catch (RuntimeException $exception) {
-            $this->nextPlanInstructions = '';
-            $this->nextPlanPrompt = '';
-            $this->nextPlanSchema = '';
-            $this->nextPlanPromptError = $exception->getMessage();
+            $this->planPromptPreview->showError(__('Next plan prompt'), $exception->getMessage());
+        }
+    }
+
+    public function openNutritionPlanPrompt(NutritionPlanAIGenerator $generator): void
+    {
+        $client = $this->selectedClient;
+
+        if ($client === null) {
+            return;
         }
 
-        $this->showNextPlanPrompt = true;
+        try {
+            $this->planPromptPreview->show(__('Nutrition plan prompt'), $generator->preview($client));
+        } catch (RuntimeException $exception) {
+            $this->planPromptPreview->showError(__('Nutrition plan prompt'), $exception->getMessage());
+        }
     }
 
     private function resetNextPlanPromptPreview(): void
     {
-        $this->showNextPlanPrompt = false;
-        $this->nextPlanInstructions = '';
-        $this->nextPlanPrompt = '';
-        $this->nextPlanSchema = '';
-        $this->nextPlanPromptError = null;
+        $this->planPromptPreview->reset();
     }
 
     #[Computed]
@@ -627,11 +627,12 @@ new class extends Component
     @endif
 
     <x-dashboard.next-plan-prompt-preview
-        wire:model="showNextPlanPrompt"
-        :instructions="$nextPlanInstructions"
-        :prompt="$nextPlanPrompt"
-        :schema="$nextPlanSchema"
-        :error="$nextPlanPromptError"
+        wire:model="planPromptPreview.isOpen"
+        :title="$planPromptPreview->title"
+        :instructions="$planPromptPreview->instructions"
+        :prompt="$planPromptPreview->prompt"
+        :schema="$planPromptPreview->schema"
+        :error="$planPromptPreview->error"
     />
 
     <flux:modal wire:model="showWorkoutPlanForm" class="w-full max-w-lg">

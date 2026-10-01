@@ -15,6 +15,7 @@ tags:
   - name: Subscriptions
   - name: Coaching
   - name: Sync
+  - name: Workouts
 paths:
   /api/auth/register:
     post:
@@ -359,6 +360,22 @@ paths:
                 $ref: '#/components/schemas/CoachCollection'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+  /api/workout-plans/generate:
+    post:
+      tags: [Workouts]
+      summary: Generate a one-week workout-plan draft
+      description: Generates a draft from the authenticated user's training profile and recent history. The response is not persisted; save and sync it through the existing workout-plan flow.
+      responses:
+        '200':
+          description: Generated workout-plan draft
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutPlanGenerationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: An active subscription, trial, or demo access is required.
   /api/sync/push:
     post:
       tags: [Sync]
@@ -427,7 +444,7 @@ paths:
     get:
       tags: [Sync]
       summary: Pull workout days and templates with their blocks, exercises, and results
-      description: Each workout day includes `kind`: `workout` for an executable workout or `template` for a reusable coach-owned workout day.
+      description: 'Each workout day includes `kind`: `workout` for an executable workout or `template` for a reusable coach-owned workout day.'
       parameters:
         - $ref: '#/components/parameters/UpdatedAfter'
       responses:
@@ -751,6 +768,91 @@ components:
         updated_at: {type: string, format: date-time}
         deleted_at: {type: [string, 'null'], format: date-time}
       additionalProperties: true
+    WorkoutPlanGenerationResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/GeneratedWorkoutPlan'
+    GeneratedWorkoutPlan:
+      type: object
+      required: [name, goal, status, workout_days]
+      properties:
+        name: {type: string}
+        goal: {type: string}
+        status: {type: string, enum: [draft]}
+        notes: {type: [string, 'null']}
+        mesocycle_number: {type: integer}
+        phase: {type: [string, 'null']}
+        phase_week: {type: [integer, 'null']}
+        cycle_length: {type: [integer, 'null']}
+        body_composition_phase: {type: [string, 'null']}
+        starts_on: {type: [string, 'null'], format: date-time}
+        workout_days:
+          type: array
+          items: {$ref: '#/components/schemas/GeneratedWorkoutDay'}
+    GeneratedWorkoutDay:
+      type: object
+      required: [title, focus, status, order_index, intended_weekday, day_type, estimated_duration_minutes, blocks]
+      properties:
+        title: {type: string}
+        focus: {type: string}
+        status: {type: string, enum: [planned]}
+        order_index: {type: integer}
+        intended_weekday: {type: string}
+        day_type: {type: string}
+        estimated_duration_minutes: {type: integer}
+        notes: {type: [string, 'null']}
+        blocks:
+          type: array
+          items: {$ref: '#/components/schemas/GeneratedWorkoutBlock'}
+    GeneratedWorkoutBlock:
+      type: object
+      required: [type, order_index, rounds, exercises]
+      properties:
+        type: {type: string, enum: [warmup, standard, superset, cooldown]}
+        order_index: {type: integer}
+        rounds: {type: integer}
+        rest_after_block_seconds: {type: [integer, 'null']}
+        notes: {type: [string, 'null']}
+        exercises:
+          type: array
+          items: {$ref: '#/components/schemas/GeneratedPlannedExercise'}
+    GeneratedPlannedExercise:
+      type: object
+      required: [exercise, order_index]
+      properties:
+        exercise: {type: string}
+        order_index: {type: integer}
+        sets: {type: [integer, 'null']}
+        reps_min: {type: [integer, 'null']}
+        reps_max: {type: [integer, 'null']}
+        target_reps: {type: [array, 'null'], items: {type: integer}}
+        target_weight_kg: {type: [number, 'null']}
+        target_weights_kg: {type: [array, 'null'], items: {type: number}}
+        target_duration_minutes: {type: [integer, 'null']}
+        target_duration_seconds: {type: [integer, 'null']}
+        target_distance_km: {type: [number, 'null']}
+        target_pace_seconds_per_km: {type: [integer, 'null']}
+        rest_seconds: {type: [integer, 'null']}
+        set_style_configuration:
+          anyOf:
+            - $ref: '#/components/schemas/SetStyleConfiguration'
+            - type: 'null'
+        notes: {type: [string, 'null']}
+    SetStyleConfiguration:
+      type: object
+      required: [style]
+      properties:
+        style: {type: string, enum: [warmup, straight, topSetBackoff, ascendingPyramid, dropSet, restPause, intervals, tempo]}
+        applies_to_final_set_only: {type: boolean}
+        drop_count: {type: integer, minimum: 1}
+        drop_weight_percent: {type: number, minimum: 1, maximum: 100}
+        backoff_set_count: {type: integer, minimum: 1}
+        backoff_weight_percent: {type: number, minimum: 1, maximum: 100}
+        intra_set_rest_seconds: {type: integer, minimum: 1}
+        tempo: {type: string}
+        target_rir: {type: integer, minimum: 0, maximum: 10}
     WorkoutDay:
       allOf:
         - $ref: '#/components/schemas/SyncRecord'

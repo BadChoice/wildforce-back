@@ -1,9 +1,9 @@
-@props(['instructions', 'prompt', 'schema', 'error'])
+@props(['instructions', 'prompt', 'schema', 'error', 'title' => __('Next plan prompt')])
 
 <flux:modal {{ $attributes->merge(['class' => 'w-full max-w-6xl']) }}>
     <div class="space-y-6">
         <div>
-            <flux:heading size="lg">{{ __('Next plan prompt') }}</flux:heading>
+            <flux:heading size="lg">{{ $title }}</flux:heading>
             <flux:text variant="subtle" class="mt-1">{{ __('Preview of the exact prompt and response schema. No AI request is made.') }}</flux:text>
         </div>
 

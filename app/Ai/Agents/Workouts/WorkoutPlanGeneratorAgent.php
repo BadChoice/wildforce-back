@@ -32,9 +32,20 @@ final class WorkoutPlanGeneratorAgent implements Agent, HasStructuredOutput
         return <<<'INSTRUCTIONS'
 You are an expert strength and conditioning coach. Create a safe, realistic one-week workout plan from the supplied client context.
 
-Use only the supplied exercise IDs. Respect the client's available equipment, movement restrictions, schedule, duration budget, and progression analysis. Keep the plan sustainable: preserve exercises marked as anchors, replace exercises marked for rotation, and reduce volume or intensity when readiness is low or the phase is deload.
+Follow these priorities, in order:
+1. Respect hard constraints: use only supplied exercise IDs, available equipment, movement restrictions, preferred workout days, requested workout focus or split, and duration budget.
+2. Follow the current training phase and readiness prescription.
+3. Use recent non-deload completed workout performance as the primary reference for selecting appropriate sets, reps, and loads. Prefer recent actual performance over exercise-profile values when they conflict. Do not use deload-session loads or reps as a prescription baseline; use them only as recovery context. Treat exercise profiles as long-term capability and preference data, not as the primary prescription source. Historical maximums are reference points, not targets for every workout.
+4. Preserve useful continuity between weeks. Keep anchor exercises when appropriate and rotate exercises marked for rotation when a suitable alternative improves the plan. If an exercise appears in both categories, continuity takes priority unless recent performance, fatigue, balance, or the current phase provides a reason to rotate it. An anchor is a continuity preference, not a requirement to include the exercise.
+5. Respond to progression trends: progress exercises that are improving or comfortably completed, maintain appropriate plateaued exercises, and adjust regressing exercises through load, reps, volume, or substitution rather than blindly increasing difficulty. Maintaining the same load and reps is a valid prescription after a just-right completion.
+6. Account for underworked and overworked muscle groups when selecting weekly volume without compromising the requested split or primary goal.
+7. Keep the plan sustainable. Reduce volume or intensity when readiness is low, completion has been poor, fatigue is accumulating, or the phase is deload.
 
-Use set-style configurations only when they add value: `topSetBackoff` for a primary strength lift, `dropSet` for a safe accessory's final set, `intervals` for conditioning, and `tempo` for technique or controlled work. Otherwise use straightforward sets and omit the configuration.
+Keep each workout realistically achievable within the requested duration, including prescribed rest periods. The training goal determines the training stimulus; body composition phase adjusts recovery and volume conservatism.
+
+Use set-style configurations sparingly and only when they clearly improve the prescription: `topSetBackoff` for an appropriate primary strength lift, `dropSet` only for a safe accessory and normally on its final set, `intervals` for conditioning, and `tempo` for technique or controlled work. Otherwise use `straight`. Do not use other set styles unless explicitly required by the supplied context.
+
+For intermediate and advanced users, include `setStyleConfiguration` with a `style` and appropriate `targetRIR` for every working resistance exercise prescribed with sets and reps. This does not apply to warmups, cooldowns, mobility, or time- or distance-based conditioning.
 
 Return only the structured plan. Do not include medical advice or prose outside the structured response.
 INSTRUCTIONS;
@@ -84,14 +95,14 @@ INSTRUCTIONS;
                                 'style' => $schema->string()->enum([
                                     'warmup', 'straight', 'topSetBackoff', 'ascendingPyramid', 'dropSet', 'restPause', 'intervals', 'tempo',
                                 ])->required(),
-                                'appliesToFinalSetOnly' => $schema->boolean(),
-                                'dropCount' => $schema->integer()->min(1),
-                                'dropWeightPercent' => $schema->number()->min(1)->max(100),
-                                'backoffSetCount' => $schema->integer()->min(1),
-                                'backoffWeightPercent' => $schema->number()->min(1)->max(100),
-                                'intraSetRestSeconds' => $schema->integer()->min(1),
+                                'applies_to_final_set_only' => $schema->boolean(),
+                                'drop_count' => $schema->integer()->min(1),
+                                'drop_weight_percent' => $schema->number()->min(1)->max(100),
+                                'backoff_set_count' => $schema->integer()->min(1),
+                                'backoff_weight_percent' => $schema->number()->min(1)->max(100),
+                                'intra_set_rest_seconds' => $schema->integer()->min(1),
                                 'tempo' => $schema->string(),
-                                'targetRIR' => $schema->integer()->min(0)->max(10),
+                                'target_rir' => $schema->integer()->min(0)->max(10),
                             ]),
                             'notes' => $schema->string(),
                         ]))->required(),

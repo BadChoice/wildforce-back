@@ -36,7 +36,15 @@ final class WorkoutPlanAIGenerator
             throw new RuntimeException('The workout plan generator did not return structured data.');
         }
 
-        return $this->planFromResponse($user, $context['analysis']->mesocycleNumber, $response->toArray());
+        $planResponse = $response->toArray();
+
+        $this->validateSetStyleConfigurations(
+            $planResponse,
+            $context['exercises'],
+            $user->trainingPreferences?->general_training_level,
+        );
+
+        return $this->planFromResponse($user, $context['analysis']->mesocycleNumber, $planResponse);
     }
 
     /**
@@ -119,6 +127,7 @@ final class WorkoutPlanAIGenerator
             ->map(fn ($profile): string => implode(' | ', array_filter([
                 $profile->exercise,
                 $profile->working_weight === null ? null : $profile->working_weight.' kg',
+                $profile->max_reps === null ? null : 'historical max reps: '.$profile->max_reps,
                 $profile->preferred_rep_range_min === null || $profile->preferred_rep_range_max === null
                     ? null
                     : $profile->preferred_rep_range_min.'-'.$profile->preferred_rep_range_max.' reps',
@@ -173,8 +182,13 @@ final class WorkoutPlanAIGenerator
 ## Exercise profiles
 {$profiles}
 
-## Recent workout history
+## Recent active workout performance
+Use this section to prescribe sets, reps, and loads. It excludes deload sessions.
 {$this->markdownList(explode("\n", $this->recentWorkoutHistory($trainingHistory)))}
+
+## Recent deload history
+Use this section only as recovery context. Do not use its loads or reps as the baseline for the next plan.
+{$this->markdownList(explode("\n", $this->recentWorkoutHistory($trainingHistory, deloadOnly: true)))}
 
 ## Allowed exercises
 ```text
@@ -184,6 +198,50 @@ ID | name | target metrics | movement patterns | planning note
 
 Create exactly one workout for each preferred workout day.
 PROMPT;
+    }
+
+    /**
+     * @param  array<string, mixed>  $response
+     * @param  Collection<int, array<string, mixed>>  $exercises
+     */
+    private function validateSetStyleConfigurations(array $response, Collection $exercises, ?string $trainingLevel): void
+    {
+        if (! in_array($trainingLevel, ['intermediate', 'advanced'], true)) {
+            return;
+        }
+
+        $exercisesById = $exercises->keyBy('id');
+
+        foreach ($response['workoutDays'] as $workoutDay) {
+            foreach ($workoutDay['blocks'] as $block) {
+                foreach ($block['exercises'] as $plannedExercise) {
+                    $exercise = $exercisesById->get($plannedExercise['exercise']);
+
+                    if (! $this->requiresSetStyleConfiguration($block, $plannedExercise, $exercise)) {
+                        continue;
+                    }
+
+                    $configuration = $plannedExercise['setStyleConfiguration'] ?? null;
+
+                    if (! is_array($configuration) || ! isset($configuration['style']) || ! isset($configuration['target_rir'])) {
+                        throw new RuntimeException("Workout plan response requires a set-style configuration with target RIR for {$plannedExercise['exercise']}.");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $block
+     * @param  array<string, mixed>  $plannedExercise
+     * @param  array<string, mixed>|null  $exercise
+     */
+    private function requiresSetStyleConfiguration(array $block, array $plannedExercise, ?array $exercise): bool
+    {
+        return in_array($block['type'], ['standard', 'superset'], true)
+            && isset($plannedExercise['sets'])
+            && ($exercise['trackingMode'] ?? null) === 'reps'
+            && ! in_array($exercise['category'] ?? null, ['cardio', 'mobility'], true);
     }
 
     /**
@@ -361,9 +419,10 @@ PROMPT;
         };
     }
 
-    private function recentWorkoutHistory(TrainingHistory $trainingHistory): string
+    private function recentWorkoutHistory(TrainingHistory $trainingHistory, bool $deloadOnly = false): string
     {
         return $trainingHistory->recentPlans()
+            ->filter(fn ($plan): bool => $deloadOnly ? $plan->phase === 'deload' : $plan->phase !== 'deload')
             ->map(function ($plan): string {
                 $workouts = $plan->workoutDays
                     ->map(function ($workoutDay): string {
