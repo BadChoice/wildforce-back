@@ -223,7 +223,7 @@ try {
 
     $translations = [System.Collections.Generic.List[object]]::new()
     $keys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
-    $resourceNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    $resourceNames = [System.Collections.Generic.Dictionary[string, string]]::new([System.StringComparer]::Ordinal)
 
     foreach ($row in $rows | Select-Object -Skip 1) {
         $values = Get-RowValues $row $sharedStrings $worksheetNamespaces
@@ -238,13 +238,17 @@ try {
         }
 
         if (-not $keys.Add($key)) {
-            throw "The Google Sheet contains the duplicate key '$key'."
+            Write-Warning "Skipping duplicate Google Sheet key '$key'; the first occurrence is kept."
+            continue
         }
 
         $resourceName = Get-AndroidResourceName $key
-        if (-not $resourceNames.Add($resourceName)) {
-            throw "The Android resource name '$resourceName' is duplicated."
+        if ($resourceNames.ContainsKey($resourceName)) {
+            Write-Warning "Skipping key '$key'; it maps to Android resource '$resourceName', already used by '$($resourceNames[$resourceName])'."
+            continue
         }
+
+        $resourceNames[$resourceName] = $key
 
         $description = ([string]$values[$columns['description']]).Trim()
         $localizedValues = @{}
