@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
-test('it creates an Apple user after validating Apple’s signed identity token', function () {
+test('it rejects an unlinked Apple user after validating Apple’s signed identity token', function () {
     $clientPrivateKey = appleTestClientPrivateKey();
     [$identityPrivateKey, $jwk] = appleTestIdentityKeyMaterial();
     $identityToken = appleTestIdentityToken($identityPrivateKey, [
@@ -33,21 +33,11 @@ test('it creates an Apple user after validating Apple’s signed identity token'
         'https://appleid.apple.com/auth/keys' => Http::response(['keys' => [$jwk]]),
     ]);
 
-    $result = app(AppleAuthenticator::class)->authenticate('apple-authorization-code', 'Jane’s iPhone', 'Jane Doe');
+    expect(fn () => app(AppleAuthenticator::class)->authenticate('apple-authorization-code', 'Jane’s iPhone', 'Jane Doe'))
+        ->toThrow(ValidationException::class);
 
-    expect($result->user->name)->toBe('Jane Doe')
-        ->and($result->user->email)->toBe('jane@privaterelay.appleid.com')
-        ->and($result->user->password)->toBeNull()
-        ->and($result->token)->toBeString()->not->toBeEmpty()
-        ->and($result->trialEndsAt)->not->toBeNull();
-
-    $this->assertDatabaseHas('user_identities', [
-        'user_id' => $result->user->id,
-        'provider' => 'apple',
-        'provider_user_id' => 'apple-user-123',
-        'provider_email' => 'jane@privaterelay.appleid.com',
-    ]);
-    $this->assertDatabaseCount('user_identities', 1);
+    $this->assertDatabaseCount('users', 0);
+    $this->assertDatabaseCount('user_identities', 0);
 
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://appleid.apple.com/auth/token');
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://appleid.apple.com/auth/keys');

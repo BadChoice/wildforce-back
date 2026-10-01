@@ -5,21 +5,29 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\RegisterRequest;
 use App\Models\Subscription;
+use App\Models\TrainingPreference;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class RegisterController extends Controller
 {
     public function __invoke(RegisterRequest $request): JsonResponse
     {
-        $user = User::create([
-            'name' => $request->string('name')->toString(),
-            'email' => $request->string('email')->lower()->toString(),
-            'password' => Hash::make($request->string('password')->toString()),
-        ]);
-        $trial = $user->attachSubscription(Subscription::createTrial());
+        [$user, $trial] = DB::transaction(function () use ($request): array {
+            $user = User::create([
+                'name' => $request->string('name')->toString(),
+                'email' => $request->string('email')->lower()->toString(),
+                'password' => Hash::make($request->string('password')->toString()),
+            ]);
+
+            $user->trainingPreferences()->save((new TrainingPreference)->forceFill($request->trainingProfile()));
+            $trial = $user->attachSubscription(Subscription::createTrial());
+
+            return [$user, $trial];
+        });
 
         event(new Registered($user));
 

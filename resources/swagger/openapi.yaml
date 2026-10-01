@@ -61,7 +61,7 @@ paths:
     post:
       tags: [Authentication]
       summary: Sign in with Google and issue a bearer token
-      description: Verifies a Google OpenID Connect ID token before signing in or creating the user.
+      description: Verifies a Google OpenID Connect ID token and signs in only when it is already linked to an account. Complete registration before using Google sign-in.
       security: []
       requestBody:
         required: true
@@ -76,21 +76,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
-        '201':
-          description: User registered and authenticated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '409':
-          description: The verified email already belongs to an account with another sign-in method.
         '422':
           $ref: '#/components/responses/ValidationError'
   /api/auth/apple:
     post:
       tags: [Authentication]
       summary: Sign in with Apple and issue a bearer token
-      description: Exchanges the native Apple authorization code on the server. The optional full name is only used while creating a new user, because Apple may provide it only once.
+      description: Exchanges the native Apple authorization code on the server and signs in only when the Apple ID is already linked to an account. Complete registration before using Apple sign-in.
       security: []
       requestBody:
         required: true
@@ -105,14 +97,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
-        '201':
-          description: New user created from an Apple identity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '409':
-          $ref: '#/components/responses/Conflict'
         '422':
           $ref: '#/components/responses/ValidationError'
   /api/account/identities:
@@ -589,7 +573,7 @@ components:
         data: {type: array, items: {$ref: '#/components/schemas/Coach'}}
     RegisterRequest:
       type: object
-      required: [name, email, password, password_confirmation, device_name]
+      required: [name, email, password, password_confirmation, device_name, training_profile]
       properties:
         name: {type: string, maxLength: 255}
         email: {type: string, format: email, maxLength: 255}
@@ -600,6 +584,29 @@ components:
           description: Must contain uppercase and lowercase letters, a number, a symbol, and must not appear in a known data leak.
         password_confirmation: {type: string, format: password}
         device_name: {type: string, maxLength: 255}
+        training_profile:
+          $ref: '#/components/schemas/TrainingProfile'
+    TrainingProfile:
+      type: object
+      required: [goal, lifestyle, gym_type, general_training_level, training_split_preference, preferred_workout_duration_minutes, workout_days]
+      properties:
+        goal: {type: string, enum: [generalFitness, loseWeight, buildMuscle, gainStrength, improveEndurance, improveMobility, bodyRecomposition]}
+        lifestyle: {type: string, enum: [sedentary, lightlyActive, moderatelyActive, veryActive]}
+        gym_type: {type: string, enum: [bigGym, smallGym, homeGym, someAccessories, bodyweightOnly]}
+        general_training_level: {type: string, enum: [completeBeginner, beginner, novice, intermediate, advanced, elite]}
+        training_split_preference: {type: string, enum: [automatic, fullBody, upperLower, pushPullLegs, bodyPartSplit, custom]}
+        preferred_workout_duration_minutes: {type: integer, minimum: 10, maximum: 300}
+        workout_days:
+          type: array
+          minItems: 1
+          maxItems: 7
+          items: {type: string, enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]}
+        custom_workout_focuses: {type: object, additionalProperties: {type: string}}
+        movement_restrictions: {type: array, items: {type: string}}
+        body_composition_phase: {type: [string, 'null'], enum: [automatic, bulk, cut, maintain, null]}
+        skips_warmups: {type: boolean}
+        skips_cooldowns: {type: boolean}
+        skips_rest_periods: {type: boolean}
     LoginRequest:
       type: object
       required: [email, password, device_name]

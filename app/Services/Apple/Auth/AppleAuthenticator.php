@@ -3,13 +3,10 @@
 namespace App\Services\Apple\Auth;
 
 use App\Contracts\AppleAuthentication;
-use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserIdentity;
-use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -48,29 +45,9 @@ class AppleAuthenticator implements AppleAuthentication
             return new AppleUserAuthenticationResult($identity->user);
         }
 
-        $email = $this->verifiedEmail($claims);
-
-        if (User::query()->where('email', $email)->exists()) {
-            throw new ConflictHttpException('This email already has an account. Sign in with an existing method before linking Apple.');
-        }
-
-        return DB::transaction(function () use ($email, $providerUserId, $claims, $fullName): AppleUserAuthenticationResult {
-            $user = User::create([
-                'name' => $this->nameForNewUser($fullName, $email),
-                'email' => $email,
-                'email_verified_at' => now(),
-                'password' => null,
-            ]);
-            $trial = $user->attachSubscription(Subscription::createTrial());
-            $this->createAppleIdentity($user, $providerUserId, $claims);
-            $trialEndsAt = $trial->getAttribute('renews_at');
-
-            if (! $trialEndsAt instanceof CarbonInterface) {
-                throw new RuntimeException('The trial end date is invalid.');
-            }
-
-            return new AppleUserAuthenticationResult($user, $trialEndsAt);
-        });
+        throw ValidationException::withMessages([
+            'authorization_code' => ['No account is linked to this Apple ID. Complete registration first.'],
+        ]);
     }
 
     public function link(User $user, string $authorizationCode): UserIdentity
@@ -155,26 +132,6 @@ class AppleAuthenticator implements AppleAuthentication
         }
 
         return $providerUserId;
-    }
-
-    /** @param array<string, mixed> $claims */
-    private function verifiedEmail(array $claims): string
-    {
-        $email = $claims['email'] ?? null;
-        $isVerified = ($claims['email_verified'] ?? null) === true || ($claims['email_verified'] ?? null) === 'true';
-
-        if (! $isVerified || ! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw ValidationException::withMessages(['authorization_code' => ['Apple did not return a verified email address for this account.']]);
-        }
-
-        return Str::lower($email);
-    }
-
-    private function nameForNewUser(?string $fullName, string $email): string
-    {
-        $fullName = trim((string) preg_replace('/\\s+/', ' ', $fullName ?? ''));
-
-        return $fullName !== '' ? $fullName : Str::before($email, '@');
     }
 
     /** @return Builder<UserIdentity> */

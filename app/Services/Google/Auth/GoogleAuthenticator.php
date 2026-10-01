@@ -3,15 +3,11 @@
 namespace App\Services\Google\Auth;
 
 use App\Contracts\GoogleAuthentication;
-use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserIdentity;
-use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use RuntimeException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class GoogleAuthenticator implements GoogleAuthentication
@@ -36,29 +32,9 @@ class GoogleAuthenticator implements GoogleAuthentication
             return new GoogleUserAuthenticationResult($identity->user);
         }
 
-        $email = $this->verifiedEmail($claims);
-
-        if (User::query()->where('email', $email)->exists()) {
-            throw new ConflictHttpException('This email already has an account. Sign in with an existing method before linking Google.');
-        }
-
-        return DB::transaction(function () use ($email, $providerUserId, $claims): GoogleUserAuthenticationResult {
-            $user = User::create([
-                'name' => $this->nameForNewUser($claims, $email),
-                'email' => $email,
-                'email_verified_at' => now(),
-                'password' => null,
-            ]);
-            $trial = $user->attachSubscription(Subscription::createTrial());
-            $this->createGoogleIdentity($user, $providerUserId, $claims);
-            $trialEndsAt = $trial->getAttribute('renews_at');
-
-            if (! $trialEndsAt instanceof CarbonInterface) {
-                throw new RuntimeException('The trial end date is invalid.');
-            }
-
-            return new GoogleUserAuthenticationResult($user, $trialEndsAt);
-        });
+        throw ValidationException::withMessages([
+            'id_token' => ['No account is linked to this Google ID. Complete registration first.'],
+        ]);
     }
 
     public function link(User $user, string $identityToken): UserIdentity
@@ -114,35 +90,6 @@ class GoogleAuthenticator implements GoogleAuthentication
         }
 
         return $providerUserId;
-    }
-
-    /** @param array<string, mixed> $claims */
-    private function verifiedEmail(array $claims): string
-    {
-        $email = $claims['email'] ?? null;
-        $isVerified = ($claims['email_verified'] ?? null) === true || ($claims['email_verified'] ?? null) === 'true';
-
-        if (! $isVerified || ! is_string($email) || ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw ValidationException::withMessages(['id_token' => ['Google did not return a verified email address for this account.']]);
-        }
-
-        return Str::lower($email);
-    }
-
-    /** @param array<string, mixed> $claims */
-    private function nameForNewUser(array $claims, string $email): string
-    {
-        $name = $claims['name'] ?? null;
-
-        if (is_string($name)) {
-            $name = trim((string) preg_replace('/\s+/', ' ', $name));
-
-            if ($name !== '') {
-                return $name;
-            }
-        }
-
-        return Str::before($email, '@');
     }
 
     /** @return Builder<UserIdentity> */

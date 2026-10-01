@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
-test('it creates a Google user after validating Google’s signed identity token', function () {
+test('it rejects an unlinked Google user after validating Google’s signed identity token', function () {
     [$identityPrivateKey, $jwk] = googleTestIdentityKeyMaterial();
     $identityToken = googleTestIdentityToken($identityPrivateKey, [
         'iss' => 'https://accounts.google.com',
@@ -27,21 +27,11 @@ test('it creates a Google user after validating Google’s signed identity token
         'https://www.googleapis.com/oauth2/v3/certs' => Http::response(['keys' => [$jwk]]),
     ]);
 
-    $result = app(GoogleAuthenticator::class)->authenticate($identityToken, 'Jane’s iPhone');
+    expect(fn () => app(GoogleAuthenticator::class)->authenticate($identityToken, 'Jane’s iPhone'))
+        ->toThrow(ValidationException::class);
 
-    expect($result->user->name)->toBe('Jane Doe')
-        ->and($result->user->email)->toBe('jane@example.com')
-        ->and($result->user->password)->toBeNull()
-        ->and($result->token)->toBeString()->not->toBeEmpty()
-        ->and($result->trialEndsAt)->not->toBeNull();
-
-    $this->assertDatabaseHas('user_identities', [
-        'user_id' => $result->user->id,
-        'provider' => 'google',
-        'provider_user_id' => 'google-user-123',
-        'provider_email' => 'jane@example.com',
-    ]);
-    $this->assertDatabaseCount('user_identities', 1);
+    $this->assertDatabaseCount('users', 0);
+    $this->assertDatabaseCount('user_identities', 0);
 
     Http::assertSent(fn (Request $request): bool => $request->url() === 'https://www.googleapis.com/oauth2/v3/certs');
 });
@@ -72,6 +62,13 @@ test('it rejects a Google identity token issued for another client', function ()
 });
 
 test('it accepts a Google identity token issued for the web client', function () {
+    $user = User::factory()->create(['email' => 'jane@example.com']);
+    UserIdentity::create([
+        'user_id' => $user->id,
+        'provider' => UserIdentity::GoogleProvider,
+        'provider_user_id' => 'google-user-123',
+    ]);
+
     [$identityPrivateKey, $jwk] = googleTestIdentityKeyMaterial();
     $identityToken = googleTestIdentityToken($identityPrivateKey, [
         'iss' => 'accounts.google.com',
@@ -92,7 +89,8 @@ test('it accepts a Google identity token issued for the web client', function ()
 
     $result = app(GoogleAuthenticator::class)->resolve($identityToken);
 
-    expect($result->user->email)->toBe('jane@example.com');
+    expect($result->user->id)->toBe($user->id)
+        ->and($result->user->email)->toBe('jane@example.com');
 });
 
 test('it does not remove a Google identity that is the user’s only sign-in method', function () {
