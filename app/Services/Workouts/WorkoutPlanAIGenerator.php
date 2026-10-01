@@ -15,6 +15,7 @@ use App\Services\Workouts\Progression\TrainingHistory;
 use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Laravel\Ai\ObjectSchema;
 use Laravel\Ai\Responses\StructuredAgentResponse;
 use RuntimeException;
@@ -45,6 +46,36 @@ final class WorkoutPlanAIGenerator
         );
 
         return $this->planFromResponse($user, $context['analysis']->mesocycleNumber, $planResponse);
+    }
+
+    /**
+     * Generate and persist a workout plan with its days, blocks, and exercises.
+     */
+    public function generateAndPersist(User $user): WorkoutPlan
+    {
+        $plan = $this->generate($user);
+
+        return DB::transaction(function () use ($plan): WorkoutPlan {
+            $plan->save();
+
+            foreach ($plan->workoutDays as $day) {
+                $plan->workoutDays()->save($day);
+
+                foreach ($day->blocks as $block) {
+                    $day->blocks()->save($block);
+
+                    foreach ($block->exercises as $exercise) {
+                        $exercise->setAttribute('workout_day_id', $day->getKey());
+                        $block->exercises()->save($exercise);
+                    }
+                }
+            }
+
+            return $plan->load([
+                'workoutDays.blocks.exercises.exerciseResults',
+                'workoutDays.directExercises.exerciseResults',
+            ]);
+        });
     }
 
     /**

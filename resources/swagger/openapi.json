@@ -622,15 +622,16 @@
     "/api/workout-plans/generate": {
       "post": {
         "tags": ["Workouts"],
-        "summary": "Generate a one-week workout-plan draft",
-        "description": "Generates a draft from the authenticated user's training profile and recent history. The response is not persisted; save and sync it through the existing workout-plan flow.",
+        "summary": "Generate and save a one-week workout plan",
+        "description": "Generates and persists a workout plan from the authenticated user's training profile and recent history. The response uses the sync payload, including IDs and timestamps.",
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
         "responses": {
-          "200": {
-            "description": "Generated workout-plan draft",
+          "201": {
+            "description": "Generated and persisted workout plan",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WorkoutPlanGenerationResponse"
+                  "$ref": "#/components/schemas/WorkoutPlanSyncResponse"
                 }
               }
             }
@@ -640,6 +641,12 @@
           },
           "403": {
             "description": "An active subscription, trial, or demo access is required."
+          },
+          "409": {
+            "description": "The idempotency key is already in progress or was reused with a different request."
+          },
+          "429": {
+            "description": "The generation rate limit of five requests per minute was exceeded."
           }
         }
       }
@@ -647,15 +654,16 @@
     "/api/nutrition-plans/generate": {
       "post": {
         "tags": ["Nutrition"],
-        "summary": "Generate a seven-day nutrition-plan draft",
-        "description": "Generates a draft from the authenticated user's nutrition profile, body metrics, training preferences, and upcoming workout plan. The response is not persisted; save and sync it through the existing nutrition-plan flow.",
+        "summary": "Generate and save a seven-day nutrition plan",
+        "description": "Generates and persists a nutrition plan from the authenticated user's nutrition profile, body metrics, training preferences, and upcoming workout plan. The response uses the same sync payload as the nutrition-plan sync endpoints.",
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
         "responses": {
-          "200": {
-            "description": "Generated nutrition-plan draft",
+          "201": {
+            "description": "Generated and persisted nutrition plan",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NutritionPlanGenerationResponse"
+                  "$ref": "#/components/schemas/NutritionPlanSyncResponse"
                 }
               }
             }
@@ -665,6 +673,9 @@
           },
           "403": {
             "description": "An active subscription, trial, or demo access is required."
+          },
+          "409": {
+            "description": "The idempotency key is already in progress or was reused with a different request."
           },
           "429": {
             "description": "The generation rate limit of five requests per minute was exceeded."
@@ -939,6 +950,16 @@
       }
     },
     "parameters": {
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": true,
+        "description": "A client-generated, unique key. Repeating a completed request with the same key within 24 hours returns its original response without repeating the operation.",
+        "schema": {
+          "type": "string",
+          "maxLength": 255
+        }
+      },
       "SyncResource": {
         "name": "resource",
         "in": "query",
@@ -1525,102 +1546,60 @@
         },
         "additionalProperties": true
       },
-      "WorkoutPlanGenerationResponse": {
+      "WorkoutPlanSyncResponse": {
         "type": "object",
         "required": ["data"],
         "properties": {
-          "data": {"$ref": "#/components/schemas/GeneratedWorkoutPlan"}
+          "data": {"$ref": "#/components/schemas/WorkoutPlanSync"}
         }
       },
-      "GeneratedWorkoutPlan": {
-        "type": "object",
-        "required": ["name", "goal", "status", "workout_days"],
-        "properties": {
-          "name": {"type": "string"}, "goal": {"type": "string"}, "status": {"type": "string", "enum": ["draft"]}, "notes": {"type": ["string", "null"]}, "mesocycle_number": {"type": "integer"}, "phase": {"type": ["string", "null"]}, "phase_week": {"type": ["integer", "null"]}, "cycle_length": {"type": ["integer", "null"]}, "body_composition_phase": {"type": ["string", "null"]}, "starts_on": {"type": ["string", "null"], "format": "date-time"}, "workout_days": {"type": "array", "items": {"$ref": "#/components/schemas/GeneratedWorkoutDay"}}
-        }
+      "WorkoutPlanSync": {
+        "allOf": [
+          {"$ref": "#/components/schemas/SyncRecord"},
+          {
+            "type": "object",
+            "required": ["name", "goal", "status", "workout_days"],
+            "properties": {
+              "name": {"type": "string"},
+              "goal": {"type": "string"},
+              "status": {"type": "string", "enum": ["draft"]},
+              "notes": {"type": ["string", "null"]},
+              "mesocycle_number": {"type": ["integer", "null"]},
+              "phase": {"type": ["string", "null"]},
+              "phase_week": {"type": ["integer", "null"]},
+              "cycle_length": {"type": ["integer", "null"]},
+              "body_composition_phase": {"type": ["string", "null"]},
+              "starts_on": {"type": ["string", "null"], "format": "date-time"},
+              "workout_days": {"type": "array", "items": {"$ref": "#/components/schemas/WorkoutDaySync"}}
+            }
+          }
+        ]
       },
-      "GeneratedWorkoutDay": {
-        "type": "object",
-        "required": ["title", "focus", "status", "order_index", "intended_weekday", "day_type", "estimated_duration_minutes", "blocks"],
-        "properties": {
-          "title": {"type": "string"}, "focus": {"type": "string"}, "status": {"type": "string", "enum": ["planned"]}, "order_index": {"type": "integer"}, "intended_weekday": {"type": "string"}, "day_type": {"type": "string"}, "estimated_duration_minutes": {"type": "integer"}, "notes": {"type": ["string", "null"]}, "blocks": {"type": "array", "items": {"$ref": "#/components/schemas/GeneratedWorkoutBlock"}}
-        }
+      "WorkoutDaySync": {
+        "allOf": [
+          {"$ref": "#/components/schemas/SyncRecord"},
+          {
+            "type": "object",
+            "required": ["title", "focus", "status", "order_index", "blocks", "exercises"],
+            "properties": {
+              "title": {"type": "string"},
+              "focus": {"type": "string"},
+              "status": {"type": "string"},
+              "order_index": {"type": "integer"},
+              "intended_weekday": {"type": ["string", "null"]},
+              "day_type": {"type": ["string", "null"]},
+              "estimated_duration_minutes": {"type": ["integer", "null"]},
+              "blocks": {"type": "array", "items": {"$ref": "#/components/schemas/SyncRecord"}},
+              "exercises": {"type": "array", "items": {"$ref": "#/components/schemas/SyncRecord"}}
+            }
+          }
+        ]
       },
-      "GeneratedWorkoutBlock": {
-        "type": "object",
-        "required": ["type", "order_index", "rounds", "exercises"],
-        "properties": {
-          "type": {"type": "string", "enum": ["warmup", "standard", "superset", "cooldown"]}, "order_index": {"type": "integer"}, "rounds": {"type": "integer"}, "rest_after_block_seconds": {"type": ["integer", "null"]}, "notes": {"type": ["string", "null"]}, "exercises": {"type": "array", "items": {"$ref": "#/components/schemas/GeneratedPlannedExercise"}}
-        }
-      },
-      "GeneratedPlannedExercise": {
-        "type": "object",
-        "required": ["exercise", "order_index"],
-        "properties": {
-          "exercise": {"type": "string"}, "order_index": {"type": "integer"}, "sets": {"type": ["integer", "null"]}, "reps_min": {"type": ["integer", "null"]}, "reps_max": {"type": ["integer", "null"]}, "target_reps": {"type": ["array", "null"], "items": {"type": "integer"}}, "target_weight_kg": {"type": ["number", "null"]}, "target_weights_kg": {"type": ["array", "null"], "items": {"type": "number"}}, "target_duration_minutes": {"type": ["integer", "null"]}, "target_duration_seconds": {"type": ["integer", "null"]}, "target_distance_km": {"type": ["number", "null"]}, "target_pace_seconds_per_km": {"type": ["integer", "null"]}, "rest_seconds": {"type": ["integer", "null"]}, "set_style_configuration": {"anyOf": [{"$ref": "#/components/schemas/SetStyleConfiguration"}, {"type": "null"}]}, "notes": {"type": ["string", "null"]}
-        }
-      },
-      "NutritionPlanGenerationResponse": {
+      "NutritionPlanSyncResponse": {
         "type": "object",
         "required": ["data"],
         "properties": {
-          "data": {"$ref": "#/components/schemas/GeneratedNutritionPlan"}
-        }
-      },
-      "GeneratedNutritionPlan": {
-        "type": "object",
-        "required": ["starts_on", "goal", "body_composition_phase", "daily_calorie_average", "days"],
-        "properties": {
-          "source_workout_plan_id": {"type": ["string", "null"], "format": "uuid"},
-          "starts_on": {"type": "string", "format": "date"},
-          "goal": {"type": "string", "enum": ["generalFitness", "loseWeight", "buildMuscle", "gainStrength", "improveEndurance", "improveMobility", "bodyRecomposition"]},
-          "body_composition_phase": {"type": "string", "enum": ["bulk", "cut", "maintain"]},
-          "daily_calorie_average": {"type": "number", "minimum": 0},
-          "notes": {"type": ["string", "null"]},
-          "days": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"$ref": "#/components/schemas/GeneratedNutritionDay"}}
-        }
-      },
-      "GeneratedNutritionDay": {
-        "type": "object",
-        "required": ["date", "weekday", "day_type", "target_calories", "target_protein_grams", "target_carbs_grams", "target_fat_grams", "energy_demand", "meals"],
-        "properties": {
-          "date": {"type": "string", "format": "date"},
-          "weekday": {"type": "string", "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]},
-          "day_type": {"type": "string", "enum": ["training", "rest", "recovery"]},
-          "target_calories": {"type": "number", "minimum": 0},
-          "target_protein_grams": {"type": "number", "minimum": 0},
-          "target_carbs_grams": {"type": "number", "minimum": 0},
-          "target_fat_grams": {"type": "number", "minimum": 0},
-          "planned_workout_title": {"type": ["string", "null"]},
-          "planned_workout_focus": {"type": ["string", "null"]},
-          "energy_demand": {"type": "string", "enum": ["low", "medium", "high"]},
-          "notes": {"type": ["string", "null"]},
-          "pre_workout_guidance": {"type": ["string", "null"]},
-          "post_workout_guidance": {"type": ["string", "null"]},
-          "meals": {"type": "array", "items": {"$ref": "#/components/schemas/GeneratedNutritionMeal"}}
-        }
-      },
-      "GeneratedNutritionMeal": {
-        "type": "object",
-        "required": ["title", "order_index", "meal_type", "target_calories", "target_protein_grams", "target_carbs_grams", "target_fat_grams", "example_foods"],
-        "properties": {
-          "title": {"type": "string"},
-          "order_index": {"type": "integer", "minimum": 0},
-          "meal_type": {"type": "string", "enum": ["breakfast", "lunch", "snack", "dinner"]},
-          "target_calories": {"type": "number", "minimum": 0},
-          "target_protein_grams": {"type": "number", "minimum": 0},
-          "target_carbs_grams": {"type": "number", "minimum": 0},
-          "target_fat_grams": {"type": "number", "minimum": 0},
-          "guidance": {"type": ["string", "null"]},
-          "example_foods": {"type": "array", "items": {"$ref": "#/components/schemas/GeneratedNutritionFood"}}
-        }
-      },
-      "GeneratedNutritionFood": {
-        "type": "object",
-        "required": ["name", "amountGrams"],
-        "properties": {
-          "name": {"type": "string"},
-          "amountGrams": {"type": "integer", "minimum": 1}
+          "data": {"$ref": "#/components/schemas/NutritionPlan"}
         }
       },
       "SetStyleConfiguration": {

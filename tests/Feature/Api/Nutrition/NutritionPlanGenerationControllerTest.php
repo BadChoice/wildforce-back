@@ -7,23 +7,26 @@ use App\Models\TrainingPreference;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
-test('it returns an unpersisted generated nutrition plan for the authenticated user', function () {
+test('it persists and returns a generated nutrition plan using the sync payload', function () {
     $this->travelTo('2026-10-05 09:00:00');
     $user = nutritionPlanGenerationUser();
     NutritionPlanGeneratorAgent::fake([nutritionPlanGenerationResponse()])->preventStrayPrompts();
 
-    $response = $this->actingAs($user, 'sanctum')->postJson('/api/nutrition-plans/generate');
+    $response = $this->actingAs($user, 'sanctum')->postJson('/api/nutrition-plans/generate', [], [
+        'Idempotency-Key' => 'nutrition-plan-generation-1',
+    ]);
 
-    $response->assertOk()
-        ->assertJsonPath('data.starts_on', '2026-10-05')
+    $response->assertCreated()
+        ->assertJsonPath('data.id', fn (string $id): bool => $id !== '')
+        ->assertJsonPath('data.starts_on', '2026-10-05T00:00:00.000000Z')
         ->assertJsonPath('data.goal', 'buildMuscle')
-        ->assertJsonPath('data.days.0.target_calories', '2272.00')
+        ->assertJsonPath('data.days.0.target_calories', 2272)
         ->assertJsonPath('data.days.0.meals.0.title', 'Breakfast')
         ->assertJsonPath('data.days.0.meals.0.example_foods.0.amountGrams', 60);
 
-    $this->assertDatabaseCount('nutrition_plans', 0);
-    $this->assertDatabaseCount('nutrition_days', 0);
-    $this->assertDatabaseCount('nutrition_meals', 0);
+    $this->assertDatabaseCount('nutrition_plans', 1);
+    $this->assertDatabaseCount('nutrition_days', 7);
+    $this->assertDatabaseCount('nutrition_meals', 7);
 });
 
 test('it returns 401 when no token is provided', function () {

@@ -6,7 +6,7 @@ use App\Models\TrainingLocation;
 use App\Models\TrainingPreference;
 use App\Models\User;
 
-test('it returns an unpersisted generated workout plan for the authenticated user', function () {
+test('it persists and returns a generated workout plan using the sync payload', function () {
     $user = User::factory()->create();
     TrainingPreference::factory()->for($user)->create([
         'workout_days' => ['monday'],
@@ -18,14 +18,45 @@ test('it returns an unpersisted generated workout plan for the authenticated use
     ]);
     WorkoutPlanGeneratorAgent::fake([workoutPlanGenerationResponse()])->preventStrayPrompts();
 
-    $response = $this->actingAs($user, 'sanctum')->postJson('/api/workout-plans/generate');
+    $response = $this->actingAs($user, 'sanctum')->postJson('/api/workout-plans/generate', [], [
+        'Idempotency-Key' => 'workout-plan-generation-1',
+    ]);
 
-    $response->assertOk()
+    $response->assertCreated()
+        ->assertJsonPath('data.id', fn (string $id): bool => $id !== '')
         ->assertJsonPath('data.name', 'Full body foundation')
         ->assertJsonPath('data.workout_days.0.blocks.0.exercises.0.set_style_configuration.style', 'straight')
         ->assertJsonPath('data.workout_days.0.blocks.0.exercises.0.set_style_configuration.target_rir', 2);
 
-    $this->assertDatabaseCount('workout_plans', 0);
+    $this->assertDatabaseCount('workout_plans', 1);
+    $this->assertDatabaseCount('workout_days', 1);
+    $this->assertDatabaseCount('workout_blocks', 1);
+    $this->assertDatabaseCount('planned_exercises', 1);
+});
+
+test('it returns the original response when an idempotency key is retried', function () {
+    $user = User::factory()->create();
+    TrainingPreference::factory()->for($user)->create(['workout_days' => ['monday']]);
+    TrainingLocation::factory()->for($user)->create(['equipment' => ['bodyweight']]);
+    WorkoutPlanGeneratorAgent::fake([workoutPlanGenerationResponse()])->preventStrayPrompts();
+
+    $headers = ['Idempotency-Key' => 'workout-plan-generation-retry'];
+    $first = $this->actingAs($user, 'sanctum')->postJson('/api/workout-plans/generate', [], $headers);
+    $second = $this->actingAs($user, 'sanctum')->postJson('/api/workout-plans/generate', [], $headers);
+
+    $first->assertCreated();
+    $second->assertCreated()
+        ->assertExactJson($first->json());
+
+    $this->assertDatabaseCount('workout_plans', 1);
+});
+
+test('it requires an idempotency key', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user, 'sanctum')->postJson('/api/workout-plans/generate')
+        ->assertBadRequest()
+        ->assertJsonPath('code', 'idempotency_key_required');
 });
 
 test('it returns 401 when no token is provided', function () {

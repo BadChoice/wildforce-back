@@ -12,6 +12,7 @@ use App\Services\Nutrition\Progression\NutritionProgressionAnalysis;
 use App\Services\Nutrition\Progression\NutritionProgressionAnalyzer;
 use Carbon\CarbonInterface;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
+use Illuminate\Support\Facades\DB;
 use Laravel\Ai\ObjectSchema;
 use Laravel\Ai\Responses\StructuredAgentResponse;
 use RuntimeException;
@@ -28,6 +29,28 @@ final class NutritionPlanAIGenerator
         }
 
         return $this->planFromResponse($user, $analysis, $response->toArray());
+    }
+
+    /**
+     * Generate and persist a nutrition plan with its days and meals.
+     */
+    public function generateAndPersist(User $user): NutritionPlan
+    {
+        $plan = $this->generate($user);
+
+        return DB::transaction(function () use ($plan): NutritionPlan {
+            $plan->save();
+
+            foreach ($plan->days as $day) {
+                $plan->days()->save($day);
+
+                foreach ($day->meals as $meal) {
+                    $day->meals()->save($meal);
+                }
+            }
+
+            return $plan->load('days.meals');
+        });
     }
 
     /** @return array{instructions: string, prompt: string, schema: string} */
