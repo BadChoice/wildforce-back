@@ -35,7 +35,7 @@ class BatchSyncPullRequest extends FormRequest
                 'distinct:strict',
                 Rule::in(app(SyncRegistry::class)->batchPullResources()),
             ],
-            'resources.*.updated_after' => ['present', 'nullable', 'date'],
+            'resources.*.updated_after' => ['nullable', 'date'],
         ];
     }
 
