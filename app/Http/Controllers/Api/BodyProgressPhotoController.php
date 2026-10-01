@@ -31,9 +31,10 @@ class BodyProgressPhotoController extends Controller
         /** @var UploadedFile $image */
         $image = $validated['image'];
         $angle = $request->route('angle');
-        $relativePath = Str::lower($bodyProgressPhotoSession->id)."-{$angle}.jpg";
+        $filename = Str::lower($bodyProgressPhotoSession->id)."-{$angle}.jpg";
+        $relativePath = "body-progress-photos/{$filename}";
 
-        if (Storage::putFileAs('', $image, $relativePath, ['visibility' => 'private']) === false) {
+        if (Storage::putFileAs('body-progress-photos', $image, $filename, ['visibility' => 'private']) === false) {
             throw new RuntimeException('Unable to store the body progress photo.');
         }
 
