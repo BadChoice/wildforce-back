@@ -132,7 +132,7 @@ class BatchSyncPullService
             'as_of' => $now->toISOString(),
             'resources' => array_map(fn (array $resource): array => [
                 'resource' => $resource['resource'],
-                'updated_after' => $resource['updated_after'],
+                'updated_after' => $resource['updated_after'] ?? null,
                 'last_updated_at' => null,
                 'last_id' => null,
             ], $requestedResources),
