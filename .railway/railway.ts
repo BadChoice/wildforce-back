@@ -83,6 +83,7 @@ export default defineRailway(() => {
       // Google
       // -------------------------
       GOOGLE_CLIENT_ID: preserve(),
+      GOOGLE_WEB_SECRET: preserve(),
 
       // -------------------------
       // Stripe
