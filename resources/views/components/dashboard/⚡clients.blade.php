@@ -1,15 +1,20 @@
 <?php
 
 use App\Enums\CoachingEnrollmentStatus;
+use App\Enums\Generated\MajorMuscleGroup;
+use App\Enums\Generated\MuscleGroup;
 use App\Models\PlannedExercise;
 use App\Models\User;
 use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Nutrition\NutritionPlanAIGenerator;
+use App\Services\Workouts\WorkoutPlanAIGenerator;
 use App\Services\Workouts\Progression\ProgressionAnalysis;
 use App\Services\Workouts\Progression\TrainingHistory;
 use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
+use App\ViewModels\PlanPromptPreview;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
@@ -30,6 +35,8 @@ new class extends Component
 
     public bool $showProgressionAnalysis = false;
 
+    public PlanPromptPreview $planPromptPreview;
+
     public string $workoutPlanName = '';
 
     public string $workoutPlanGoal = 'generalFitness';
@@ -48,9 +55,15 @@ new class extends Component
 
     public string $workoutDayFocus = 'fullBody';
 
+    public string $workoutDayEstimatedDurationMinutes = '';
+
     public ?string $selectedWorkoutBlockId = null;
 
     public string $exerciseSearch = '';
+
+    public string $exerciseCategory = '';
+
+    public string $exerciseMuscle = '';
 
     /**
      * @var list<array{id: string, type: string, notes: string, exercises: list<array{id: string, exercise: string, name: string, notes: string, sets: int, reps_min: int, reps_max: int, target_weight_kg: string, rest_seconds: int}>}>
@@ -58,6 +71,11 @@ new class extends Component
     public array $workoutDayBlocks = [];
 
     protected ExerciseCatalog $exerciseCatalog;
+
+    public function mount(): void
+    {
+        $this->planPromptPreview = new PlanPromptPreview;
+    }
 
     public function boot(ExerciseCatalog $exerciseCatalog): void
     {
@@ -119,11 +137,42 @@ new class extends Component
                 return false;
             }
 
-            return $search === '' || Str::contains(
+            $matchesSearch = $search === '' || Str::contains(
                 Str::lower(implode(' ', [(string) ($exercise['id'] ?? ''), (string) ($exercise['name'] ?? '')])),
                 $search,
             );
+            $matchesCategory = $this->exerciseCategory === '' || ($exercise['category'] ?? null) === $this->exerciseCategory;
+            $muscles = array_merge($exercise['primaryMuscles'] ?? [], $exercise['secondaryMuscles'] ?? []);
+            $selectedMajorMuscleGroup = MajorMuscleGroup::tryFrom($this->exerciseMuscle);
+            $matchesMuscle = $this->exerciseMuscle === '' || in_array($this->exerciseMuscle, $muscles, true)
+                || ($selectedMajorMuscleGroup !== null && collect($muscles)->map(fn (string $muscle): ?MuscleGroup => MuscleGroup::tryFrom($muscle))->contains(fn (?MuscleGroup $muscle): bool => $muscle?->majorGroup() === $selectedMajorMuscleGroup));
+
+            return $matchesSearch && $matchesCategory && $matchesMuscle;
         }));
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    #[Computed]
+    public function categories(): array
+    {
+        /** @var list<array<string, mixed>> $categories */
+        $categories = Arr::get($this->exerciseCatalog->all(), 'referenceData.exerciseCategories', []);
+
+        return $categories;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    #[Computed]
+    public function muscleGroups(): array
+    {
+        /** @var list<array<string, mixed>> $muscleGroups */
+        $muscleGroups = array_merge(Arr::get($this->exerciseCatalog->all(), 'referenceData.majorMuscleGroups', []), Arr::get($this->exerciseCatalog->all(), 'referenceData.muscleGroups', []));
+
+        return $muscleGroups;
     }
 
     public function selectClient(string $clientId): void
@@ -137,6 +186,7 @@ new class extends Component
         $this->selectedClientId = $clientId;
         $this->selectedTab = 'info';
         $this->showProgressionAnalysis = false;
+        $this->resetNextPlanPromptPreview();
         $this->showClientDetail = true;
     }
 
@@ -153,6 +203,7 @@ new class extends Component
     {
         $this->showClientDetail = false;
         $this->showProgressionAnalysis = false;
+        $this->resetNextPlanPromptPreview();
     }
 
     public function openProgressionAnalysis(): void
@@ -167,6 +218,41 @@ new class extends Component
     public function closeProgressionAnalysis(): void
     {
         $this->showProgressionAnalysis = false;
+    }
+
+    public function openNextPlanPrompt(WorkoutPlanAIGenerator $generator): void
+    {
+        $client = $this->selectedClient;
+
+        if ($client === null) {
+            return;
+        }
+
+        try {
+            $this->planPromptPreview->show(__('Next plan prompt'), $generator->preview($client));
+        } catch (RuntimeException $exception) {
+            $this->planPromptPreview->showError(__('Next plan prompt'), $exception->getMessage());
+        }
+    }
+
+    public function openNutritionPlanPrompt(NutritionPlanAIGenerator $generator): void
+    {
+        $client = $this->selectedClient;
+
+        if ($client === null) {
+            return;
+        }
+
+        try {
+            $this->planPromptPreview->show(__('Nutrition plan prompt'), $generator->preview($client));
+        } catch (RuntimeException $exception) {
+            $this->planPromptPreview->showError(__('Nutrition plan prompt'), $exception->getMessage());
+        }
+    }
+
+    private function resetNextPlanPromptPreview(): void
+    {
+        $this->planPromptPreview->reset();
     }
 
     #[Computed]
@@ -239,9 +325,12 @@ new class extends Component
         $this->workoutDayTitle = '';
         $this->workoutDayNotes = '';
         $this->workoutDayFocus = 'fullBody';
+        $this->workoutDayEstimatedDurationMinutes = '';
         $this->workoutDayBlocks = [];
         $this->addWorkoutBlock();
         $this->exerciseSearch = '';
+        $this->exerciseCategory = '';
+        $this->exerciseMuscle = '';
         $this->showWorkoutDayEditor = true;
     }
 
@@ -274,6 +363,7 @@ new class extends Component
         $this->workoutDayTitle = $workoutDay->title;
         $this->workoutDayNotes = $workoutDay->notes ?? '';
         $this->workoutDayFocus = $workoutDay->focus;
+        $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
         $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => [
             'id' => $block->id,
             'type' => $block->type,
@@ -292,6 +382,8 @@ new class extends Component
         ])->all();
         $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
         $this->exerciseSearch = '';
+        $this->exerciseCategory = '';
+        $this->exerciseMuscle = '';
         $this->showWorkoutDayEditor = true;
     }
 
@@ -386,6 +478,7 @@ new class extends Component
             'workoutDayTitle' => ['required', 'string', 'max:255'],
             'workoutDayNotes' => ['nullable', 'string'],
             'workoutDayFocus' => ['required', 'string', 'max:255'],
+            'workoutDayEstimatedDurationMinutes' => ['nullable', 'integer', 'min:1', 'max:1440'],
             'workoutDayBlocks' => ['required', 'array'],
             'workoutDayBlocks.*.id' => ['required', 'uuid'],
             'workoutDayBlocks.*.type' => ['required', 'string', 'max:255'],
@@ -422,6 +515,7 @@ new class extends Component
                 'title' => $validated['workoutDayTitle'],
                 'focus' => $validated['workoutDayFocus'],
                 'status' => 'planned',
+                'estimated_duration_minutes' => $validated['workoutDayEstimatedDurationMinutes'] === '' ? null : $validated['workoutDayEstimatedDurationMinutes'],
                 'notes' => $validated['workoutDayNotes'] ?: null,
             ]);
 
@@ -532,6 +626,15 @@ new class extends Component
         </flux:modal>
     @endif
 
+    <x-dashboard.next-plan-prompt-preview
+        wire:model="planPromptPreview.isOpen"
+        :title="$planPromptPreview->title"
+        :instructions="$planPromptPreview->instructions"
+        :prompt="$planPromptPreview->prompt"
+        :schema="$planPromptPreview->schema"
+        :error="$planPromptPreview->error"
+    />
+
     <flux:modal wire:model="showWorkoutPlanForm" class="w-full max-w-lg">
         <form wire:submit="saveWorkoutPlan" class="space-y-5">
             <div>
@@ -574,6 +677,8 @@ new class extends Component
         <x-dashboard.workout-day-editor
             :blocks="$workoutDayBlocks"
             :available-exercises="$this->availableExercises"
+            :categories="$this->categories"
+            :muscle-groups="$this->muscleGroups"
             :selected-workout-block-id="$selectedWorkoutBlockId"
         />
     </flux:modal>

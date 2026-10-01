@@ -15,6 +15,7 @@ tags:
   - name: Subscriptions
   - name: Coaching
   - name: Sync
+  - name: Workouts
 paths:
   /api/auth/register:
     post:
@@ -359,6 +360,22 @@ paths:
                 $ref: '#/components/schemas/CoachCollection'
         '401':
           $ref: '#/components/responses/Unauthenticated'
+  /api/workout-plans/generate:
+    post:
+      tags: [Workouts]
+      summary: Generate a one-week workout-plan draft
+      description: Generates a draft from the authenticated user's training profile and recent history. The response is not persisted; save and sync it through the existing workout-plan flow.
+      responses:
+        '200':
+          description: Generated workout-plan draft
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutPlanGenerationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '403':
+          description: An active subscription, trial, or demo access is required.
   /api/sync/push:
     post:
       tags: [Sync]
@@ -398,10 +415,36 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /api/sync/pull/batch:
+    post:
+      tags: [Sync]
+      summary: Pull changed flat-resource records in stable, paginated order
+      description: |
+        The first request supplies the resources and their watermarks. Later requests
+        supply only the opaque `cursor` returned by the prior response. Workout-day
+        and nutrition-plan graphs, plus nutrition-log media, are not available here.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchSyncPullRequest'
+      responses:
+        '200':
+          description: A page of changed records. `next_cursor` is null on the final page.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchSyncPullResponse'
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /api/sync/workout-days:
     get:
       tags: [Sync]
-      summary: Pull workout days with their blocks, exercises, and results
+      summary: Pull workout days and templates with their blocks, exercises, and results
+      description: 'Each workout day includes `kind`: `workout` for an executable workout or `template` for a reusable coach-owned workout day.'
       parameters:
         - $ref: '#/components/parameters/UpdatedAfter'
       responses:
@@ -415,7 +458,8 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
     post:
       tags: [Sync]
-      summary: Push workout days with their blocks, exercises, and results
+      summary: Push workout days and templates with their blocks, exercises, and results
+      description: Set `kind` to `template` for a reusable coach-owned workout day. It must not be attached to a workout plan.
       requestBody:
         required: true
         content:
@@ -662,6 +706,47 @@ components:
           type: array
           maxItems: 100
           items: {$ref: '#/components/schemas/SyncRecord'}
+    BatchSyncPullRequest:
+      oneOf:
+        - type: object
+          required: [resources]
+          properties:
+            resources:
+              type: array
+              minItems: 1
+              maxItems: 20
+              items:
+                type: object
+                required: [resource, updated_after]
+                properties:
+                  resource:
+                    type: string
+                    enum: [users, user-app-settings, training-preferences, training-locations, body-metric-entries, body-progress-photo-sessions, exercise-profiles, nutrition-profiles, nutrition-log-entries, nutrition-log-items, workout-plans, subscriptions]
+                  updated_after: {type: [string, 'null'], format: date-time}
+        - type: object
+          required: [cursor]
+          properties:
+            cursor:
+              type: string
+              description: Opaque, user-bound continuation cursor.
+    BatchSyncPullResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            required: [resource, record]
+            properties:
+              resource: {type: string}
+              record: {$ref: '#/components/schemas/SyncRecord'}
+        meta:
+          type: object
+          required: [as_of, next_cursor]
+          properties:
+            as_of: {type: string, format: date-time}
+            next_cursor: {type: [string, 'null']}
     SyncResponse:
       type: object
       required: [data, meta]
@@ -683,13 +768,99 @@ components:
         updated_at: {type: string, format: date-time}
         deleted_at: {type: [string, 'null'], format: date-time}
       additionalProperties: true
+    WorkoutPlanGenerationResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: '#/components/schemas/GeneratedWorkoutPlan'
+    GeneratedWorkoutPlan:
+      type: object
+      required: [name, goal, status, workout_days]
+      properties:
+        name: {type: string}
+        goal: {type: string}
+        status: {type: string, enum: [draft]}
+        notes: {type: [string, 'null']}
+        mesocycle_number: {type: integer}
+        phase: {type: [string, 'null']}
+        phase_week: {type: [integer, 'null']}
+        cycle_length: {type: [integer, 'null']}
+        body_composition_phase: {type: [string, 'null']}
+        starts_on: {type: [string, 'null'], format: date-time}
+        workout_days:
+          type: array
+          items: {$ref: '#/components/schemas/GeneratedWorkoutDay'}
+    GeneratedWorkoutDay:
+      type: object
+      required: [title, focus, status, order_index, intended_weekday, day_type, estimated_duration_minutes, blocks]
+      properties:
+        title: {type: string}
+        focus: {type: string}
+        status: {type: string, enum: [planned]}
+        order_index: {type: integer}
+        intended_weekday: {type: string}
+        day_type: {type: string}
+        estimated_duration_minutes: {type: integer}
+        notes: {type: [string, 'null']}
+        blocks:
+          type: array
+          items: {$ref: '#/components/schemas/GeneratedWorkoutBlock'}
+    GeneratedWorkoutBlock:
+      type: object
+      required: [type, order_index, rounds, exercises]
+      properties:
+        type: {type: string, enum: [warmup, standard, superset, cooldown]}
+        order_index: {type: integer}
+        rounds: {type: integer}
+        rest_after_block_seconds: {type: [integer, 'null']}
+        notes: {type: [string, 'null']}
+        exercises:
+          type: array
+          items: {$ref: '#/components/schemas/GeneratedPlannedExercise'}
+    GeneratedPlannedExercise:
+      type: object
+      required: [exercise, order_index]
+      properties:
+        exercise: {type: string}
+        order_index: {type: integer}
+        sets: {type: [integer, 'null']}
+        reps_min: {type: [integer, 'null']}
+        reps_max: {type: [integer, 'null']}
+        target_reps: {type: [array, 'null'], items: {type: integer}}
+        target_weight_kg: {type: [number, 'null']}
+        target_weights_kg: {type: [array, 'null'], items: {type: number}}
+        target_duration_minutes: {type: [integer, 'null']}
+        target_duration_seconds: {type: [integer, 'null']}
+        target_distance_km: {type: [number, 'null']}
+        target_pace_seconds_per_km: {type: [integer, 'null']}
+        rest_seconds: {type: [integer, 'null']}
+        set_style_configuration:
+          anyOf:
+            - $ref: '#/components/schemas/SetStyleConfiguration'
+            - type: 'null'
+        notes: {type: [string, 'null']}
+    SetStyleConfiguration:
+      type: object
+      required: [style]
+      properties:
+        style: {type: string, enum: [warmup, straight, topSetBackoff, ascendingPyramid, dropSet, restPause, intervals, tempo]}
+        applies_to_final_set_only: {type: boolean}
+        drop_count: {type: integer, minimum: 1}
+        drop_weight_percent: {type: number, minimum: 1, maximum: 100}
+        backoff_set_count: {type: integer, minimum: 1}
+        backoff_weight_percent: {type: number, minimum: 1, maximum: 100}
+        intra_set_rest_seconds: {type: integer, minimum: 1}
+        tempo: {type: string}
+        target_rir: {type: integer, minimum: 0, maximum: 10}
     WorkoutDay:
       allOf:
         - $ref: '#/components/schemas/SyncRecord'
         - type: object
-          required: [title, blocks, exercises]
+          required: [title, kind, blocks, exercises]
           properties:
             title: {type: string}
+            kind: {type: string, enum: [workout, template], description: '`template` is a reusable coach-owned workout day; `workout` is an executable workout day.'}
             blocks: {type: array, items: {$ref: '#/components/schemas/SyncRecord'}}
             exercises: {type: array, items: {$ref: '#/components/schemas/SyncRecord'}}
     WorkoutDayResponse:

@@ -65,6 +65,9 @@ new class extends Component {
                                 <span>{{ __('Starts :date', ['date' => $planStartDate]) }}</span>
                             @endif
                             <span>{{ __('Created :date', ['date' => $formatDate($plan->created_at)]) }}</span>
+                            <a href="{{ route('workout-plans.show', $plan) }}">
+                                <flux:icon.calendar variant="mini" />
+                            </a>
                         </div>
                     </div>
                     <div class="flex items-center gap-3">

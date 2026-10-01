@@ -9,7 +9,9 @@ use App\Enums\BillingInterval;
 use App\Enums\SubscriptionPlan;
 use App\Enums\SubscriptionProvider;
 use App\Enums\SubscriptionStatus;
+use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -46,7 +48,9 @@ use Illuminate\Support\Carbon;
 ])]
 class Subscription extends Model implements Syncable
 {
-    use SyncsWithUser;
+    /** @use HasFactory<SubscriptionFactory> */
+    use HasFactory, SyncsWithUser;
+
     use UsesUuidPrimaryKey;
 
     protected function casts(): array

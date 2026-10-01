@@ -6,6 +6,7 @@ use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\ValueObjects\Workouts\SetStyleConfiguration;
 use Database\Factories\PlannedExerciseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,7 @@ class PlannedExercise extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['target_reps' => 'array', 'target_weight_kg' => 'decimal:2', 'target_weights_kg' => 'array', 'target_distance_km' => 'decimal:3', 'set_style_configuration' => 'array'];
+        return ['target_reps' => 'array', 'target_weight_kg' => 'decimal:2', 'target_weights_kg' => 'array', 'target_distance_km' => 'decimal:3', 'set_style_configuration' => SetStyleConfiguration::class];
     }
 
     public function workoutDay(): BelongsTo

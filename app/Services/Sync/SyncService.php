@@ -30,7 +30,7 @@ class SyncService
                 $deletedAt = isset($record['deleted_at'])
                     ? Carbon::parse($record['deleted_at'])
                     : null;
-                $model = $this->syncQuery($user, $modelClass)->whereKey($record['id'])->first();
+                $model = $this->queryForUser($user, $modelClass)->whereKey($record['id'])->first();
                 $isNew = $model === null;
 
                 if ($isNew && $modelClass::query()->withTrashed()->whereKey($record['id'])->exists()) {
@@ -78,7 +78,7 @@ class SyncService
                     $model->timestamps = true;
                 }
 
-                if (! $this->syncQuery($user, $modelClass)->whereKey($model)->exists()) {
+                if (! $this->queryForUser($user, $modelClass)->whereKey($model)->exists()) {
                     throw ValidationException::withMessages([
                         'records' => ['Each record must belong to the authenticated user.'],
                     ]);
@@ -95,7 +95,7 @@ class SyncService
      */
     public function pull(User $user, string $modelClass, ?Carbon $updatedAfter): Collection
     {
-        return $this->syncQuery($user, $modelClass)
+        return $this->queryForUser($user, $modelClass)
             ->when(
                 $updatedAfter,
                 fn ($query) => $query->where('updated_at', '>', $updatedAfter),
@@ -109,7 +109,7 @@ class SyncService
      * @param  class-string<Syncable>  $modelClass
      * @return Builder<Syncable>
      */
-    private function syncQuery(User $user, string $modelClass): Builder
+    public function queryForUser(User $user, string $modelClass): Builder
     {
         $query = $modelClass::query();
 

@@ -2,9 +2,12 @@
 
 use App\Models\User;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Nutrition\NutritionPlanAIGenerator;
+use App\Services\Workouts\WorkoutPlanAIGenerator;
 use App\Services\Workouts\Progression\ProgressionAnalysis;
 use App\Services\Workouts\Progression\TrainingHistory;
 use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
+use App\ViewModels\PlanPromptPreview;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,6 +25,8 @@ new class extends Component
 
     public bool $showProgressionAnalysis = false;
 
+    public PlanPromptPreview $planPromptPreview;
+
     protected ExerciseCatalog $exerciseCatalog;
 
     public function boot(ExerciseCatalog $exerciseCatalog): void
@@ -31,6 +36,7 @@ new class extends Component
 
     public function mount(): void
     {
+        $this->planPromptPreview = new PlanPromptPreview;
         Gate::authorize('viewDashboard');
     }
 
@@ -45,7 +51,7 @@ new class extends Component
             ->with('subscription')
             ->withCount([
                 'workoutPlans',
-                'workoutDays as custom_workouts_count' => fn (Builder $query): Builder => $query->whereNull('workout_plan_id'),
+                'workoutDays as custom_workouts_count' => fn (Builder $query): Builder => $query->customWorkouts(),
                 'nutritionPlans',
             ])
             ->orderBy('name')
@@ -85,6 +91,7 @@ new class extends Component
         $this->selectedUserId = $userId;
         $this->selectedTab = 'training';
         $this->showProgressionAnalysis = false;
+        $this->resetNextPlanPromptPreview();
         $this->showUserDetail = true;
     }
 
@@ -101,6 +108,7 @@ new class extends Component
     {
         $this->showUserDetail = false;
         $this->showProgressionAnalysis = false;
+        $this->resetNextPlanPromptPreview();
     }
 
     public function openProgressionAnalysis(): void
@@ -115,6 +123,41 @@ new class extends Component
     public function closeProgressionAnalysis(): void
     {
         $this->showProgressionAnalysis = false;
+    }
+
+    public function openNextPlanPrompt(WorkoutPlanAIGenerator $generator): void
+    {
+        $user = $this->selectedUser;
+
+        if ($user === null) {
+            return;
+        }
+
+        try {
+            $this->planPromptPreview->show(__('Next plan prompt'), $generator->preview($user));
+        } catch (RuntimeException $exception) {
+            $this->planPromptPreview->showError(__('Next plan prompt'), $exception->getMessage());
+        }
+    }
+
+    public function openNutritionPlanPrompt(NutritionPlanAIGenerator $generator): void
+    {
+        $user = $this->selectedUser;
+
+        if ($user === null) {
+            return;
+        }
+
+        try {
+            $this->planPromptPreview->show(__('Nutrition plan prompt'), $generator->preview($user));
+        } catch (RuntimeException $exception) {
+            $this->planPromptPreview->showError(__('Nutrition plan prompt'), $exception->getMessage());
+        }
+    }
+
+    private function resetNextPlanPromptPreview(): void
+    {
+        $this->planPromptPreview->reset();
     }
 
     #[Computed]
@@ -199,4 +242,13 @@ new class extends Component
             />
         </flux:modal>
     @endif
+
+    <x-dashboard.next-plan-prompt-preview
+        wire:model="planPromptPreview.isOpen"
+        :title="$planPromptPreview->title"
+        :instructions="$planPromptPreview->instructions"
+        :prompt="$planPromptPreview->prompt"
+        :schema="$planPromptPreview->schema"
+        :error="$planPromptPreview->error"
+    />
 </div>

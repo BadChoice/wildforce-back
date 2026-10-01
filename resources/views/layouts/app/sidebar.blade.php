@@ -29,6 +29,11 @@
                 </flux:sidebar.group>
 
                 <flux:sidebar.group :heading="__('Library')" class="grid">
+                    @if (auth()->user()->clients(\App\Enums\CoachingEnrollmentStatus::Active)->exists())
+                        <flux:sidebar.item icon="clipboard-document-list" :href="route('workout-templates.index')" :current="request()->routeIs('workout-templates.*')" wire:navigate>
+                            {{ __('Workout templates') }}
+                        </flux:sidebar.item>
+                    @endif
                     <flux:sidebar.item icon="rectangle-stack" :href="route('exercises.index')" :current="request()->routeIs('exercises.*')" wire:navigate>
                         {{ __('Exercises') }}
                     </flux:sidebar.item>

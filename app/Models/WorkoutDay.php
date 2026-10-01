@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\WorkoutKind;
 use Database\Factories\WorkoutDayFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,7 +21,7 @@ class WorkoutDay extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['did_count_toward_streak' => 'boolean', 'scheduled_for' => 'datetime', 'started_at' => 'datetime', 'completed_at' => 'datetime', 'active_calories_burned' => 'decimal:2', 'average_heart_rate' => 'decimal:2', 'maximum_heart_rate' => 'decimal:2', 'total_volume_kg' => 'decimal:3'];
+        return ['kind' => WorkoutKind::class, 'did_count_toward_streak' => 'boolean', 'scheduled_for' => 'datetime', 'started_at' => 'datetime', 'completed_at' => 'datetime', 'active_calories_burned' => 'decimal:2', 'average_heart_rate' => 'decimal:2', 'maximum_heart_rate' => 'decimal:2', 'total_volume_kg' => 'decimal:3'];
     }
 
     public function user(): BelongsTo
@@ -32,6 +34,11 @@ class WorkoutDay extends Model implements Syncable
         return $this->belongsTo(WorkoutPlan::class, 'workout_plan_id');
     }
 
+    public function sourceWorkoutDay(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'source_workout_day_id');
+    }
+
     public function blocks(): HasMany
     {
         return $this->hasMany(WorkoutBlock::class);
@@ -42,8 +49,43 @@ class WorkoutDay extends Model implements Syncable
         return $this->hasMany(PlannedExercise::class);
     }
 
+    public function exercisesCount(): int
+    {
+        return $this->blocks->sum(fn ($block) => $block->exercises->count()) + $this->directExercises()->count();
+    }
+
     public function directExercises(): HasMany
     {
         return $this->hasMany(PlannedExercise::class)->whereNull('workout_block_id');
+    }
+
+    /**
+     * @param  Builder<WorkoutDay>  $query
+     * @return Builder<WorkoutDay>
+     */
+    public function scopeCustomWorkouts(Builder $query): Builder
+    {
+        return $query
+            ->whereNull('workout_plan_id')
+            ->where('kind', WorkoutKind::Workout);
+    }
+
+    /**
+     * @param  Builder<WorkoutDay>  $query
+     * @return Builder<WorkoutDay>
+     */
+    public function scopeTemplates(Builder $query): Builder
+    {
+        return $query
+            ->whereNull('workout_plan_id')
+            ->where('kind', WorkoutKind::Template);
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected static function syncExcludedAttributes(): array
+    {
+        return ['id', 'user_id', 'created_at', 'updated_at', 'deleted_at', 'source_workout_day_id'];
     }
 }

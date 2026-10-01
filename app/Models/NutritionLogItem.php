@@ -5,13 +5,16 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use Database\Factories\NutritionLogItemFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class NutritionLogItem extends Model implements Syncable
 {
-    use SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
+    /** @use HasFactory<NutritionLogItemFactory> */
+    use HasFactory, SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
 
     protected function casts(): array
     {

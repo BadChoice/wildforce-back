@@ -228,6 +228,7 @@ test('it synchronizes a complete workout day graph atomically', function () {
             'created_at' => '2026-09-24T12:00:00Z',
             'updated_at' => '2026-09-24T12:00:00Z',
             'deleted_at' => null,
+            'kind' => 'template',
             'title' => 'Upper body',
             'focus' => 'upperBody',
             'status' => 'planned',
@@ -266,12 +267,13 @@ test('it synchronizes a complete workout day graph atomically', function () {
 
     $response->assertOk()
         ->assertJsonPath('data.0.id', $workoutDayId)
+        ->assertJsonPath('data.0.kind', 'template')
         ->assertJsonPath('data.0.blocks.0.id', $blockId)
         ->assertJsonPath('data.0.blocks.0.exercises.0.id', $exerciseId)
         ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.id', $resultId)
         ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.watch_set_summary.cadence_r_p_m', 0);
 
-    $this->assertDatabaseHas('workout_days', ['id' => $workoutDayId, 'user_id' => $user->id]);
+    $this->assertDatabaseHas('workout_days', ['id' => $workoutDayId, 'user_id' => $user->id, 'kind' => 'template']);
     $this->assertDatabaseHas('workout_blocks', ['id' => $blockId, 'workout_day_id' => $workoutDayId]);
     $this->assertDatabaseHas('planned_exercises', ['id' => $exerciseId, 'workout_day_id' => $workoutDayId, 'workout_block_id' => $blockId]);
     $this->assertDatabaseHas('exercise_results', ['id' => $resultId, 'planned_exercise_id' => $exerciseId]);

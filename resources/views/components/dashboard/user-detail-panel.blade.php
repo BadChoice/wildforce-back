@@ -38,8 +38,9 @@
             @switch($activeTab)
             @case('training')
                 <div class="space-y-8">
-                    <div class="flex justify-end">
+                    <div class="flex justify-end gap-2">
                         <flux:button size="sm" variant="ghost" icon="chart-bar" wire:click="openProgressionAnalysis">{{ __('Progression analysis') }}</flux:button>
+                        <flux:button size="sm" variant="ghost" icon="document-text" wire:click="openNextPlanPrompt">{{ __('Next plan prompt') }}</flux:button>
                     </div>
                     <x-dashboard.training-profile :profile="$user->trainingPreferences" />
                     <x-dashboard.workout-plan-list :workout-plans="$user->workoutPlans" />
@@ -51,7 +52,15 @@
                 @break
 
             @case('nutrition')
-                <x-dashboard.placeholder-tab :title="__('Nutrition')" :description="__('Nutrition details will be available here soon.')" />
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <flux:heading size="sm">{{ __('Nutrition plans') }}</flux:heading>
+                            <flux:text variant="subtle">{{ __('Review the generator prompt and response schema for this user.') }}</flux:text>
+                        </div>
+                        <flux:button size="sm" variant="ghost" icon="document-text" wire:click="openNutritionPlanPrompt">{{ __('Nutrition plan prompt') }}</flux:button>
+                    </div>
+                </div>
                 @break
 
             @case('body-metrics')

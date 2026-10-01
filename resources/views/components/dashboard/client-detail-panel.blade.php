@@ -58,6 +58,7 @@
                         </div>
                         <div class="flex shrink-0 items-center gap-2">
                             <flux:button size="sm" variant="ghost" icon="chart-bar" wire:click="openProgressionAnalysis">{{ __('Progression analysis') }}</flux:button>
+                            <flux:button size="sm" variant="ghost" icon="document-text" wire:click="openNextPlanPrompt">{{ __('Next plan prompt') }}</flux:button>
                             <flux:button size="sm" variant="primary" icon="plus" wire:click="openWorkoutPlanForm">{{ __('Workout plan') }}</flux:button>
                         </div>
                     </div>
@@ -67,7 +68,15 @@
                 @break
 
             @case('nutrition')
-                <x-dashboard.placeholder-tab :title="__('Nutrition')" :description="__('Nutrition details will be available here soon.')" />
+                <div class="space-y-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <flux:heading size="sm">{{ __('Nutrition plans') }}</flux:heading>
+                            <flux:text variant="subtle">{{ __('Review the generator prompt and response schema for this client.') }}</flux:text>
+                        </div>
+                        <flux:button size="sm" variant="ghost" icon="document-text" wire:click="openNutritionPlanPrompt">{{ __('Nutrition plan prompt') }}</flux:button>
+                    </div>
+                </div>
                 @break
 
             @case('body-metrics')

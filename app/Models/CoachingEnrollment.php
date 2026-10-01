@@ -4,14 +4,17 @@ namespace App\Models;
 
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Enums\CoachingEnrollmentStatus;
+use Database\Factories\CoachingEnrollmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 #[Fillable(['client_user_id', 'coach_user_id', 'status', 'starts_at', 'ends_at'])]
 class CoachingEnrollment extends Pivot
 {
-    use UsesUuidPrimaryKey;
+    /** @use HasFactory<CoachingEnrollmentFactory> */
+    use HasFactory, UsesUuidPrimaryKey;
 
     protected $table = 'coaching_enrollments';
 
