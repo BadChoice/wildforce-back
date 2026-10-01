@@ -68,17 +68,47 @@ test('exports iOS and Android translation resources', function () {
                 ],
             ],
         ])
-        ->and(file_get_contents("{$directory}/res/values/strings.xml"))
+        ->and(file_get_contents("{$directory}/res/values/sheet_translations.xml"))
         ->toContain('<string name="welcome_title" formatted="false">Welcome &amp; enjoy</string>')
-        ->and(file_get_contents("{$directory}/res/values-es/strings.xml"))
+        ->and(file_get_contents("{$directory}/res/values-es/sheet_translations.xml"))
         ->toContain('<string name="welcome_title" formatted="false">Bienvenido</string>')
-        ->and(file_get_contents("{$directory}/res/values-ca/strings.xml"))
+        ->and(file_get_contents("{$directory}/res/values-ca/sheet_translations.xml"))
         ->toContain('<string name="welcome_title" formatted="false">Benvingut</string>')
-        ->and(file_get_contents("{$directory}/res/values-de/strings.xml"))
+        ->and(file_get_contents("{$directory}/res/values-de/sheet_translations.xml"))
         ->toContain('<string name="welcome_title" formatted="false">Willkommen</string>')
-        ->and(file_get_contents("{$directory}/res/values-zh-rCN/strings.xml"))
+        ->and(file_get_contents("{$directory}/res/values-zh-rCN/sheet_translations.xml"))
         ->toContain('<string name="welcome_title" formatted="false">欢迎</string>');
 });
+
+test('exports keys beginning with a number using a safe Android resource prefix', function () {
+    $directory = sys_get_temp_dir().'/translations-'.uniqid();
+    $translations = [[
+        'key' => '1 check-in',
+        'description' => null,
+        'translations' => collect(array_keys(config('translations.locales')))
+            ->mapWithKeys(fn (string $locale): array => [$locale => '1 check-in'])
+            ->all(),
+    ]];
+
+    app(AndroidExporter::class)->export($translations, "{$directory}/res");
+
+    expect(file_get_contents("{$directory}/res/values/sheet_translations.xml"))
+        ->toContain('<string name="key_1_check_in" formatted="false">1 check-in</string>');
+});
+
+test('rejects Android resource name collisions after normalizing keys', function () {
+    $translations = collect(['Body composition', 'Body Composition'])
+        ->map(fn (string $key): array => [
+            'key' => $key,
+            'description' => null,
+            'translations' => collect(array_keys(config('translations.locales')))
+                ->mapWithKeys(fn (string $locale): array => [$locale => $key])
+                ->all(),
+        ])
+        ->all();
+
+    app(AndroidExporter::class)->export($translations, sys_get_temp_dir().'/translations-'.uniqid());
+})->throws(InvalidArgumentException::class, "The Android resource name 'body_composition' is duplicated.");
 
 test('generates the requested platform through the Artisan command', function () {
     $directory = sys_get_temp_dir().'/translations-command-'.uniqid();
