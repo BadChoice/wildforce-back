@@ -34,6 +34,9 @@
     },
     {
       "name": "Workouts"
+    },
+    {
+      "name": "Nutrition"
     }
   ],
   "paths": {
@@ -637,6 +640,34 @@
           },
           "403": {
             "description": "An active subscription, trial, or demo access is required."
+          }
+        }
+      }
+    },
+    "/api/nutrition-plans/generate": {
+      "post": {
+        "tags": ["Nutrition"],
+        "summary": "Generate a seven-day nutrition-plan draft",
+        "description": "Generates a draft from the authenticated user's nutrition profile, body metrics, training preferences, and upcoming workout plan. The response is not persisted; save and sync it through the existing nutrition-plan flow.",
+        "responses": {
+          "200": {
+            "description": "Generated nutrition-plan draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NutritionPlanGenerationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "description": "An active subscription, trial, or demo access is required."
+          },
+          "429": {
+            "description": "The generation rate limit of five requests per minute was exceeded."
           }
         }
       }
@@ -1527,6 +1558,69 @@
         "required": ["exercise", "order_index"],
         "properties": {
           "exercise": {"type": "string"}, "order_index": {"type": "integer"}, "sets": {"type": ["integer", "null"]}, "reps_min": {"type": ["integer", "null"]}, "reps_max": {"type": ["integer", "null"]}, "target_reps": {"type": ["array", "null"], "items": {"type": "integer"}}, "target_weight_kg": {"type": ["number", "null"]}, "target_weights_kg": {"type": ["array", "null"], "items": {"type": "number"}}, "target_duration_minutes": {"type": ["integer", "null"]}, "target_duration_seconds": {"type": ["integer", "null"]}, "target_distance_km": {"type": ["number", "null"]}, "target_pace_seconds_per_km": {"type": ["integer", "null"]}, "rest_seconds": {"type": ["integer", "null"]}, "set_style_configuration": {"anyOf": [{"$ref": "#/components/schemas/SetStyleConfiguration"}, {"type": "null"}]}, "notes": {"type": ["string", "null"]}
+        }
+      },
+      "NutritionPlanGenerationResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {"$ref": "#/components/schemas/GeneratedNutritionPlan"}
+        }
+      },
+      "GeneratedNutritionPlan": {
+        "type": "object",
+        "required": ["starts_on", "goal", "body_composition_phase", "daily_calorie_average", "days"],
+        "properties": {
+          "source_workout_plan_id": {"type": ["string", "null"], "format": "uuid"},
+          "starts_on": {"type": "string", "format": "date"},
+          "goal": {"type": "string", "enum": ["generalFitness", "loseWeight", "buildMuscle", "gainStrength", "improveEndurance", "improveMobility", "bodyRecomposition"]},
+          "body_composition_phase": {"type": "string", "enum": ["bulk", "cut", "maintain"]},
+          "daily_calorie_average": {"type": "number", "minimum": 0},
+          "notes": {"type": ["string", "null"]},
+          "days": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"$ref": "#/components/schemas/GeneratedNutritionDay"}}
+        }
+      },
+      "GeneratedNutritionDay": {
+        "type": "object",
+        "required": ["date", "weekday", "day_type", "target_calories", "target_protein_grams", "target_carbs_grams", "target_fat_grams", "energy_demand", "meals"],
+        "properties": {
+          "date": {"type": "string", "format": "date"},
+          "weekday": {"type": "string", "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]},
+          "day_type": {"type": "string", "enum": ["training", "rest", "recovery"]},
+          "target_calories": {"type": "number", "minimum": 0},
+          "target_protein_grams": {"type": "number", "minimum": 0},
+          "target_carbs_grams": {"type": "number", "minimum": 0},
+          "target_fat_grams": {"type": "number", "minimum": 0},
+          "planned_workout_title": {"type": ["string", "null"]},
+          "planned_workout_focus": {"type": ["string", "null"]},
+          "energy_demand": {"type": "string", "enum": ["low", "medium", "high"]},
+          "notes": {"type": ["string", "null"]},
+          "pre_workout_guidance": {"type": ["string", "null"]},
+          "post_workout_guidance": {"type": ["string", "null"]},
+          "meals": {"type": "array", "items": {"$ref": "#/components/schemas/GeneratedNutritionMeal"}}
+        }
+      },
+      "GeneratedNutritionMeal": {
+        "type": "object",
+        "required": ["title", "order_index", "meal_type", "target_calories", "target_protein_grams", "target_carbs_grams", "target_fat_grams", "example_foods"],
+        "properties": {
+          "title": {"type": "string"},
+          "order_index": {"type": "integer", "minimum": 0},
+          "meal_type": {"type": "string", "enum": ["breakfast", "lunch", "snack", "dinner"]},
+          "target_calories": {"type": "number", "minimum": 0},
+          "target_protein_grams": {"type": "number", "minimum": 0},
+          "target_carbs_grams": {"type": "number", "minimum": 0},
+          "target_fat_grams": {"type": "number", "minimum": 0},
+          "guidance": {"type": ["string", "null"]},
+          "example_foods": {"type": "array", "items": {"$ref": "#/components/schemas/GeneratedNutritionFood"}}
+        }
+      },
+      "GeneratedNutritionFood": {
+        "type": "object",
+        "required": ["name", "amountGrams"],
+        "properties": {
+          "name": {"type": "string"},
+          "amountGrams": {"type": "integer", "minimum": 1}
         }
       },
       "SetStyleConfiguration": {
