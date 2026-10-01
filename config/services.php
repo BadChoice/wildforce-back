@@ -24,6 +24,9 @@ return [
 
     'apple' => [
         'client_id' => env('APPLE_CLIENT_ID', 'io.codepassion.doublegym'),
+        // The browser uses a Services ID; Apple binds web authorization codes to it.
+        'web_client_id' => env('APPLE_WEB_CLIENT_ID', 'io.codepassion.wildforce-web'),
+        'web_redirect_uri' => env('APPLE_WEB_REDIRECT_URI'),
         'team_id' => env('APPLE_TEAM_ID', 'SV3ZXK4PZF'), // codepassion
         'key_id' => env('APPLE_KEY_ID'),
         'private_key' => env('APPLE_PRIVATE_KEY'),

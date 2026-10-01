@@ -7,7 +7,17 @@
 
         <x-passkey-verify />
 
-        <x-google-sign-in />
+        <div class="flex flex-col gap-3">
+            <x-apple-sign-in />
+            <x-google-sign-in />
+        </div>
+
+        @if ((filled(config('services.apple.web_client_id')) && filled(config('services.apple.web_redirect_uri'))) || filled(config('services.google.web_client_id')))
+            <div class="relative my-3">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-zinc-200 dark:border-zinc-700"></div></div>
+                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-zinc-500 dark:bg-zinc-900">{{ __('Or continue with email') }}</span></div>
+            </div>
+        @endif
 
         <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
             @csrf

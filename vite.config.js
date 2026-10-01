@@ -10,6 +10,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/passkeys.js',
+                'resources/js/apple-sign-in.js',
                 'resources/js/google-sign-in.js',
             ],
             refresh: true,

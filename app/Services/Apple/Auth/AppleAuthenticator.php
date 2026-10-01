@@ -27,14 +27,25 @@ class AppleAuthenticator implements AppleAuthentication
 
     public function authenticate(string $authorizationCode, string $deviceName, ?string $fullName): AppleAuthenticationResult
     {
-        $claims = $this->claimsForAuthorizationCode($authorizationCode);
+        $authentication = $this->resolve($authorizationCode, $this->appleClientSecret->clientId(), $fullName);
+        $token = $authentication->user->createToken($deviceName);
+
+        return new AppleAuthenticationResult($authentication->user, $token->plainTextToken, $authentication->trialEndsAt);
+    }
+
+    public function resolveWeb(string $authorizationCode, ?string $fullName): AppleUserAuthenticationResult
+    {
+        return $this->resolve($authorizationCode, $this->appleClientSecret->webClientId(), $fullName);
+    }
+
+    private function resolve(string $authorizationCode, string $clientId, ?string $fullName): AppleUserAuthenticationResult
+    {
+        $claims = $this->claimsForAuthorizationCode($authorizationCode, $clientId);
         $providerUserId = $this->providerUserId($claims);
         $identity = $this->appleIdentityQuery()->with('user.subscription')->where('provider_user_id', $providerUserId)->first();
 
         if ($identity !== null) {
-            $token = $identity->user->createToken($deviceName);
-
-            return new AppleAuthenticationResult($identity->user, $token->plainTextToken);
+            return new AppleUserAuthenticationResult($identity->user);
         }
 
         $email = $this->verifiedEmail($claims);
@@ -43,7 +54,7 @@ class AppleAuthenticator implements AppleAuthentication
             throw new ConflictHttpException('This email already has an account. Sign in with an existing method before linking Apple.');
         }
 
-        return DB::transaction(function () use ($email, $providerUserId, $claims, $deviceName, $fullName): AppleAuthenticationResult {
+        return DB::transaction(function () use ($email, $providerUserId, $claims, $fullName): AppleUserAuthenticationResult {
             $user = User::create([
                 'name' => $this->nameForNewUser($fullName, $email),
                 'email' => $email,
@@ -52,20 +63,19 @@ class AppleAuthenticator implements AppleAuthentication
             ]);
             $trial = $user->attachSubscription(Subscription::createTrial());
             $this->createAppleIdentity($user, $providerUserId, $claims);
-            $token = $user->createToken($deviceName);
             $trialEndsAt = $trial->getAttribute('renews_at');
 
             if (! $trialEndsAt instanceof CarbonInterface) {
                 throw new RuntimeException('The trial end date is invalid.');
             }
 
-            return new AppleAuthenticationResult($user, $token->plainTextToken, $trialEndsAt);
+            return new AppleUserAuthenticationResult($user, $trialEndsAt);
         });
     }
 
     public function link(User $user, string $authorizationCode): UserIdentity
     {
-        $claims = $this->claimsForAuthorizationCode($authorizationCode);
+        $claims = $this->claimsForAuthorizationCode($authorizationCode, $this->appleClientSecret->clientId());
         $providerUserId = $this->providerUserId($claims);
         $identity = $this->appleIdentityQuery()->where('provider_user_id', $providerUserId)->first();
 
@@ -113,11 +123,11 @@ class AppleAuthenticator implements AppleAuthentication
     }
 
     /** @return array<string, mixed> */
-    private function claimsForAuthorizationCode(string $authorizationCode): array
+    private function claimsForAuthorizationCode(string $authorizationCode, string $clientId): array
     {
         $response = Http::asForm()->connectTimeout(3)->timeout(10)->post(self::TokenEndpoint, [
-            'client_id' => $this->appleClientSecret->clientId(),
-            'client_secret' => $this->appleClientSecret->create(),
+            'client_id' => $clientId,
+            'client_secret' => $this->appleClientSecret->create($clientId),
             'code' => $authorizationCode,
             'grant_type' => 'authorization_code',
         ]);
@@ -132,7 +142,7 @@ class AppleAuthenticator implements AppleAuthentication
             throw new RuntimeException('Apple did not return an identity token.');
         }
 
-        return $this->appleIdentityTokenVerifier->verify($identityToken);
+        return $this->appleIdentityTokenVerifier->verify($identityToken, $clientId);
     }
 
     /** @param array<string, mixed> $claims */

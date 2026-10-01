@@ -6,10 +6,10 @@ use Illuminate\Validation\ValidationException;
 
 class AppleIdentityTokenVerifier
 {
-    public function __construct(private ApplePublicKeys $applePublicKeys, private AppleClientSecret $appleClientSecret) {}
+    public function __construct(private ApplePublicKeys $applePublicKeys) {}
 
     /** @return array<string, mixed> */
-    public function verify(string $token): array
+    public function verify(string $token, string $clientId): array
     {
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
@@ -22,7 +22,7 @@ class AppleIdentityTokenVerifier
             $this->invalid();
         }
         $verified = openssl_verify($header.'.'.$payload, $this->decode($signature), $this->applePublicKeys->publicKeyFor($headerData['kid']), OPENSSL_ALGO_SHA256);
-        if ($verified !== 1 || ($claims['iss'] ?? null) !== 'https://appleid.apple.com' || ($claims['aud'] ?? null) !== $this->appleClientSecret->clientId() || ! is_numeric($claims['exp'] ?? null) || (int) $claims['exp'] <= now()->getTimestamp()) {
+        if ($verified !== 1 || ($claims['iss'] ?? null) !== 'https://appleid.apple.com' || ($claims['aud'] ?? null) !== $clientId || ! is_numeric($claims['exp'] ?? null) || (int) $claims['exp'] <= now()->getTimestamp()) {
             $this->invalid();
         }
 

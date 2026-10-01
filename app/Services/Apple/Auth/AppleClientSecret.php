@@ -11,7 +11,12 @@ class AppleClientSecret
         return $this->config('client_id');
     }
 
-    public function create(): string
+    public function webClientId(): string
+    {
+        return $this->config('web_client_id');
+    }
+
+    public function create(string $clientId): string
     {
         $key = openssl_pkey_get_private(str_replace('\\n', "\n", $this->config('private_key')));
 
@@ -23,7 +28,7 @@ class AppleClientSecret
         $header = $this->encode(['alg' => 'ES256', 'kid' => $this->config('key_id')]);
         $payload = $this->encode([
             'iss' => $this->config('team_id'), 'iat' => $issuedAt, 'exp' => $issuedAt + 15_552_000,
-            'aud' => 'https://appleid.apple.com', 'sub' => $this->clientId(),
+            'aud' => 'https://appleid.apple.com', 'sub' => $clientId,
         ]);
         $signed = openssl_sign($header.'.'.$payload, $signature, $key, OPENSSL_ALGO_SHA256);
 
