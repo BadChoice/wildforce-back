@@ -79,7 +79,7 @@ export default defineRailway(() => {
       APPLE_KEY_ID:"AC3X8Q3LP3",
       APPLE_PRIVATE_KEY: preserve(),
       APPLE_WEB_CLIENT_ID: "io.codepassion.wildforce-web",
-      APPLE_WEB_REDIRECT_URI: "http://www.wildforce.test/login",
+      APPLE_WEB_REDIRECT_URI: "http://www.wildforce.app/login",
 
       // -------------------------
       // Google
