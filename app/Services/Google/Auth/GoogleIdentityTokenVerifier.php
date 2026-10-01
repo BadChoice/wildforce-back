@@ -33,7 +33,7 @@ class GoogleIdentityTokenVerifier
         if (
             $verified !== 1
             || ! in_array($claims['iss'] ?? null, ['accounts.google.com', 'https://accounts.google.com'], true)
-            || ($claims['aud'] ?? null) !== $this->googleClientId->value()
+            || ! $this->googleClientId->accepts($claims['aud'] ?? null)
             || ! is_numeric($claims['exp'] ?? null)
             || (int) $claims['exp'] <= now()->getTimestamp()
         ) {

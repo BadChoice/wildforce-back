@@ -12,7 +12,8 @@ use Laravel\Ai\Promptable;
 
 #[Provider('openai')]
 #[Model('gpt-5.6-luna')]
-#[Temperature(0.2)]
+//#[Temperature(0.2)]
+#[Effort('medium')]
 final class NutritionPlanGeneratorAgent implements Agent, HasStructuredOutput
 {
     use Promptable;

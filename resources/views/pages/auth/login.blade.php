@@ -7,6 +7,8 @@
 
         <x-passkey-verify />
 
+        <x-google-sign-in />
+
         <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-6">
             @csrf
 

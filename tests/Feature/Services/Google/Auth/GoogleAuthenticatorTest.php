@@ -71,6 +71,30 @@ test('it rejects a Google identity token issued for another client', function ()
     $this->assertDatabaseCount('user_identities', 0);
 });
 
+test('it accepts a Google identity token issued for the web client', function () {
+    [$identityPrivateKey, $jwk] = googleTestIdentityKeyMaterial();
+    $identityToken = googleTestIdentityToken($identityPrivateKey, [
+        'iss' => 'accounts.google.com',
+        'aud' => 'web-client-id.apps.googleusercontent.com',
+        'exp' => now()->addMinute()->timestamp,
+        'sub' => 'google-user-123',
+        'email' => 'jane@example.com',
+        'email_verified' => true,
+    ]);
+
+    config()->set('services.google.client_id', 'mobile-client-id.apps.googleusercontent.com');
+    config()->set('services.google.web_client_id', 'web-client-id.apps.googleusercontent.com');
+    Cache::forget('google-sign-in-public-keys');
+    Http::preventStrayRequests();
+    Http::fake([
+        'https://www.googleapis.com/oauth2/v3/certs' => Http::response(['keys' => [$jwk]]),
+    ]);
+
+    $result = app(GoogleAuthenticator::class)->resolve($identityToken);
+
+    expect($result->user->email)->toBe('jane@example.com');
+});
+
 test('it does not remove a Google identity that is the user’s only sign-in method', function () {
     $user = User::factory()->create(['password' => null]);
     UserIdentity::create([

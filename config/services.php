@@ -31,6 +31,10 @@ return [
 
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
+        // Mobile clients can keep using GOOGLE_CLIENT_ID. The browser needs its
+        // own OAuth client because Google binds ID tokens to the client that
+        // requested them.
+        'web_client_id' => env('GOOGLE_WEB_CLIENT_ID'),
     ],
 
     'google_play' => [

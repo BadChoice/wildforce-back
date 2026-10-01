@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Billing\BillingController;
 use App\Http\Controllers\Billing\StripeCheckoutController;
 use App\Http\Controllers\DashboardController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\WorkoutPlansController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::post('auth/google', GoogleLoginController::class)->middleware('throttle:5,1')->name('google.login');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');

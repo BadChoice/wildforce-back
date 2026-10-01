@@ -20,14 +20,20 @@ class GoogleAuthenticator implements GoogleAuthentication
 
     public function authenticate(string $identityToken, string $deviceName): GoogleAuthenticationResult
     {
+        $result = $this->resolve($identityToken);
+        $token = $result->user->createToken($deviceName);
+
+        return new GoogleAuthenticationResult($result->user, $token->plainTextToken, $result->trialEndsAt);
+    }
+
+    public function resolve(string $identityToken): GoogleUserAuthenticationResult
+    {
         $claims = $this->googleIdentityTokenVerifier->verify($identityToken);
         $providerUserId = $this->providerUserId($claims);
         $identity = $this->googleIdentityQuery()->with('user.subscription')->where('provider_user_id', $providerUserId)->first();
 
         if ($identity !== null) {
-            $token = $identity->user->createToken($deviceName);
-
-            return new GoogleAuthenticationResult($identity->user, $token->plainTextToken);
+            return new GoogleUserAuthenticationResult($identity->user);
         }
 
         $email = $this->verifiedEmail($claims);
@@ -36,7 +42,7 @@ class GoogleAuthenticator implements GoogleAuthentication
             throw new ConflictHttpException('This email already has an account. Sign in with an existing method before linking Google.');
         }
 
-        return DB::transaction(function () use ($email, $providerUserId, $claims, $deviceName): GoogleAuthenticationResult {
+        return DB::transaction(function () use ($email, $providerUserId, $claims): GoogleUserAuthenticationResult {
             $user = User::create([
                 'name' => $this->nameForNewUser($claims, $email),
                 'email' => $email,
@@ -45,14 +51,13 @@ class GoogleAuthenticator implements GoogleAuthentication
             ]);
             $trial = $user->attachSubscription(Subscription::createTrial());
             $this->createGoogleIdentity($user, $providerUserId, $claims);
-            $token = $user->createToken($deviceName);
             $trialEndsAt = $trial->getAttribute('renews_at');
 
             if (! $trialEndsAt instanceof CarbonInterface) {
                 throw new RuntimeException('The trial end date is invalid.');
             }
 
-            return new GoogleAuthenticationResult($user, $token->plainTextToken, $trialEndsAt);
+            return new GoogleUserAuthenticationResult($user, $trialEndsAt);
         });
     }
 
