@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\NutritionDay;
-use App\Models\NutritionDay;
 use App\Models\NutritionMeal;
 use App\Models\NutritionPlan;
 use Illuminate\Database\Eloquent\Factories\Factory;
