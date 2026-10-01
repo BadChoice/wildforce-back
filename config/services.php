@@ -30,6 +30,7 @@ return [
     ],
 
     'google' => [
+        // https://console.cloud.google.com/apis/credentials?project=wildforce-prod
         'client_id' => env('GOOGLE_CLIENT_ID'),
         // Mobile clients can keep using GOOGLE_CLIENT_ID. The browser needs its
         // own OAuth client because Google binds ID tokens to the client that
