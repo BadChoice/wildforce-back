@@ -1,4 +1,4 @@
-@props(['user', 'activeTab', 'progressionAnalysis' => null, 'showProgressionAnalysis' => false])
+@props(['user', 'activeTab', 'progressionAnalysis' => null, 'showProgressionAnalysis' => false, 'coaches', 'coaching', 'canAddCoach'])
 
 <div class="flex min-h-dvh flex-col bg-white dark:bg-zinc-900">
     <header class="border-zinc-200 p-5 dark:border-zinc-700">
@@ -16,7 +16,7 @@
 
         @unless ($showProgressionAnalysis)
             <nav aria-label="{{ __('User details') }}" role="tablist" class="mt-5 flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
-                @foreach (['training' => __('Training'), 'exercise-profiles' => __('Exercise Profiles'), 'nutrition' => __('Nutrition'), 'body-metrics' => __('Body metrics'), 'subscription' => __('Subscription')] as $tab => $label)
+                @foreach (['training' => __('Training'), 'exercise-profiles' => __('Exercise Profiles'), 'nutrition' => __('Nutrition'), 'body-metrics' => __('Body metrics'), 'subscription' => __('Subscription'), 'coaching' => __('Coaching')] as $tab => $label)
                     <button
                         type="button"
                         role="tab"
@@ -69,6 +69,10 @@
 
             @case('subscription')
                 <x-dashboard.subscription-details :subscription="$user->subscription" />
+                @break
+
+            @case('coaching')
+                <x-dashboard.coaching-relationships :coaches="$coaches" :coaching="$coaching" :can-add-coach="$canAddCoach" />
                 @break
             @endswitch
         @endif

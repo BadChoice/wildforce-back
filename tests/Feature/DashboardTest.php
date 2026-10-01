@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\CoachingEnrollmentStatus;
 use App\Models\BodyMetricEntry;
+use App\Models\CoachingEnrollment;
 use App\Models\ExerciseProfile;
 use App\Models\NutritionPlan;
 use App\Models\TrainingLocation;
@@ -200,4 +202,111 @@ test('dashboard displays body metric charts for a selected user', function () {
         ->call('selectTab', 'body-metrics')
         ->assertSee('Body Fat Percentage')
         ->assertSee('Latest: 18.400');
+});
+
+test('dashboard displays a user coaching relationships', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create(['name' => 'Alex Morgan']);
+    $coach = User::factory()->create(['name' => 'Jordan Coach']);
+    $client = User::factory()->create(['name' => 'Taylor Client']);
+
+    CoachingEnrollment::create([
+        'client_user_id' => $user->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => '2026-09-01 09:00:00',
+    ]);
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $user->id,
+        'status' => CoachingEnrollmentStatus::Paused,
+        'starts_at' => '2026-09-15 09:00:00',
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('dashboard.user-plan-list')
+        ->call('selectUser', $user->id)
+        ->call('selectTab', 'coaching')
+        ->assertSee('Coaches')
+        ->assertSee('Jordan Coach')
+        ->assertSee('Coaching')
+        ->assertSee('Taylor Client')
+        ->assertSee('Paused')
+        ->assertDontSee('Add coach')
+        ->assertSee('Add client');
+});
+
+test('dashboard assigns an active user as a coach', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+    $coach = User::factory()->create(['name' => 'Jordan Coach']);
+    User::factory()->withoutSubscription()->create(['name' => 'Inactive User']);
+
+    $this->actingAs($admin);
+
+    Livewire::test('dashboard.user-plan-list')
+        ->call('selectUser', $user->id)
+        ->call('selectTab', 'coaching')
+        ->assertSee('Add coach')
+        ->call('openCoachingEnrollmentForm', 'coach')
+        ->assertSet('showCoachingEnrollmentForm', true)
+        ->assertSee('Jordan Coach')
+        ->set('relatedUserId', $coach->id)
+        ->call('saveCoachingEnrollment')
+        ->assertSet('showCoachingEnrollmentForm', false)
+        ->assertSee('Jordan Coach')
+        ->assertDontSee('Add coach');
+
+    $this->assertDatabaseHas('coaching_enrollments', [
+        'client_user_id' => $user->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active->value,
+    ]);
+});
+
+test('dashboard manages a coaching relationship status', function () {
+    $admin = User::factory()->admin()->create();
+    $coach = User::factory()->create();
+    $client = User::factory()->create(['name' => 'Taylor Client']);
+
+    $this->actingAs($admin);
+
+    Livewire::test('dashboard.user-plan-list')
+        ->call('selectUser', $coach->id)
+        ->call('selectTab', 'coaching')
+        ->call('openCoachingEnrollmentForm', 'client')
+        ->set('relatedUserId', $client->id)
+        ->call('saveCoachingEnrollment')
+        ->assertSee('Taylor Client');
+
+    $enrollment = CoachingEnrollment::query()->sole();
+
+    Livewire::test('dashboard.user-plan-list')
+        ->call('selectUser', $coach->id)
+        ->call('pauseCoachingEnrollment', $enrollment->id);
+
+    $this->assertDatabaseHas('coaching_enrollments', [
+        'id' => $enrollment->id,
+        'status' => CoachingEnrollmentStatus::Paused->value,
+    ]);
+
+    Livewire::test('dashboard.user-plan-list')
+        ->call('selectUser', $coach->id)
+        ->call('endCoachingEnrollment', $enrollment->id);
+
+    $this->assertDatabaseHas('coaching_enrollments', [
+        'id' => $enrollment->id,
+        'status' => CoachingEnrollmentStatus::Ended->value,
+    ]);
+
+    Livewire::test('dashboard.user-plan-list')
+        ->call('selectUser', $coach->id)
+        ->call('reactivateCoachingEnrollment', $enrollment->id);
+
+    $this->assertDatabaseHas('coaching_enrollments', [
+        'id' => $enrollment->id,
+        'status' => CoachingEnrollmentStatus::Active->value,
+        'ends_at' => null,
+    ]);
 });
