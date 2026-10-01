@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\Nutrition\NutritionPlanGenerationController;
 use App\Http\Controllers\Api\Subscription\SubscriptionAccessController;
 use App\Http\Controllers\Api\Subscription\SyncAppStoreTransactionController;
+use App\Http\Controllers\Api\Subscription\SyncGooglePlayPurchaseController;
 use App\Http\Controllers\Api\Sync\BatchSyncPullController;
 use App\Http\Controllers\Api\Sync\NutritionPlanSyncController;
 use App\Http\Controllers\Api\Sync\SyncPullController;
@@ -43,6 +44,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/users/avatar', AvatarController::class);
     Route::post('/subscription/redeem-code', RedeemDemoCodeController::class);
     Route::post('/subscription/app-store/transactions', SyncAppStoreTransactionController::class);
+    Route::post('/subscription/google-play/purchases', SyncGooglePlayPurchaseController::class);
     Route::get('/subscription/access', SubscriptionAccessController::class);
     Route::post('/feedback', FeedbackController::class);
 
