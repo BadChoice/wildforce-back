@@ -152,6 +152,7 @@ No artifacts, no extra limbs, no warped equipment';
                 Files\Image::fromPath(resource_path("assetModels/{$gender}.png")),
             ])
             ->portrait()
+            //->generate();
             ->generate(provider: Lab::OpenAI);
 
         $image->storeAs('vertical/'.$exerciseId.'_'.$gender.'.jpeg');

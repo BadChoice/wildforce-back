@@ -3,7 +3,7 @@
 <div class="pt-4 border-t border-zinc-200 dark:border-zinc-700">
     <flux:heading size="sm" class="mb-2">{{ __('Training locations') }}</flux:heading>
 
-    @if ($trainingLocations->isNotEmpty())
+    @if ($trainingLocations && $trainingLocations->isNotEmpty())
     <flux:table>
         @foreach ($trainingLocations as $location)
         <flux:table.row class="text-xs">
