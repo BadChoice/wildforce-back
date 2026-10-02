@@ -19,7 +19,7 @@ test('it stores a front progress photo on the default private disk', function ()
         'image' => UploadedFile::fake()->image('front.jpg'),
     ]);
 
-    $path = "{$session->id}-front.jpg";
+    $path = "body-progress-photos/{$session->id}-front.jpg";
 
     $response->assertOk()
         ->assertJsonPath('data.path', $path);
@@ -43,7 +43,7 @@ test('it returns 404 when uploading a progress photo for another user session', 
     ]);
 
     $response->assertNotFound();
-    Storage::disk(config('filesystems.default'))->assertDirectoryEmpty('');
+    Storage::disk(config('filesystems.default'))->assertDirectoryEmpty('body-progress-photos');
 });
 
 test('it returns 401 when uploading a progress photo without a bearer token', function () {
@@ -69,5 +69,5 @@ test('it rejects a non-JPEG progress photo', function () {
     ])->assertUnprocessable()
         ->assertJsonValidationErrors(['image']);
 
-    Storage::disk(config('filesystems.default'))->assertDirectoryEmpty('');
+    Storage::disk(config('filesystems.default'))->assertDirectoryEmpty('body-progress-photos');
 });
