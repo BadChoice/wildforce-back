@@ -281,13 +281,20 @@ new class extends Component {
         }
 
         if ($workoutDay->status === WorkoutDayStatus::Completed->value) {
-            $this->viewingWorkoutDay = $workoutDay;
-            $this->showWorkoutDayCompleted = true;
+            $this->openWorkoutDayCompleted($workoutDay);
 
             return;
         }
 
         $this->openWorkoutDayEditor($workoutDayId);
+    }
+
+    public function openWorkoutDayCompleted(WorkoutDay $workoutDay): void
+    {
+        Gate::authorize('view', $this->workoutPlan);
+
+        $this->viewingWorkoutDay = $workoutDay;
+        $this->showWorkoutDayCompleted = true;
     }
 
     public function openWorkoutDayEditor(string $workoutDayId): void
