@@ -18,7 +18,7 @@ class AndroidExporter
         foreach (config('translations.locales') as $locale => $configuration) {
             $directory = $configuration['android_directory'];
             $this->files->ensureDirectoryExists("{$path}/{$directory}");
-            $this->files->put("{$path}/{$directory}/strings.xml", $this->xml($translations, $locale));
+            $this->files->put("{$path}/{$directory}/sheet_translations.xml", $this->xml($translations, $locale));
         }
     }
 
@@ -58,8 +58,12 @@ class AndroidExporter
             ->replaceMatches('/[^a-z0-9_]/', '_')
             ->toString();
 
-        if ($resourceName === '' || ctype_digit($resourceName[0])) {
+        if ($resourceName === '') {
             throw new InvalidArgumentException("The key '{$key}' cannot be converted to an Android resource name.");
+        }
+
+        if (ctype_digit($resourceName[0])) {
+            $resourceName = "key_{$resourceName}";
         }
 
         return $resourceName;

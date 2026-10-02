@@ -509,7 +509,7 @@
                       "properties": {
                         "path": {
                           "type": "string",
-                          "example": "018f70f9-66a0-7a26-a4f8-8e0e1433f50e-front.jpg"
+                          "example": "body-progress-photos/018f70f9-66a0-7a26-a4f8-8e0e1433f50e-front.jpg"
                         }
                       }
                     }
@@ -523,6 +523,78 @@
           },
           "404": {
             "description": "Progress photo session does not belong to the authenticated user."
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/api/nutrition-log-items/{nutritionLogItem}/image": {
+      "post": {
+        "tags": [
+          "Media"
+        ],
+        "summary": "Upload a private nutrition log item image",
+        "description": "Stores a JPEG on the default private S3 disk and updates the image path on the nutrition log item.",
+        "parameters": [
+          {
+            "name": "nutritionLogItem",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "image"
+                ],
+                "properties": {
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG image up to 5 MiB."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Nutrition log item image uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "example": "nutrition-log-items/018f70f9-66a0-7a26-a4f8-8e0e1433f50e.jpg"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "404": {
+            "description": "Nutrition log item does not belong to the authenticated user."
           },
           "422": {
             "$ref": "#/components/responses/ValidationError"

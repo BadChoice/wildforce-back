@@ -95,11 +95,27 @@ new class extends Component {
     }
 
     #[Computed]
-    public function visibleStartDate(): CarbonImmutable
+    public function isCompleted(): bool
+    {
+        return $this->workoutPlan->status === 'completed';
+    }
+
+    #[Computed]
+    public function baseStartDate(): CarbonImmutable
     {
         return ($this->workoutPlan->starts_on ?? now())
             ->toImmutable()
             ->startOfWeek();
+    }
+
+    #[Computed]
+    public function visibleStartDate(): CarbonImmutable
+    {
+        if ($this->isCompleted) {
+            return $this->baseStartDate;
+        }
+
+        return now()->toImmutable()->startOfWeek();
     }
 
     /**
@@ -108,14 +124,35 @@ new class extends Component {
     #[Computed]
     public function workoutsByDate(): Collection
     {
-        $startDate = $this->visibleStartDate();
+        $baseStart = $this->baseStartDate;
+        $visibleStart = $this->visibleStartDate;
+
+        $weekdayOffsets = [
+            'monday' => 0,
+            'tuesday' => 1,
+            'wednesday' => 2,
+            'thursday' => 3,
+            'friday' => 4,
+            'saturday' => 5,
+            'sunday' => 6,
+        ];
 
         return $this->workoutPlan->workoutDays()
-            ->whereBetween('scheduled_for', [$startDate, $startDate->addWeeks(4)->subSecond()])
-            ->orderBy('scheduled_for')
             ->orderBy('order_index')
             ->get()
-            ->groupBy(fn (WorkoutDay $workoutDay): string => $workoutDay->scheduled_for->toDateString());
+            ->groupBy(function (WorkoutDay $workoutDay) use ($baseStart, $visibleStart, $weekdayOffsets): string {
+                if ($workoutDay->scheduled_for !== null) {
+                    $dayScheduled = $workoutDay->scheduled_for->toImmutable()->startOfDay();
+                    $weekOffset = max(0, min(3, (int) floor($baseStart->diffInDays($dayScheduled) / 7)));
+                    $dayOffset = (int) ($dayScheduled->dayOfWeekIso - 1);
+                } else {
+                    $weekOffset = 0;
+                    $intended = strtolower((string) $workoutDay->intended_weekday);
+                    $dayOffset = $weekdayOffsets[$intended] ?? 0;
+                }
+
+                return $visibleStart->addWeeks($weekOffset)->addDays($dayOffset)->toDateString();
+            });
     }
 
     /**
