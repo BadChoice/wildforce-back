@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\Sync\SyncPushController;
 use App\Http\Controllers\Api\Sync\WorkoutDaySyncController;
 use App\Http\Controllers\Api\Webhooks\AppStoreServerNotificationController;
 use App\Http\Controllers\Api\Webhooks\StripeWebhookController;
+use App\Http\Controllers\Api\Workouts\SingleWorkoutGenerationController;
 use App\Http\Controllers\Api\Workouts\WorkoutPlanGenerationController;
 use App\Http\Middleware\EnsureUserHasAppAccess;
 use Illuminate\Http\Request;
@@ -51,6 +52,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::middleware(EnsureUserHasAppAccess::class)->group(function () {
         Route::post('/ai/completions', CompletionController::class)->middleware('throttle:10,1');
         Route::post('/workout-plans/generate', WorkoutPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1']);
+        Route::post('/workout-days/generate', SingleWorkoutGenerationController::class)->middleware(['idempotency', 'throttle:5,1']);
         Route::post('/nutrition-plans/generate', NutritionPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1']);
         Route::get('/account/coaches', CoachController::class);
         Route::post('/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}', [BodyProgressPhotoController::class, 'store'])
