@@ -40,6 +40,59 @@ test('it renders unscheduled workout days using intended weekday', function () {
         ->assertSee('Leg day');
 });
 
+test('it displays and updates workout plan details', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    $workoutPlan = WorkoutPlan::factory()->for($client)->create([
+        'goal' => 'buildMuscle',
+        'status' => 'draft',
+        'mesocycle_number' => 2,
+        'phase' => 'accumulation',
+        'phase_week' => 2,
+        'cycle_length' => 6,
+        'body_composition_phase' => 'bulk',
+    ]);
+    $this->actingAs($coach);
+
+    Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+        ->assertSee('Draft')
+        ->assertSee('Build Muscle')
+        ->assertSee('Bulk')
+        ->assertSee('Mesocycle')
+        ->assertSee('Accumulation')
+        ->call('openWorkoutPlanEditor')
+        ->assertSet('showWorkoutPlanEditor', true)
+        ->set('workoutPlanGoal', 'gainStrength')
+        ->set('workoutPlanStatus', 'active')
+        ->set('workoutPlanBodyCompositionPhase', 'maintain')
+        ->set('workoutPlanMesocycleNumber', '3')
+        ->set('workoutPlanPhase', 'intensification')
+        ->set('workoutPlanPhaseWeek', '1')
+        ->set('workoutPlanCycleLength', '8')
+        ->call('saveWorkoutPlan')
+        ->assertSet('showWorkoutPlanEditor', false)
+        ->assertSee('Active')
+        ->assertSee('Gain Strength')
+        ->assertSee('Maintain')
+        ->assertSee('Intensification');
+
+    $workoutPlan->refresh();
+
+    expect($workoutPlan->status)->toBe('active')
+        ->and($workoutPlan->goal)->toBe('gainStrength')
+        ->and($workoutPlan->body_composition_phase)->toBe('maintain')
+        ->and($workoutPlan->mesocycle_number)->toBe(3)
+        ->and($workoutPlan->phase)->toBe('intensification')
+        ->and($workoutPlan->phase_week)->toBe(1)
+        ->and($workoutPlan->cycle_length)->toBe(8);
+});
+
 test('it creates a workout day on the selected calendar date', function () {
     $user = User::factory()->create();
     $currentWeekStart = now()->startOfWeek()->toDateString();
