@@ -67,12 +67,12 @@
                 <x-dashboard.user-body-metrics :user="$user" />
                 @break
 
-            @case('subscription')
-                <x-dashboard.subscription-details :subscription="$user->subscription" />
-                @break
-
             @case('coaching')
                 <x-dashboard.coaching-relationships :coaches="$coaches" :coaching="$coaching" :can-add-coach="$canAddCoach" />
+                @break
+
+            @case('subscription')
+                <x-dashboard.subscription-details :subscription="$user->subscription" />
                 @break
             @endswitch
         @endif
