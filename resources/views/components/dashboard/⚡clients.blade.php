@@ -651,7 +651,7 @@ new class extends Component
             <flux:field>
                 <flux:label>{{ __('Goal') }}</flux:label>
                 <flux:select wire:model="workoutPlanGoal">
-                    @foreach (['generalFitness', 'loseWeight', 'buildMuscle', 'gainStrength', 'improveEndurance', 'improveMobility', 'bodyRecomposition'] as $goal)
+                    @foreach (\App\Enums\Goal::allCasesArray() as $goal)
                         <option value="{{ $goal }}">{{ str($goal)->headline() }}</option>
                     @endforeach
                 </flux:select>
