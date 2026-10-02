@@ -58,4 +58,39 @@ enum ExerciseSetStyle: string
             self::Tempo => 'Tempo',
         };
     }
+
+    /**
+     * @param  mixed  $config
+     * @return array<string, mixed>|null
+     */
+    public static function formatConfiguration(mixed $config): ?array
+    {
+        if (! is_array($config) || empty($config['style'])) {
+            return null;
+        }
+
+        $style = self::tryFrom((string) $config['style']);
+        if ($style === null) {
+            return null;
+        }
+
+        $allowed = $style->allowedFields();
+        $filtered = ['style' => $style->value];
+
+        foreach ($allowed as $field) {
+            if (array_key_exists($field, $config) && $config[$field] !== '' && $config[$field] !== null) {
+                if ($field === 'applies_to_final_set_only') {
+                    $filtered[$field] = (bool) $config[$field];
+                } elseif (in_array($field, ['drop_count', 'backoff_set_count', 'intra_set_rest_seconds', 'target_rir'], true)) {
+                    $filtered[$field] = (int) $config[$field];
+                } elseif (in_array($field, ['drop_weight_percent', 'backoff_weight_percent'], true)) {
+                    $filtered[$field] = (float) $config[$field];
+                } else {
+                    $filtered[$field] = (string) $config[$field];
+                }
+            }
+        }
+
+        return $filtered;
+    }
 }

@@ -214,37 +214,6 @@ new class extends Component
         $this->showWorkoutDayEditor = true;
     }
 
-    private function formatSetStyleConfiguration(mixed $config): ?array
-    {
-        if (! is_array($config) || empty($config['style'])) {
-            return null;
-        }
-
-        $style = \App\Enums\ExerciseSetStyle::tryFrom($config['style']);
-        if ($style === null) {
-            return null;
-        }
-
-        $allowed = $style->allowedFields();
-        $filtered = ['style' => $style->value];
-
-        foreach ($allowed as $field) {
-            if (array_key_exists($field, $config) && $config[$field] !== '' && $config[$field] !== null) {
-                if ($field === 'applies_to_final_set_only') {
-                    $filtered[$field] = (bool) $config[$field];
-                } elseif (in_array($field, ['drop_count', 'backoff_set_count', 'intra_set_rest_seconds', 'target_rir'], true)) {
-                    $filtered[$field] = (int) $config[$field];
-                } elseif (in_array($field, ['drop_weight_percent', 'backoff_weight_percent'], true)) {
-                    $filtered[$field] = (float) $config[$field];
-                } else {
-                    $filtered[$field] = (string) $config[$field];
-                }
-            }
-        }
-
-        return $filtered;
-    }
-
     /** @param \Illuminate\Support\Collection<string, array<string, mixed>>|null $exerciseNames */
     private function fillWorkoutDayEditor(WorkoutDay $workoutDay, ?\Illuminate\Support\Collection $exerciseNames = null): void
     {
@@ -457,7 +426,7 @@ new class extends Component
                         'reps_max' => $exerciseData['reps_max'],
                         'target_weight_kg' => $exerciseData['target_weight_kg'] === '' ? null : $exerciseData['target_weight_kg'],
                         'rest_seconds' => $exerciseData['rest_seconds'],
-                        'set_style_configuration' => $this->formatSetStyleConfiguration($exerciseData['set_style_configuration'] ?? null),
+                        'set_style_configuration' => \App\Enums\ExerciseSetStyle::formatConfiguration($exerciseData['set_style_configuration'] ?? null),
                         'notes' => $exerciseData['notes'] ?: null,
                     ]);
                     $plannedExercise->save();
