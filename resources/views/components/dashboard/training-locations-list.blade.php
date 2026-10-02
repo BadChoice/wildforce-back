@@ -7,8 +7,13 @@
     <flux:table>
         @foreach ($trainingLocations as $location)
         <flux:table.row class="text-xs">
+
+            @php logger($location->equipment) @endphp
+            @php logger(count($location->equipment)) @endphp
             <flux:table.cell class=""><span class="text-black">{{ $location->name }}</span></flux:table.cell>
-            <flux:table.cell class="w-px text-right">{{ trans_choice(":count equipment", ['count' => count($location->equipment)]) }}</flus:table.cell>
+            <flux:table.cell class="w-px text-right">
+                {{ trans_choice('{1} :count equipment|[2,*] :count equipments', count($location->equipment)) }}
+            </flux:table.cell>
         </flux:table.row>
         @endforeach
     </flux:table>
