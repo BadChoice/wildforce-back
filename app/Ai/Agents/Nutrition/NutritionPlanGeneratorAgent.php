@@ -2,6 +2,8 @@
 
 namespace App\Ai\Agents\Nutrition;
 
+use App\Enums\Goal;
+use App\Enums\WorkoutFocus;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
@@ -51,7 +53,7 @@ INSTRUCTIONS;
 
         return [
             'startsOn' => $schema->string()->format('date')->required(),
-            'goal' => $schema->string()->enum(['generalFitness', 'loseWeight', 'buildMuscle', 'gainStrength', 'improveEndurance', 'improveMobility', 'bodyRecomposition'])->required(),
+            'goal' => $schema->string()->enum(Goal::allCasesArray())->required(),
             'bodyCompositionPhase' => $schema->string()->enum(['bulk', 'cut', 'maintain'])->required(),
             'dailyCalorieAverage' => $schema->number()->min(0)->required(),
             'notes' => $schema->string(),
@@ -61,7 +63,7 @@ INSTRUCTIONS;
                 'dayType' => $schema->string()->enum(['training', 'rest', 'recovery'])->required(),
                 'targetMacros' => $schema->object($macros)->required(),
                 'plannedWorkoutTitle' => $schema->string(),
-                'plannedWorkoutFocus' => $schema->string()->enum(['fullBody', 'upperBody', 'lowerBody', 'push', 'pull', 'legs', 'cardio', 'mobility', 'recovery', 'core']),
+                'plannedWorkoutFocus' => $schema->string()->enum(WorkoutFocus::allCasesArray()),
                 'energyDemand' => $schema->string()->enum(['low', 'medium', 'high'])->required(),
                 'notes' => $schema->string(),
                 'preWorkoutGuidance' => $schema->string(),

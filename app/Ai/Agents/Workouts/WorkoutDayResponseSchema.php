@@ -2,6 +2,7 @@
 
 namespace App\Ai\Agents\Workouts;
 
+use App\Enums\WorkoutFocus;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 
@@ -15,7 +16,7 @@ final class WorkoutDayResponseSchema
     {
         return [
             'title' => $schema->string()->required(),
-            'focus' => $schema->string()->enum(['fullBody', 'upperBody', 'lowerBody', 'chest', 'back', 'shoulders', 'arms', 'core', 'cardio', 'mobility'])->required(),
+            'focus' => $schema->string()->enum(WorkoutFocus::allCasesArray())->required(),
             'dayType' => $schema->string()->enum(['strength', 'hypertrophy', 'technique', 'volume', 'deload', 'recovery', 'conditioning'])->required(),
             'estimatedDurationMinutes' => $schema->integer()->min(1)->required(),
             'notes' => $schema->string(),
