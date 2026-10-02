@@ -160,9 +160,9 @@ new class extends Component
     /**
      * @param  array<string, mixed>  $exercise
      */
-    public function imageUrl(array $exercise): string
+    public function imageUrl(array $exercise, string $gender = 'female'): string
     {
-        return $this->exerciseCatalog->imageUrl($exercise['id']);
+        return $this->exerciseCatalog->imageUrl($exercise['id'], $gender);
     }
 
     public function selectExercise(string $exerciseId): void
@@ -314,7 +314,10 @@ new class extends Component
         <flux:modal wire:model="showExerciseDetail" flyout position="right" :closable="false" class="w-full max-w-none p-0 sm:w-[34rem]">
             <x-exercises.exercise-detail-panel
                 :exercise="$this->selectedExercise"
-                :image-url="$this->imageUrl($this->selectedExercise)"
+                :image-urls="[
+                    'female' => $this->imageUrl($this->selectedExercise, 'female'),
+                    'male' => $this->imageUrl($this->selectedExercise, 'male'),
+                ]"
                 :active-tab="$selectedExerciseTab"
                 :user="$this->user"
                 :exercise-profile="$this->selectedExerciseProfile"

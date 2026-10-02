@@ -1,4 +1,4 @@
-@props(['exercise', 'imageUrl', 'activeTab' => 'details', 'user' => null, 'exerciseProfile' => null])
+@props(['exercise', 'imageUrls', 'activeTab' => 'details', 'user' => null, 'exerciseProfile' => null])
 
 <div class="flex min-h-dvh flex-col bg-white dark:bg-zinc-900">
     <header class="border-zinc-200 p-5 dark:border-zinc-700">
@@ -10,7 +10,29 @@
             <flux:button variant="ghost" icon="x-mark" size="sm" wire:click="closeExerciseDetail" aria-label="{{ __('Close exercise details') }}" />
         </div>
 
-        <img src="{{ $imageUrl }}" alt="{{ $exercise['name'] }}" class="mt-5 aspect-[4/5] w-full rounded-xl bg-zinc-100 object-cover dark:bg-zinc-800" />
+        <div x-data="{ 
+            gender: 'female', 
+            imageUrls: {{ json_encode($imageUrls) }} 
+        }" class="mt-5 relative">
+            <img :src="imageUrls[gender]" alt="{{ $exercise['name'] }}" class="aspect-[4/5] w-full rounded-xl bg-zinc-100 object-cover dark:bg-zinc-800" />
+            
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                <button 
+                    type="button" 
+                    @click="gender = 'female'" 
+                    :class="gender === 'female' ? 'bg-white scale-110' : 'bg-white/50'" 
+                    class="h-2 w-2 rounded-full transition-all" 
+                    aria-label="{{ __('Female') }}"
+                ></button>
+                <button 
+                    type="button" 
+                    @click="gender = 'male'" 
+                    :class="gender === 'male' ? 'bg-white scale-110' : 'bg-white/50'" 
+                    class="h-2 w-2 rounded-full transition-all" 
+                    aria-label="{{ __('Male') }}"
+                ></button>
+            </div>
+        </div>
 
         <nav aria-label="{{ __('Exercise details') }}" role="tablist" class="mt-5 flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
             @foreach (['details' => __('Details and metadata'), 'instructions' => __('Instructions')] as $tab => $label)
@@ -80,7 +102,7 @@
                                 @endforelse
                             </x-ui.reference-box>
 
-                            <x-exercises.reference-detail-item :label="__('Movement patterns')" type="movementPatterns" :ids="$exercise['movementPatterns']" />
+                            <x-exercises.reference-detail-item :label="__('Movement patterns')" type="movementPatterns" :ids="$exercise['movementPatterns']" class="sm:col-span-2" />
                             <x-exercises.reference-detail-item :label="__('Goals')" type="goals" :ids="$exercise['compatibleGoals']" class="sm:col-span-2" />
                             <x-exercises.reference-detail-item :label="__('Target metrics')" type="targetMetrics" :ids="$exercise['targetMetrics']" class="sm:col-span-2" />
                             @if ($exercise['contraindicatedRestrictions'] !== [])
@@ -133,7 +155,7 @@
                         <x-dashboard.detail-item :label="__('Estimated one-rep max')" :value="$exerciseProfile->estimated_one_rep_max ? __(':weight kg', ['weight' => $exerciseProfile->estimated_one_rep_max]) : __('Not set')" />
                         <x-dashboard.detail-item :label="__('Maximum reps')" :value="$exerciseProfile->max_reps ?? __('Not set')" />
                         <x-dashboard.detail-item :label="__('Preferred rep range')" :value="$exerciseProfile->preferred_rep_range_min && $exerciseProfile->preferred_rep_range_max ? __(':min–:max reps', ['min' => $exerciseProfile->preferred_rep_range_min, 'max' => $exerciseProfile->preferred_rep_range_max]) : __('Not set')" />
-                        <x-dashboard.detail-item :label="__('Typical duration')" :value="$exerciseProfile->typical_duration_minutes ? trans_choice(':count min', $exerciseProfile->typical_duration_minutes, ['count' => $exerciseProfile->typical_duration_minutes]) : __('Not set')" />
+                        <x-dashboard.detail-item :label="__('Typical duration')" :value="$exerciseProfile->typical_duration_minutes ? trans_choice(':count min', ['count' => $exerciseProfile->typical_duration_minutes]) : __('Not set')" />
                         <x-dashboard.detail-item :label="__('Typical distance')" :value="$exerciseProfile->typical_distance_km ? __(':distance km', ['distance' => $exerciseProfile->typical_distance_km]) : __('Not set')" />
                         <x-dashboard.detail-item :label="__('Typical pace')" :value="$exerciseProfile->typical_pace_seconds_per_km ? gmdate('i:s', $exerciseProfile->typical_pace_seconds_per_km).' / km' : __('Not set')" />
                     </dl>

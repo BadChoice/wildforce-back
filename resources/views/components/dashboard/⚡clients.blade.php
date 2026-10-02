@@ -31,17 +31,9 @@ new class extends Component
 
     public bool $showClientDetail = false;
 
-    public bool $showWorkoutPlanForm = false;
-
     public bool $showProgressionAnalysis = false;
 
     public PlanPromptPreview $planPromptPreview;
-
-    public string $workoutPlanName = '';
-
-    public string $workoutPlanGoal = 'generalFitness';
-
-    public string $workoutPlanNotes = '';
 
     public bool $showWorkoutDayEditor = false;
 
@@ -268,47 +260,6 @@ new class extends Component
             new TrainingHistory($client),
             $this->exerciseCatalog,
         )->analyze();
-    }
-
-    public function openWorkoutPlanForm(): void
-    {
-        if ($this->selectedClient === null) {
-            return;
-        }
-
-        $this->resetValidation();
-        $this->workoutPlanName = '';
-        $this->workoutPlanGoal = 'generalFitness';
-        $this->workoutPlanNotes = '';
-        $this->showWorkoutPlanForm = true;
-    }
-
-    public function saveWorkoutPlan(): void
-    {
-        $validated = $this->validate([
-            'workoutPlanName' => ['required', 'string', 'max:255'],
-            'workoutPlanGoal' => ['required', 'string', 'max:255'],
-            'workoutPlanNotes' => ['nullable', 'string'],
-        ]);
-        $client = $this->selectedClient;
-
-        if ($client === null) {
-            return;
-        }
-
-        $workoutPlan = new WorkoutPlan;
-        $workoutPlan->forceFill([
-            'user_id' => $client->id,
-            'name' => $validated['workoutPlanName'],
-            'goal' => $validated['workoutPlanGoal'],
-            'notes' => $validated['workoutPlanNotes'] ?: null,
-            'status' => 'draft',
-        ]);
-        $workoutPlan->save();
-
-        unset($this->selectedClient);
-
-        $this->showWorkoutPlanForm = false;
     }
 
     public function openWorkoutDayEditor(string $workoutPlanId): void
@@ -635,44 +586,6 @@ new class extends Component
         :error="$planPromptPreview->error"
     />
 
-    <flux:modal wire:model="showWorkoutPlanForm" class="w-full max-w-lg">
-        <form wire:submit="saveWorkoutPlan" class="space-y-5">
-            <div>
-                <flux:heading size="lg">{{ __('New workout plan') }}</flux:heading>
-                <flux:text variant="subtle" class="mt-1">{{ __('Create a draft plan for this client.') }}</flux:text>
-            </div>
-
-            <flux:field>
-                <flux:label>{{ __('Name') }}</flux:label>
-                <flux:input wire:model="workoutPlanName" autofocus />
-                <flux:error name="workoutPlanName" />
-            </flux:field>
-
-            <flux:field>
-                <flux:label>{{ __('Goal') }}</flux:label>
-                <flux:select wire:model="workoutPlanGoal">
-                    @foreach (\App\Enums\Goal::allCasesArray() as $goal)
-                        <option value="{{ $goal }}">{{ str($goal)->headline() }}</option>
-                    @endforeach
-                </flux:select>
-                <flux:error name="workoutPlanGoal" />
-            </flux:field>
-
-            <flux:field>
-                <flux:label>{{ __('Notes') }}</flux:label>
-                <flux:textarea wire:model="workoutPlanNotes" rows="4" />
-                <flux:error name="workoutPlanNotes" />
-            </flux:field>
-
-            <div class="flex justify-end gap-3">
-                <flux:modal.close>
-                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">{{ __('Create workout plan') }}</flux:button>
-            </div>
-        </form>
-    </flux:modal>
-
     <flux:modal wire:model="showWorkoutDayEditor" :closable="false" class="w-full max-w-7xl p-0">
         <x-dashboard.workout-day-editor
             :blocks="$workoutDayBlocks"
@@ -682,4 +595,6 @@ new class extends Component
             :selected-workout-block-id="$selectedWorkoutBlockId"
         />
     </flux:modal>
+
+    <livewire:workout-plans.create-plan-modal />
 </div>

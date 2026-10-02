@@ -53,9 +53,12 @@ new class extends Component {
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
 
     <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
-        <div class="mb-6">
-            <flux:heading size="lg" level="1">{{ __('Workout plans') }}</flux:heading>
-            <flux:text variant="subtle">{{ __('The list of workout plans.') }}</flux:text>
+        <div class="mb-6 flex items-center justify-between">
+            <div>
+                <flux:heading size="lg" level="1">{{ __('Workout plans') }}</flux:heading>
+                <flux:text variant="subtle">{{ __('The list of workout plans.') }}</flux:text>
+            </div>
+            <flux:button variant="primary" icon="plus" wire:click="$dispatch('open-create-workout-plan-modal')">{{ __('New plan') }}</flux:button>
         </div>
         <flux:table>
             <flux:table.columns>
@@ -70,8 +73,8 @@ new class extends Component {
             @forelse ($this->plans as $plan)
             <flux:table.row>
                 <flux:table.cell>
-                    <a href="{{ route('workout-plans.show', $plan) }}">
-                        <span class="font-bold text-gray-900">{{ $plan->name}}</span>
+                    <a href="{{ route('workout-plans.show', $plan) }}" class="font-bold text-black">
+                        {{ $plan->name}}
                     </a>
                 </flux:table.cell>
                 <flux:table.cell> {{ trans_choice(':count workout|:count workouts', $plan->workout_days_count, ['count' => $plan->workout_days_count]) }} </flux:table.cell>
@@ -95,11 +98,13 @@ new class extends Component {
                 </flux:table.cell>
             </flux:table.row>
             @empty
-
+                <flux:table.row>
+                    <flux:table.cell colspan="6" class="py-8 text-center text-sm text-zinc-500">{{ __('No workout plans found.') }}</flux:table.cell>
+                </flux:table.row>
             @endforelse
 
         </flux:table>
     </div>
 
-
+    <livewire:workout-plans.create-plan-modal />
 </div>
