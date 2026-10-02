@@ -3,6 +3,7 @@
 use App\Enums\CoachingEnrollmentStatus;
 use App\Enums\SubscriptionStatus;
 use App\Models\CoachingEnrollment;
+use App\Models\TrainingLocation;
 use App\Models\User;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
 use App\Services\Nutrition\NutritionPlanAIGenerator;
@@ -19,8 +20,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
-new class extends Component
-{
+new class extends Component {
     public ?string $selectedUserId = null;
 
     public string $selectedTab = 'training';
@@ -61,7 +61,7 @@ new class extends Component
             ->with('subscription')
             ->withCount([
                 'workoutPlans',
-                'workoutDays as custom_workouts_count' => fn (Builder $query): Builder => $query->customWorkouts(),
+                'workoutDays as custom_workouts_count' => fn(Builder $query): Builder => $query->customWorkouts(),
                 'nutritionPlans',
             ])
             ->orderBy('name')
@@ -78,13 +78,13 @@ new class extends Component
         return User::query()
             ->with([
                 'trainingPreferences',
-                'exerciseProfiles' => fn (HasMany $query): HasMany => $query->orderBy('exercise'),
-                'workoutPlans' => fn (HasMany $query): HasMany => $query
+                'exerciseProfiles' => fn(HasMany $query): HasMany => $query->orderBy('exercise'),
+                'workoutPlans' => fn(HasMany $query): HasMany => $query
                     ->orderByDesc('updated_at')
                     ->with([
-                        'workoutDays' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
+                        'workoutDays' => fn(HasMany $query): HasMany => $query->orderBy('order_index'),
                     ]),
-                'bodyMetrics' => fn (HasMany $query): HasMany => $query
+                'bodyMetrics' => fn(HasMany $query): HasMany => $query
                     ->select(['id', 'user_id', 'type', 'value', 'recorded_at'])
                     ->orderBy('recorded_at'),
                 'subscription',
@@ -94,7 +94,7 @@ new class extends Component
 
     public function selectUser(string $userId): void
     {
-        if (! User::query()->whereKey($userId)->exists()) {
+        if (!User::query()->whereKey($userId)->exists()) {
             return;
         }
 
@@ -107,7 +107,7 @@ new class extends Component
 
     public function selectTab(string $tab): void
     {
-        if (! in_array($tab, ['training', 'exercise-profiles', 'nutrition', 'body-metrics', 'subscription', 'coaching'], true)) {
+        if (!in_array($tab, ['training', 'exercise-profiles', 'nutrition', 'body-metrics', 'subscription', 'coaching'], true)) {
             return;
         }
 
@@ -158,8 +158,8 @@ new class extends Component
     #[Computed]
     public function canAddCoach(): bool
     {
-        return ! $this->coaches
-            ->contains(fn (CoachingEnrollment $enrollment): bool => in_array(
+        return !$this->coaches
+            ->contains(fn(CoachingEnrollment $enrollment): bool => in_array(
                 $enrollment->status,
                 [CoachingEnrollmentStatus::Active, CoachingEnrollmentStatus::Paused],
                 true,
@@ -196,11 +196,11 @@ new class extends Component
     {
         Gate::authorize('viewDashboard');
 
-        if (! in_array($relationship, ['coach', 'client'], true)) {
+        if (!in_array($relationship, ['coach', 'client'], true)) {
             return;
         }
 
-        if ($relationship === 'coach' && ! $this->canAddCoach) {
+        if ($relationship === 'coach' && !$this->canAddCoach) {
             return;
         }
 
@@ -214,7 +214,7 @@ new class extends Component
     {
         Gate::authorize('viewDashboard');
 
-        if (! in_array($this->coachingEnrollmentType, ['coach', 'client'], true)) {
+        if (!in_array($this->coachingEnrollmentType, ['coach', 'client'], true)) {
             return;
         }
 
@@ -241,7 +241,7 @@ new class extends Component
             })
             ->exists();
 
-        if (! $isRelatedUserActive || $selectedUser->getKey() === $this->relatedUserId) {
+        if (!$isRelatedUserActive || $selectedUser->getKey() === $this->relatedUserId) {
             $this->addError('relatedUserId', __('Select an active user.'));
 
             return;
@@ -422,6 +422,11 @@ new class extends Component
             $this->exerciseCatalog,
         )->analyze();
     }
+
+    public function createDefaultLocation()
+    {
+        $this->selectedUser->trainingLocations()->save(TrainingLocation::makeDefault());
+    }
 };
 ?>
 
@@ -429,7 +434,8 @@ new class extends Component
     <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
         <div class="mb-6">
             <flux:heading size="lg" level="2">{{ __('Users and plans') }}</flux:heading>
-            <flux:text variant="subtle">{{ __('A quick overview of each user’s training and nutrition data.') }}</flux:text>
+            <flux:text
+                variant="subtle">{{ __('A quick overview of each user’s training and nutrition data.') }}</flux:text>
         </div>
 
         <flux:table>
@@ -445,19 +451,26 @@ new class extends Component
 
             <flux:table.rows>
                 @forelse ($this->users as $user)
-                        <flux:table.row :key="$user->id">
-                            <flux:table.cell variant="strong">
-                                <div class="flex items-center gap-3">
-                                    <x-user-avatar :user="$user" />
-                                    <flux:button variant="ghost" size="sm" wire:click="selectUser('{{ $user->id }}')" class="-ml-2 font-semibold">
-                                        {{ $user->name }}
-                                    </flux:button>
-                                </div>
-                            </flux:table.cell>
+                    <flux:table.row :key="$user->id">
+                        <flux:table.cell variant="strong">
+                            <div class="flex items-center gap-3">
+                                <x-user-avatar :user="$user"/>
+                                <flux:button variant="ghost" size="sm" wire:click="selectUser('{{ $user->id }}')"
+                                             class="-ml-2 font-semibold">
+                                    {{ $user->name }}
+                                </flux:button>
+                            </div>
+                        </flux:table.cell>
                         <flux:table.cell>{{ $user->email }}</flux:table.cell>
-                        <flux:table.cell align="end"><flux:badge>{{ $user->workout_plans_count }}</flux:badge></flux:table.cell>
-                        <flux:table.cell align="end"><flux:badge>{{ $user->custom_workouts_count }}</flux:badge></flux:table.cell>
-                        <flux:table.cell align="end"><flux:badge>{{ $user->nutrition_plans_count }}</flux:badge></flux:table.cell>
+                        <flux:table.cell align="end">
+                            <flux:badge>{{ $user->workout_plans_count }}</flux:badge>
+                        </flux:table.cell>
+                        <flux:table.cell align="end">
+                            <flux:badge>{{ $user->custom_workouts_count }}</flux:badge>
+                        </flux:table.cell>
+                        <flux:table.cell align="end">
+                            <flux:badge>{{ $user->nutrition_plans_count }}</flux:badge>
+                        </flux:table.cell>
                         <flux:table.cell>
                             {{ $user->subscription?->plan?->value ? str($user->subscription->plan->value)->replace('_', ' ')->title() : __('None') }}
                         </flux:table.cell>
@@ -481,7 +494,8 @@ new class extends Component
     </div>
 
     @if ($this->selectedUser)
-        <flux:modal wire:model="showUserDetail" flyout position="right" :closable="false" class="w-full max-w-none p-0 sm:w-[34rem]">
+        <flux:modal wire:model="showUserDetail" flyout position="right" :closable="false"
+                    class="w-full max-w-none p-0 sm:w-[34rem]">
             <x-dashboard.user-detail-panel
                 :user="$this->selectedUser"
                 :active-tab="$selectedTab"
@@ -507,7 +521,8 @@ new class extends Component
         <flux:modal wire:model="showCoachingEnrollmentForm" class="w-full max-w-lg">
             <form wire:submit="saveCoachingEnrollment" class="space-y-6">
                 <div>
-                    <flux:heading size="lg">{{ $coachingEnrollmentType === 'coach' ? __('Add coach') : __('Add client') }}</flux:heading>
+                    <flux:heading
+                        size="lg">{{ $coachingEnrollmentType === 'coach' ? __('Add coach') : __('Add client') }}</flux:heading>
                     <flux:text variant="subtle" class="mt-2">
                         {{ $coachingEnrollmentType === 'coach' ? __('Assign a coach to this user.') : __('Assign a client to this coach.') }}
                     </flux:text>
@@ -518,17 +533,19 @@ new class extends Component
                     <flux:select wire:model="relatedUserId">
                         <option value="">{{ __('Select a user') }}</option>
                         @foreach ($this->availableUsers as $availableUser)
-                            <option value="{{ $availableUser->id }}">{{ $availableUser->name }} · {{ $availableUser->email }}</option>
+                            <option value="{{ $availableUser->id }}">{{ $availableUser->name }}
+                                · {{ $availableUser->email }}</option>
                         @endforeach
                     </flux:select>
-                    <flux:error name="relatedUserId" />
+                    <flux:error name="relatedUserId"/>
                 </flux:field>
 
                 <div class="flex justify-end gap-3">
                     <flux:modal.close>
                         <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
                     </flux:modal.close>
-                    <flux:button variant="primary" type="submit">{{ $coachingEnrollmentType === 'coach' ? __('Add coach') : __('Add client') }}</flux:button>
+                    <flux:button variant="primary"
+                                 type="submit">{{ $coachingEnrollmentType === 'coach' ? __('Add coach') : __('Add client') }}</flux:button>
                 </div>
             </form>
         </flux:modal>

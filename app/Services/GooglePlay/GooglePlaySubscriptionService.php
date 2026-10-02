@@ -62,8 +62,13 @@ class GooglePlaySubscriptionService
                 'renews_at' => Carbon::parse($lineItem['expiryTime']),
                 'cancelled_at' => $status === SubscriptionStatus::Expired ? now() : null,
             ];
-            if ($existing !== null) { $existing->fill($attributes)->save(); return $existing; }
+            if ($existing !== null) {
+                $existing->fill($attributes)->save();
+
+                return $existing;
+            }
             $user->subscription()->lockForUpdate()->first()?->delete();
+
             return $user->subscription()->save(new Subscription($attributes)) ?? throw new \LogicException('Could not store the Google Play subscription.');
         });
     }

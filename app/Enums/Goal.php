@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum Goal : string
+enum Goal: string
 {
     case LoseWeight = 'loseWeight';
     case BuildMuscle = 'buildMuscle';

@@ -16,6 +16,8 @@ class TrainingLocation extends Model implements Syncable
     /** @use HasFactory<TrainingLocationFactory> */
     use HasFactory, SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
 
+    protected $guarded = ['id'];
+
     protected function casts(): array
     {
         return ['latitude' => 'decimal:7', 'longitude' => 'decimal:7', 'is_default' => 'boolean', 'equipment' => 'array'];
@@ -24,5 +26,15 @@ class TrainingLocation extends Model implements Syncable
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public static function makeDefault(): TrainingLocation
+    {
+        return TrainingLocation::make([
+            'name' => 'Default',
+            'is_default' => true,
+            'sort_order' => 0,
+            'equipment' => ['dumbbells', 'olympicBarbell', 'flatBench', 'cableMachine', 'pullUpBar'],
+        ]);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Enums;
 
-enum WorkoutFocus : string
+enum WorkoutFocus: string
 {
     case FullBody = 'fullBody';
     case UpperBody = 'upperBody';

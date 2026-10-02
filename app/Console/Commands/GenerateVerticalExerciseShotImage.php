@@ -16,8 +16,8 @@ use Laravel\Ai\Image;
 class GenerateVerticalExerciseShotImage extends Command
 {
     /**
-     * @param array<string, mixed> $exercise
-     * @param array<string, mixed>|null $biomechanics
+     * @param  array<string, mixed>  $exercise
+     * @param  array<string, mixed>|null  $biomechanics
      */
     private function prompt(array $exercise, ?array $biomechanics = null): string
     {
@@ -153,7 +153,7 @@ No artifacts, no extra limbs, no warped equipment';
             ])
             ->portrait()
             ->generate();
-            //->generate(provider: Lab::OpenAI);
+        // ->generate(provider: Lab::OpenAI);
 
         $image->storeAs('vertical/'.$exerciseId.'_'.$gender.'.jpeg');
 
@@ -182,7 +182,7 @@ No artifacts, no extra limbs, no warped equipment';
     }
 
     /**
-     * @param array<string, mixed>|null $biomechanics
+     * @param  array<string, mixed>|null  $biomechanics
      */
     private function biomechanics(?array $biomechanics): string
     {
@@ -210,7 +210,7 @@ PROMPT;
     }
 
     /**
-     * @param array<string, mixed> $data
+     * @param  array<string, mixed>  $data
      */
     private function formatBiomechanics(
         array $data,
@@ -250,4 +250,3 @@ PROMPT;
         return implode("\n", $lines);
     }
 }
-

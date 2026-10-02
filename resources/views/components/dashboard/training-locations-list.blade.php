@@ -20,6 +20,7 @@
     @else
     <div class="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
         {{ __('No training locations configured.') }}
+        <flux:button icon="plus" wire:click="createDefaultLocation()">Create one</flux:button>
     </div>
     @endif
 </div>
