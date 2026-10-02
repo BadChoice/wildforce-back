@@ -1,4 +1,4 @@
-@props(['profile', 'user'])
+@props(['profile'])
 
 <section aria-labelledby="training-profile-heading" class="space-y-4">
     <div class="space-y-4">
