@@ -10,6 +10,7 @@ use App\Models\WorkoutBlock;
 use App\Models\PlannedExercise;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Workouts\SingleWorkoutFromTextGenerator;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -25,6 +26,7 @@ new class extends Component {
 
     public bool $showWorkoutDayEditor = false;
     public bool $showTemplatePicker = false;
+    public bool $showWorkoutFromText = false;
     public ?string $editingWorkoutDayId = null;
     public ?string $selectedScheduledFor = null;
     public string $workoutDayTitle = '';
@@ -32,6 +34,7 @@ new class extends Component {
     public string $workoutDayFocus = 'fullBody';
     public string $workoutDayEstimatedDurationMinutes = '';
     public string $templateSearch = '';
+    public string $workoutText = '';
     public ?string $selectedWorkoutBlockId = null;
     public string $exerciseSearch = '';
     public string $exerciseCategory = '';
@@ -221,13 +224,40 @@ new class extends Component {
         $this->resetValidation();
         $this->editingWorkoutDayId = $workoutDay->id;
         $this->selectedScheduledFor = $workoutDay->scheduled_for?->toDateString();
-        $this->workoutDayTitle = $workoutDay->title;
-        $this->workoutDayNotes = $workoutDay->notes ?? '';
-        $this->workoutDayFocus = $workoutDay->focus;
-        $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
-        $names = collect(Arr::get($this->exerciseCatalog->all(), 'exercises', []))->keyBy('id');
-        $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => ['id' => $block->id, 'type' => $block->type, 'notes' => $block->notes ?? '', 'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => ['id' => $exercise->id, 'exercise' => $exercise->exercise, 'name' => (string) data_get($names->get($exercise->exercise), 'name', $exercise->exercise), 'notes' => $exercise->notes ?? '', 'sets' => $exercise->sets ?? 3, 'reps_min' => $exercise->reps_min ?? 8, 'reps_max' => $exercise->reps_max ?? 12, 'target_weight_kg' => $exercise->target_weight_kg ?? '', 'rest_seconds' => $exercise->rest_seconds ?? 90])->all()])->all();
-        $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
+        $this->fillWorkoutDayEditor($workoutDay);
+        $this->showWorkoutDayEditor = true;
+    }
+
+    public function openWorkoutFromText(string $scheduledFor): void
+    {
+        Gate::authorize('update', $this->workoutPlan);
+
+        $scheduledDate = $this->scheduledDateWithinVisibleWeeks($scheduledFor);
+
+        if ($scheduledDate === null) {
+            return;
+        }
+
+        $this->resetValidation();
+        $this->selectedScheduledFor = $scheduledDate->toDateString();
+        $this->workoutText = '';
+        $this->showWorkoutFromText = true;
+    }
+
+    public function generateWorkoutFromText(SingleWorkoutFromTextGenerator $generator): void
+    {
+        Gate::authorize('update', $this->workoutPlan);
+
+        $validated = $this->validate([
+            'workoutText' => ['required', 'string', 'max:20000'],
+        ]);
+
+        $workoutDay = $generator->generate($this->workoutPlan->user, $validated['workoutText']);
+
+        $this->editingWorkoutDayId = null;
+        $this->fillWorkoutDayEditor($workoutDay);
+        $this->workoutText = '';
+        $this->showWorkoutFromText = false;
         $this->showWorkoutDayEditor = true;
     }
 
@@ -354,6 +384,17 @@ new class extends Component {
         unset($this->workoutsByDate);
     }
 
+    private function fillWorkoutDayEditor(WorkoutDay $workoutDay): void
+    {
+        $names = collect(Arr::get($this->exerciseCatalog->all(), 'exercises', []))->keyBy('id');
+        $this->workoutDayTitle = $workoutDay->title;
+        $this->workoutDayNotes = $workoutDay->notes ?? '';
+        $this->workoutDayFocus = $workoutDay->focus;
+        $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
+        $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => ['id' => $block->id, 'type' => $block->type, 'notes' => $block->notes ?? '', 'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => ['id' => $exercise->id, 'exercise' => $exercise->exercise, 'name' => (string) data_get($names->get($exercise->exercise), 'name', $exercise->exercise), 'notes' => $exercise->notes ?? '', 'sets' => $exercise->sets ?? 3, 'reps_min' => $exercise->reps_min ?? 8, 'reps_max' => $exercise->reps_max ?? 12, 'target_weight_kg' => $exercise->target_weight_kg ?? '', 'rest_seconds' => $exercise->rest_seconds ?? 90])->all()])->all();
+        $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
+    }
+
     private function scheduledDateWithinVisibleWeeks(string $scheduledFor): ?CarbonImmutable
     {
         try {
@@ -408,6 +449,7 @@ new class extends Component {
                                     </flux:menu.item>
 
                                     <flux:menu.separator />
+                                    <flux:menu.item icon="document-text" wire:click="openWorkoutFromText('{{ $dateKey }}')">{{ __('From text') }}</flux:menu.item>
                                     <flux:menu.item icon="document-duplicate" wire:click="openTemplatePicker('{{ $dateKey }}')">{{ __('Add workout from template') }}</flux:menu.item>
                                 </flux:menu>
                             </flux:dropdown>
@@ -437,6 +479,14 @@ new class extends Component {
     <flux:modal wire:model="showTemplatePicker" class="w-full max-w-xl">
         <div class="space-y-4"><div><flux:heading size="lg">{{ __('Add workout from template') }}</flux:heading><flux:text variant="subtle">{{ __('Choose a template to schedule on this day.') }}</flux:text></div><flux:input wire:model.live.debounce.300ms="templateSearch" icon="magnifying-glass" placeholder="{{ __('Search templates') }}" />
             <div class="max-h-96 space-y-2 overflow-y-auto">@forelse ($this->filteredTemplateWorkouts as $templateWorkout)<button type="button" wire:key="picker-template-{{ $templateWorkout->id }}" wire:click="copyTemplateWorkout('{{ $templateWorkout->id }}')" class="flex w-full items-center justify-between rounded-lg border border-zinc-200 p-3 text-left hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"><span><span class="block font-medium">{{ $templateWorkout->title }}</span><span class="text-sm text-zinc-500">{{ str($templateWorkout->focus)->headline() }}</span></span><flux:icon name="plus" class="size-5" /></button>@empty <p class="py-8 text-center text-sm text-zinc-500">{{ __('No templates match the search.') }}</p>@endforelse</div>
+        </div>
+    </flux:modal>
+
+    <flux:modal wire:model="showWorkoutFromText" class="w-full max-w-2xl">
+        <div class="space-y-4">
+            <div><flux:heading size="lg">{{ __('Create workout from text') }}</flux:heading><flux:text variant="subtle">{{ __('Paste a workout and review it before saving.') }}</flux:text></div>
+            <flux:field><flux:label>{{ __('Workout text') }}</flux:label><flux:textarea wire:model="workoutText" rows="12" placeholder="{{ __('1. Row — 59 kg — 3 sets') }}" /><flux:error name="workoutText" /></flux:field>
+            <div class="flex justify-end"><flux:button variant="primary" wire:click="generateWorkoutFromText" wire:loading.attr="disabled">{{ __('Generate workout') }}</flux:button></div>
         </div>
     </flux:modal>
 </div>

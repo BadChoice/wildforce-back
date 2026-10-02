@@ -3,9 +3,7 @@
 namespace App\Services\Workouts;
 
 use App\Ai\Agents\Workouts\SingleWorkoutAgent;
-use App\Models\PlannedExercise;
 use App\Models\User;
-use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
 use Illuminate\Support\Collection;
@@ -14,7 +12,10 @@ use RuntimeException;
 
 final class SingleWorkoutAIGenerator
 {
-    public function __construct(private readonly ExerciseCatalog $exerciseCatalog) {}
+    public function __construct(
+        private readonly ExerciseCatalog $exerciseCatalog,
+        private readonly WorkoutDayResponseMapper $workoutDayResponseMapper,
+    ) {}
 
     /** @param array{goal: string|null, focuses: list<string>, muscleGroups: list<string>, equipment: list<string>, includeWarmup: bool, includeCooldown: bool, durationMinutes: int} $request */
     public function generate(User $user, array $request): WorkoutDay
@@ -33,7 +34,7 @@ final class SingleWorkoutAIGenerator
             throw new RuntimeException('The single workout generator did not return structured data.');
         }
 
-        $workout = $this->workoutFromResponse($user, $response->toArray());
+        $workout = $this->workoutDayResponseMapper->make($user, $response->toArray());
         $this->validateSetStyleConfigurations($workout, $exercises, $user->trainingPreferences?->general_training_level);
 
         return $workout;
@@ -102,46 +103,6 @@ ID | name | target metrics | movement patterns | planning note
 
 Create exactly one workout day. Include warmup and cooldown blocks only when requested. Do not use empty, hidden, or placeholder blocks.
 PROMPT;
-    }
-
-    /** @param array<string, mixed> $response */
-    private function workoutFromResponse(User $user, array $response): WorkoutDay
-    {
-        $workout = new WorkoutDay;
-        $workout->forceFill([
-            'user_id' => $user->id, 'title' => $response['title'], 'focus' => $response['focus'], 'status' => 'planned', 'order_index' => 0,
-            'day_type' => $response['dayType'], 'estimated_duration_minutes' => $response['estimatedDurationMinutes'], 'creation_source' => 'generated', 'notes' => $response['notes'] ?? null,
-        ]);
-        $workout->setRelation('user', $user);
-        $workout->setRelation('blocks', collect($response['blocks'])->values()->map(fn (array $block, int $index): WorkoutBlock => $this->blockFromResponse($workout, $block, $index)));
-
-        return $workout;
-    }
-
-    /** @param array<string, mixed> $response */
-    private function blockFromResponse(WorkoutDay $workout, array $response, int $index): WorkoutBlock
-    {
-        $block = new WorkoutBlock;
-        $block->forceFill(['type' => $response['type'], 'order_index' => $index, 'rounds' => $response['rounds'], 'rest_after_block_seconds' => $response['restAfterBlockSeconds'] ?? null, 'notes' => $response['notes'] ?? null]);
-        $block->setRelation('workoutDay', $workout);
-        $block->setRelation('exercises', collect($response['exercises'])->values()->map(fn (array $exercise, int $exerciseIndex): PlannedExercise => $this->exerciseFromResponse($workout, $block, $exercise, $exerciseIndex)));
-
-        return $block;
-    }
-
-    /** @param array<string, mixed> $response */
-    private function exerciseFromResponse(WorkoutDay $workout, WorkoutBlock $block, array $response, int $index): PlannedExercise
-    {
-        $exercise = new PlannedExercise;
-        $exercise->forceFill([
-            'exercise' => $response['exercise'], 'order_index' => $index, 'sets' => $response['sets'] ?? null, 'reps_min' => $response['repsMin'] ?? null, 'reps_max' => $response['repsMax'] ?? null, 'target_reps' => $response['targetReps'] ?? null,
-            'target_weight_kg' => $response['targetWeightKg'] ?? null, 'target_weights_kg' => $response['targetWeightsKg'] ?? null, 'target_duration_minutes' => $response['targetDurationMinutes'] ?? null, 'target_duration_seconds' => $response['targetDurationSeconds'] ?? null,
-            'target_distance_km' => $response['targetDistanceKm'] ?? null, 'target_pace_seconds_per_km' => $response['targetPaceSecondsPerKm'] ?? null, 'rest_seconds' => $response['restSeconds'] ?? null, 'set_style_configuration' => $response['setStyleConfiguration'] ?? null, 'notes' => $response['notes'] ?? null,
-        ]);
-        $exercise->setRelation('workoutDay', $workout);
-        $exercise->setRelation('block', $block);
-
-        return $exercise;
     }
 
     /** @param Collection<int, array<string, mixed>> $exercises */

@@ -1,5 +1,6 @@
 <?php
 
+use App\Ai\Agents\Workouts\SingleWorkoutFromTextAgent;
 use App\Enums\CoachingEnrollmentStatus;
 use App\Enums\WorkoutKind;
 use App\Models\CoachingEnrollment;
@@ -66,3 +67,28 @@ test('it lets a coach create and delete workout templates from the sidebar page'
 
     $this->assertSoftDeleted('workout_days', ['id' => $template->id]);
 });
+
+test('it fills a new template editor from free-form text', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create(['client_user_id' => $client->id, 'coach_user_id' => $coach->id, 'status' => CoachingEnrollmentStatus::Active, 'starts_at' => now()]);
+    SingleWorkoutFromTextAgent::fake([templateWorkoutFromTextResponse()])->preventStrayPrompts();
+    $this->actingAs($coach);
+
+    Livewire::test('workout-templates.index')
+        ->call('openTemplateFromText')
+        ->set('workoutText', '1. Remo Tandem — 59 kg — 3 series')
+        ->call('generateTemplateFromText')
+        ->assertSet('showWorkoutDayEditor', true)
+        ->assertSet('workoutDayTitle', 'Back template')
+        ->assertSet('workoutDayBlocks.0.exercises.0.target_weight_kg', '59.00');
+});
+
+/** @return array<string, mixed> */
+function templateWorkoutFromTextResponse(): array
+{
+    return [
+        'title' => 'Back template', 'focus' => 'back', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
+        'blocks' => [['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]]],
+    ];
+}

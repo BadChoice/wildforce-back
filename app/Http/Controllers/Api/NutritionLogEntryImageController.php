@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\BodyProgressPhotoSession;
+use App\Models\NutritionLogEntry;
+use App\Models\NutritionLogMedia;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,22 +15,16 @@ use Illuminate\Support\Str;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class BodyProgressPhotoController extends Controller
+class NutritionLogEntryImageController extends Controller
 {
-    private const PhotoPathColumns = [
-        'profile' => 'profile_photo_path',
-        'front' => 'front_photo_path',
-        'torso' => 'torso_photo_path',
-    ];
-
     public function store(
         Request $request,
-        BodyProgressPhotoSession $bodyProgressPhotoSession,
+        NutritionLogEntry $nutritionLogEntry,
     ): JsonResponse {
         /** @var User $user */
         $user = $request->user();
 
-        Gate::authorize('update', $bodyProgressPhotoSession);
+        Gate::authorize('update', $nutritionLogEntry);
 
         $validated = $request->validate([
             'image' => ['required', 'file', 'image', 'mimes:jpg,jpeg', 'max:5120'],
@@ -37,17 +32,27 @@ class BodyProgressPhotoController extends Controller
 
         /** @var UploadedFile $image */
         $image = $validated['image'];
-        $angle = $request->route('angle');
-        $filename = Str::lower($bodyProgressPhotoSession->id)."-{$angle}.jpg";
-        $relativePath = "body-progress-photos/{$filename}";
+        $filename = Str::lower($nutritionLogEntry->id).'.jpg';
+        $relativePath = "nutrition-log-entries/{$filename}";
 
-        if (Storage::putFileAs('body-progress-photos', $image, $filename, ['visibility' => 'private']) === false) {
-            throw new RuntimeException('Unable to store the body progress photo.');
+        if (Storage::putFileAs('nutrition-log-entries', $image, $filename, ['visibility' => 'private']) === false) {
+            throw new RuntimeException('Unable to store the nutrition log entry image.');
         }
 
-        $photoPathColumn = self::PhotoPathColumns[$angle];
+        $media = $nutritionLogEntry->media;
 
-        $bodyProgressPhotoSession->forceFill([$photoPathColumn => $relativePath])->save();
+        if ($media?->source !== 'localPhoto') {
+            $media = new NutritionLogMedia;
+        }
+
+        $media->forceFill([
+            'source' => 'localPhoto',
+            'local_relative_path' => $relativePath,
+            'remote_url' => null,
+        ])->save();
+
+        $nutritionLogEntry->media()->associate($media);
+        $nutritionLogEntry->save();
 
         return response()->json([
             'data' => [
@@ -58,15 +63,14 @@ class BodyProgressPhotoController extends Controller
 
     public function show(
         Request $request,
-        BodyProgressPhotoSession $bodyProgressPhotoSession,
+        NutritionLogEntry $nutritionLogEntry,
     ): StreamedResponse {
         /** @var User $user */
         $user = $request->user();
 
-        Gate::authorize('view', $bodyProgressPhotoSession);
+        Gate::authorize('view', $nutritionLogEntry);
 
-        $angle = $request->route('angle');
-        $path = $bodyProgressPhotoSession->{self::PhotoPathColumns[$angle]};
+        $path = $nutritionLogEntry->media?->local_relative_path;
 
         abort_if($path === null || Storage::missing($path), 404);
 

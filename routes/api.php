@@ -12,8 +12,8 @@ use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\BodyProgressPhotoController;
 use App\Http\Controllers\Api\FeedbackController;
-use App\Http\Controllers\Api\NutritionLogItemImageController;
 use App\Http\Controllers\Api\Nutrition\NutritionPlanGenerationController;
+use App\Http\Controllers\Api\NutritionLogEntryImageController;
 use App\Http\Controllers\Api\Subscription\SubscriptionAccessController;
 use App\Http\Controllers\Api\Subscription\SyncAppStoreTransactionController;
 use App\Http\Controllers\Api\Subscription\SyncGooglePlayPurchaseController;
@@ -58,7 +58,10 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::get('/account/coaches', CoachController::class);
         Route::post('/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}', [BodyProgressPhotoController::class, 'store'])
             ->whereIn('angle', ['profile', 'front', 'torso']);
-        Route::post('/nutrition-log-items/{nutritionLogItem}/image', [NutritionLogItemImageController::class, 'store']);
+        Route::get('/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}', [BodyProgressPhotoController::class, 'show'])
+            ->whereIn('angle', ['profile', 'front', 'torso']);
+        Route::post('/nutrition-log-entries/{nutritionLogEntry}/image', [NutritionLogEntryImageController::class, 'store']);
+        Route::get('/nutrition-log-entries/{nutritionLogEntry}/image', [NutritionLogEntryImageController::class, 'show']);
         Route::post('/sync/push', SyncPushController::class);
         Route::get('/sync/pull', SyncPullController::class);
         Route::post('/sync/pull/batch', BatchSyncPullController::class);

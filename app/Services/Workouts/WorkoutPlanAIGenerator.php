@@ -3,9 +3,7 @@
 namespace App\Services\Workouts;
 
 use App\Ai\Agents\Workouts\WorkoutPlanGeneratorAgent;
-use App\Models\PlannedExercise;
 use App\Models\User;
-use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
@@ -22,7 +20,10 @@ use RuntimeException;
 
 final class WorkoutPlanAIGenerator
 {
-    public function __construct(private readonly ExerciseCatalog $exerciseCatalog) {}
+    public function __construct(
+        private readonly ExerciseCatalog $exerciseCatalog,
+        private readonly WorkoutDayResponseMapper $workoutDayResponseMapper,
+    ) {}
 
     public function generate(User $user): WorkoutPlan
     {
@@ -335,76 +336,12 @@ PROMPT;
      */
     private function workoutDayFromResponse(User $user, WorkoutPlan $plan, array $response, int $dayIndex): WorkoutDay
     {
-        $day = new WorkoutDay;
-        $day->forceFill([
-            'user_id' => $user->id,
-            'title' => $response['title'],
-            'focus' => $response['focus'],
-            'status' => 'planned',
+        $day = $this->workoutDayResponseMapper->make($user, $response, [
             'order_index' => $dayIndex,
-            'intended_weekday' => $response['intendedWeekday'],
-            'day_type' => $response['dayType'],
-            'estimated_duration_minutes' => $response['estimatedDurationMinutes'],
-            'creation_source' => 'generated',
-            'notes' => $response['notes'] ?? null,
         ]);
-        $day->setRelation('user', $user);
         $day->setRelation('plan', $plan);
-        $day->setRelation('blocks', collect($response['blocks'])->values()->map(
-            fn (array $block, int $blockIndex): WorkoutBlock => $this->blockFromResponse($day, $block, $blockIndex),
-        ));
 
         return $day;
-    }
-
-    /**
-     * @param  array<string, mixed>  $response
-     */
-    private function blockFromResponse(WorkoutDay $day, array $response, int $blockIndex): WorkoutBlock
-    {
-        $block = new WorkoutBlock;
-        $block->forceFill([
-            'type' => $response['type'],
-            'order_index' => $blockIndex,
-            'rounds' => $response['rounds'],
-            'rest_after_block_seconds' => $response['restAfterBlockSeconds'] ?? null,
-            'notes' => $response['notes'] ?? null,
-        ]);
-        $block->setRelation('workoutDay', $day);
-        $block->setRelation('exercises', collect($response['exercises'])->values()->map(
-            fn (array $exercise, int $exerciseIndex): PlannedExercise => $this->exerciseFromResponse($day, $block, $exercise, $exerciseIndex),
-        ));
-
-        return $block;
-    }
-
-    /**
-     * @param  array<string, mixed>  $response
-     */
-    private function exerciseFromResponse(WorkoutDay $day, WorkoutBlock $block, array $response, int $exerciseIndex): PlannedExercise
-    {
-        $exercise = new PlannedExercise;
-        $exercise->forceFill([
-            'exercise' => $response['exercise'],
-            'order_index' => $exerciseIndex,
-            'sets' => $response['sets'] ?? null,
-            'reps_min' => $response['repsMin'] ?? null,
-            'reps_max' => $response['repsMax'] ?? null,
-            'target_reps' => $response['targetReps'] ?? null,
-            'target_weight_kg' => $response['targetWeightKg'] ?? null,
-            'target_weights_kg' => $response['targetWeightsKg'] ?? null,
-            'target_duration_minutes' => $response['targetDurationMinutes'] ?? null,
-            'target_duration_seconds' => $response['targetDurationSeconds'] ?? null,
-            'target_distance_km' => $response['targetDistanceKm'] ?? null,
-            'target_pace_seconds_per_km' => $response['targetPaceSecondsPerKm'] ?? null,
-            'rest_seconds' => $response['restSeconds'] ?? null,
-            'set_style_configuration' => $response['setStyleConfiguration'] ?? null,
-            'notes' => $response['notes'] ?? null,
-        ]);
-        $exercise->setRelation('workoutDay', $day);
-        $exercise->setRelation('block', $block);
-
-        return $exercise;
     }
 
     /**
