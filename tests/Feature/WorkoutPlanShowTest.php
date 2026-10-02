@@ -10,10 +10,10 @@ use Livewire\Livewire;
 
 test('it renders scheduled workout days in their calendar cells', function () {
     $user = User::factory()->create();
-    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => '2026-10-05']);
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
     WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
         'title' => 'Upper body',
-        'scheduled_for' => '2026-10-08',
+        'scheduled_for' => now()->startOfWeek()->addDays(3),
     ]);
     $this->actingAs($user);
 
@@ -22,13 +22,30 @@ test('it renders scheduled workout days in their calendar cells', function () {
         ->assertSee('Upper body');
 });
 
-test('it creates a workout day on the selected calendar date', function () {
+test('it renders unscheduled workout days using intended weekday', function () {
     $user = User::factory()->create();
-    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => '2026-10-05']);
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
+    WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'title' => 'Leg day',
+        'scheduled_for' => null,
+        'intended_weekday' => 'wednesday',
+    ]);
     $this->actingAs($user);
 
     Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
-        ->call('createWorkoutDay', '2026-10-08')
+        ->assertSee('Week 1')
+        ->assertSee('Leg day');
+});
+
+test('it creates a workout day on the selected calendar date', function () {
+    $user = User::factory()->create();
+    $currentWeekStart = now()->startOfWeek()->toDateString();
+    $targetDate = now()->startOfWeek()->addDays(3)->toDateString();
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => $currentWeekStart]);
+    $this->actingAs($user);
+
+    Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+        ->call('createWorkoutDay', $targetDate)
         ->assertSet('showWorkoutDayEditor', true)
         ->set('workoutDayTitle', 'Workout day')
         ->call('saveWorkoutDay');
@@ -38,7 +55,7 @@ test('it creates a workout day on the selected calendar date', function () {
         'workout_plan_id' => $workoutPlan->id,
         'kind' => WorkoutKind::Workout->value,
         'title' => 'Workout day',
-        'scheduled_for' => '2026-10-08 00:00:00',
+        'scheduled_for' => $targetDate.' 00:00:00',
     ]);
 });
 
@@ -51,7 +68,9 @@ test('it copies a template into the selected calendar date', function () {
         'status' => CoachingEnrollmentStatus::Active,
         'starts_at' => now(),
     ]);
-    $workoutPlan = WorkoutPlan::factory()->for($client)->create(['starts_on' => '2026-10-05']);
+    $currentWeekStart = now()->startOfWeek()->toDateString();
+    $targetDate = now()->startOfWeek()->addDays(3)->toDateString();
+    $workoutPlan = WorkoutPlan::factory()->for($client)->create(['starts_on' => $currentWeekStart]);
     $templateWorkout = WorkoutDay::factory()->for($coach)->create([
         'kind' => WorkoutKind::Template,
         'title' => 'Lower body',
@@ -59,13 +78,13 @@ test('it copies a template into the selected calendar date', function () {
     $this->actingAs($client);
 
     Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
-        ->call('openTemplatePicker', '2026-10-08')
+        ->call('openTemplatePicker', $targetDate)
         ->assertSee('Add workout from template')
         ->call('copyTemplateWorkout', $templateWorkout->id);
 
     $this->assertDatabaseHas('workout_days', [
         'workout_plan_id' => $workoutPlan->id,
         'source_workout_day_id' => $templateWorkout->id,
-        'scheduled_for' => '2026-10-08 00:00:00',
+        'scheduled_for' => $targetDate.' 00:00:00',
     ]);
 });
