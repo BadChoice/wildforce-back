@@ -44,6 +44,7 @@
                     </div>
                     <x-dashboard.training-profile :profile="$user->trainingPreferences" />
                     <x-dashboard.workout-plan-list :workout-plans="$user->workoutPlans" />
+                    <x-dashboard.equipment-list :trainingLocations="$user->trainingLocations" />
                 </div>
                 @break
 
