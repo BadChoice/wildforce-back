@@ -531,6 +531,8 @@ new class extends Component {
 ?>
 
 <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
+
+    <!-- Header -->
     @php($statusColor = match ($this->workoutPlan->status) { 'active' => 'green', 'completed' => 'indigo', default => 'zinc' })
 
     <div class="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
@@ -567,6 +569,15 @@ new class extends Component {
         </div>
     </div>
 
+    <!-- Display options -->
+    <div class="flex justify-end">
+        <flux:button.group>
+            <flux:button :variant="false ? 'primary' : 'ghost'" size="sm" icon="calendar-days" />
+            <flux:button :variant="true ? 'primary' : 'ghost'"  size="sm" icon="kanban" />
+        </flux:button.group>
+    </div>
+
+    <!-- Calendar -->
     <div class="overflow-x-auto pb-2">
         <div class="grid min-w-[52rem] grid-cols-[32px_repeat(7,minmax(0,1fr))] gap-2">
             @foreach (range(0, 3) as $weekOffset)
@@ -619,6 +630,7 @@ new class extends Component {
         </div>
     </div>
 
+    <!-- Modals -->
     <flux:modal wire:model="showWorkoutDayEditor" :closable="false" class="w-full max-w-7xl p-0">
         <x-dashboard.workout-day-editor :blocks="$workoutDayBlocks" :available-exercises="$this->availableExercises" :categories="$this->categories" :muscle-groups="$this->muscleGroups" :selected-workout-block-id="$selectedWorkoutBlockId" />
     </flux:modal>
