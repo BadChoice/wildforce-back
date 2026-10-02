@@ -107,13 +107,12 @@
                                             <x-exercises.muscles-list :exercise="app(\App\Services\ExerciseCatalog\ExerciseCatalog::class)->exercise($exercise['exercise'])" />
                                         </div>
 
-                                        <flux:popover position="bottom" align="end">
+                                        <flux:dropdown>
                                             <flux:button size="sm" variant="subtle" icon="adjustments-horizontal">
                                                 {{ $selectedStyle ? $selectedStyle->label() : __('Set Style') }}
                                             </flux:button>
 
-                                            <flux:popover.panel class="w-80 space-y-4 p-4">
-                                                <flux:heading size="sm">{{ __('Set Style Configuration') }}</flux:heading>
+                                            <flux:menu class="w-80 space-y-4 p-4">
 
                                                 <flux:field>
                                                     <flux:label>{{ __('Style') }}</flux:label>
@@ -177,8 +176,8 @@
                                                 @if (in_array('applies_to_final_set_only', $allowedFields, true))
                                                     <flux:checkbox label="{{ __('Applies to final set only') }}" wire:model="workoutDayBlocks.{{ $blockIndex }}.exercises.{{ $exerciseIndex }}.set_style_configuration.applies_to_final_set_only" />
                                                 @endif
-                                            </flux:popover.panel>
-                                        </flux:popover>
+                                            </flux:menu>
+                                        </flux:dropdown>
 
                                         <flux:button size="sm" variant="ghost" icon="trash" wire:click="removeExercise('{{ $block['id'] }}', '{{ $exercise['id'] }}')" aria-label="{{ __('Remove :exercise', ['exercise' => $exercise['name']]) }}" />
                                     </div>
