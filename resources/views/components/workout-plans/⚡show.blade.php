@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\CoachingEnrollmentStatus;
+use App\Enums\WorkoutDayStatus;
 use App\Enums\WorkoutKind;
 use App\Enums\Generated\MajorMuscleGroup;
 use App\Enums\Generated\MuscleGroup;
@@ -26,10 +27,12 @@ new class extends Component {
     public WorkoutPlan $workoutPlan;
 
     public bool $showWorkoutDayEditor = false;
+    public bool $showWorkoutDayCompleted = false;
     public bool $showTemplatePicker = false;
     public bool $showWorkoutFromText = false;
     public bool $showWorkoutPlanEditor = false;
     public ?string $editingWorkoutDayId = null;
+    public ?WorkoutDay $viewingWorkoutDay = null;
     public ?string $selectedScheduledFor = null;
     public string $workoutDayTitle = '';
     public string $workoutDayNotes = '';
@@ -193,6 +196,7 @@ new class extends Component {
         ];
 
         return $this->workoutPlan->workoutDays()
+            ->with(['blocks.exercises.exerciseResults', 'directExercises.exerciseResults'])
             ->orderBy('order_index')
             ->get()
             ->groupBy(function (WorkoutDay $workoutDay) use ($baseStart, $visibleStart, $weekdayOffsets): string {
@@ -261,6 +265,29 @@ new class extends Component {
         $this->workoutDayBlocks = [];
         $this->addWorkoutBlock();
         $this->showWorkoutDayEditor = true;
+    }
+
+    public function openWorkoutDay(string $workoutDayId): void
+    {
+        Gate::authorize('view', $this->workoutPlan);
+
+        $workoutDay = $this->workoutPlan->workoutDays()
+            ->with(['blocks.exercises.exerciseResults', 'directExercises.exerciseResults'])
+            ->whereKey($workoutDayId)
+            ->first();
+
+        if ($workoutDay === null) {
+            return;
+        }
+
+        if ($workoutDay->status === WorkoutDayStatus::Completed->value) {
+            $this->viewingWorkoutDay = $workoutDay;
+            $this->showWorkoutDayCompleted = true;
+
+            return;
+        }
+
+        $this->openWorkoutDayEditor($workoutDayId);
     }
 
     public function openWorkoutDayEditor(string $workoutDayId): void
@@ -617,8 +644,16 @@ new class extends Component {
 
                         <div class="space-y-2">
                             @foreach ($this->workoutsByDate->get($dateKey, collect()) as $workoutDay)
-                                <button type="button" wire:key="scheduled-workout-{{ $workoutDay->id }}" wire:click="openWorkoutDayEditor('{{ $workoutDay->id }}')" class="w-full rounded-lg border border-zinc-200 bg-white p-2 text-left text-xs shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800">
-                                    <p class="font-semibold text-zinc-900 dark:text-white">{{ $workoutDay->title }}</p>
+                                @php($statusEnum = WorkoutDayStatus::tryFrom($workoutDay->status ?? ''))
+                                <button type="button" wire:key="scheduled-workout-{{ $workoutDay->id }}" wire:click="openWorkoutDay('{{ $workoutDay->id }}')" class="w-full rounded-lg border border-zinc-200 bg-white p-2 text-left text-xs shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800">
+                                    <div class="flex items-start justify-between gap-1">
+                                        <p class="font-semibold text-zinc-900 dark:text-white">{{ $workoutDay->title }}</p>
+                                        @if ($statusEnum && ! $statusEnum->isDefault())
+                                            <flux:badge size="sm" :color="$statusEnum->color()" :icon="$statusEnum->icon()">
+                                                {{ $statusEnum->label() }}
+                                            </flux:badge>
+                                        @endif
+                                    </div>
                                     <p class="mt-1 text-zinc-500 dark:text-zinc-400">{{ str($workoutDay->focus)->headline() }}</p>
                                     @if ($workoutDay->estimated_duration_minutes)
                                         <p class="mt-1 text-zinc-500 dark:text-zinc-400">{{ trans_choice(':count min', $workoutDay->estimated_duration_minutes, ['count' => $workoutDay->estimated_duration_minutes]) }}</p>
@@ -633,6 +668,12 @@ new class extends Component {
     </div>
 
     <!-- Modals -->
+    <flux:modal wire:model="showWorkoutDayCompleted" class="w-full max-w-4xl p-0">
+        @if ($viewingWorkoutDay)
+            <x-dashboard.workout-day-completed :workout-day="$viewingWorkoutDay" />
+        @endif
+    </flux:modal>
+
     <flux:modal wire:model="showWorkoutDayEditor" :closable="false" class="w-full max-w-7xl p-0">
         <x-dashboard.workout-day-editor :blocks="$workoutDayBlocks" :available-exercises="$this->availableExercises" :categories="$this->categories" :muscle-groups="$this->muscleGroups" :selected-workout-block-id="$selectedWorkoutBlockId" />
     </flux:modal>

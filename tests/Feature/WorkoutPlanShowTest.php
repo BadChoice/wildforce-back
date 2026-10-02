@@ -2,8 +2,10 @@
 
 use App\Ai\Agents\Workouts\SingleWorkoutFromTextAgent;
 use App\Enums\CoachingEnrollmentStatus;
+use App\Enums\WorkoutDayStatus;
 use App\Enums\WorkoutKind;
 use App\Models\CoachingEnrollment;
+use App\Models\ExerciseResult;
 use App\Models\PlannedExercise;
 use App\Models\User;
 use App\Models\WorkoutBlock;
@@ -23,6 +25,105 @@ test('it renders scheduled workout days in their calendar cells', function () {
     Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
         ->assertSee('Week 1')
         ->assertSee('Upper body');
+});
+
+test('it displays status badge for non-default workout day states', function () {
+    $user = User::factory()->create();
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
+
+    WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'title' => 'Completed Leg Day',
+        'status' => WorkoutDayStatus::Completed->value,
+        'scheduled_for' => now()->startOfWeek()->addDays(1),
+    ]);
+
+    WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'title' => 'In Progress Chest Day',
+        'status' => WorkoutDayStatus::InProgress->value,
+        'scheduled_for' => now()->startOfWeek()->addDays(2),
+    ]);
+
+    WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'title' => 'Skipped Arm Day',
+        'status' => WorkoutDayStatus::Skipped->value,
+        'scheduled_for' => now()->startOfWeek()->addDays(3),
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+        ->assertSee('Completed')
+        ->assertSee('In Progress')
+        ->assertSee('Skipped');
+});
+
+test('it opens completed workout day view popup when pressing a completed workout day', function () {
+    $user = User::factory()->create();
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
+
+    $workoutDay = WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'title' => 'Completed Powerlifting',
+        'status' => WorkoutDayStatus::Completed->value,
+        'focus' => 'gainStrength',
+        'estimated_duration_minutes' => 60,
+        'active_calories_burned' => 450,
+        'total_volume_kg' => 2500,
+        'scheduled_for' => now()->startOfWeek()->addDays(1),
+        'completed_at' => now(),
+    ]);
+
+    $block = WorkoutBlock::factory()->for($workoutDay)->create([
+        'type' => 'standard',
+    ]);
+
+    $plannedExercise = PlannedExercise::factory()->for($workoutDay)->for($block, 'block')->create([
+        'exercise' => 'benchPress',
+        'sets' => 3,
+        'reps_min' => 8,
+        'reps_max' => 10,
+        'target_weight_kg' => 80,
+    ]);
+
+    ExerciseResult::factory()->for($plannedExercise)->create([
+        'completed_sets' => 3,
+        'completed_weight' => 82.5,
+        'per_set_reps' => [10, 9, 8],
+        'per_set_weights_kg' => [82.5, 82.5, 82.5],
+        'feedback' => 'justRight',
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+        ->call('openWorkoutDay', $workoutDay->id)
+        ->assertSet('showWorkoutDayCompleted', true)
+        ->assertSet('showWorkoutDayEditor', false)
+        ->assertSee('Completed Powerlifting')
+        ->assertSee('450 kcal')
+        ->assertSee('2,500.0 kg')
+        ->assertSee('Exercise Results')
+        ->assertSee('Logged Results')
+        ->assertSee('82.5 kg')
+        ->assertSee('10 reps');
+});
+
+test('it opens editor when pressing a planned workout day', function () {
+    $user = User::factory()->create();
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
+
+    $workoutDay = WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'title' => 'Planned Cardio',
+        'status' => WorkoutDayStatus::Planned->value,
+        'scheduled_for' => now()->startOfWeek()->addDays(1),
+    ]);
+
+    $this->actingAs($user);
+
+    Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+        ->call('openWorkoutDay', $workoutDay->id)
+        ->assertSet('showWorkoutDayCompleted', false)
+        ->assertSet('showWorkoutDayEditor', true)
+        ->assertSet('workoutDayTitle', 'Planned Cardio');
 });
 
 test('it renders unscheduled workout days using intended weekday', function () {
