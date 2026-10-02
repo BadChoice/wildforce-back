@@ -4,7 +4,9 @@ use App\Ai\Agents\Workouts\SingleWorkoutFromTextAgent;
 use App\Enums\CoachingEnrollmentStatus;
 use App\Enums\WorkoutKind;
 use App\Models\CoachingEnrollment;
+use App\Models\PlannedExercise;
 use App\Models\User;
+use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use Livewire\Livewire;
@@ -97,7 +99,7 @@ test('it fills a new scheduled workout editor from free-form text', function () 
     SingleWorkoutFromTextAgent::fake([workoutFromTextResponse()])->preventStrayPrompts();
     $this->actingAs($user);
 
-    Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+    $component = Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
         ->call('openWorkoutFromText', $targetDate)
         ->assertSet('showWorkoutFromText', true)
         ->set('workoutText', '1. Remo Tandem — 59 kg — 3 series')
@@ -105,7 +107,32 @@ test('it fills a new scheduled workout editor from free-form text', function () 
         ->assertSet('showWorkoutFromText', false)
         ->assertSet('showWorkoutDayEditor', true)
         ->assertSet('workoutDayTitle', 'Back day')
-        ->assertSet('workoutDayBlocks.0.exercises.0.target_weight_kg', '59.00');
+        ->assertSet('workoutDayBlocks.0.exercises.0.target_weight_kg', '59.00')
+        ->assertSee('Block 2');
+
+    $workoutDayBlocks = $component->get('workoutDayBlocks');
+
+    expect($workoutDayBlocks)->toHaveCount(2)
+        ->and($workoutDayBlocks[0]['id'])->toBeString()->not->toBeEmpty()
+        ->and($workoutDayBlocks[1]['id'])->toBeString()->not->toBeEmpty()
+        ->and($workoutDayBlocks[0]['id'])->not->toBe($workoutDayBlocks[1]['id'])
+        ->and($workoutDayBlocks[1]['exercises'][0])->toBeArray();
+
+    $component
+        ->call('selectWorkoutBlock', $workoutDayBlocks[1]['id'])
+        ->assertSet('selectedWorkoutBlockId', $workoutDayBlocks[1]['id'])
+        ->call('saveWorkoutDay')
+        ->assertSet('showWorkoutDayEditor', false);
+
+    $workoutDay = WorkoutDay::query()->where('title', 'Back day')->sole();
+    $workoutBlocks = WorkoutBlock::query()->whereBelongsTo($workoutDay, 'workoutDay')->orderBy('order_index')->get();
+    $plannedExercise = PlannedExercise::query()->whereBelongsTo($workoutBlocks->first(), 'block')->sole();
+
+    expect($workoutDay->workout_plan_id)->toBe($workoutPlan->id)
+        ->and($workoutDay->scheduled_for?->toDateString())->toBe($targetDate)
+        ->and($workoutBlocks)->toHaveCount(2)
+        ->and($plannedExercise->exercise)->toBe('bentOverRow')
+        ->and($plannedExercise->target_weight_kg)->toBe('59.00');
 });
 
 /** @return array<string, mixed> */
@@ -113,6 +140,9 @@ function workoutFromTextResponse(): array
 {
     return [
         'title' => 'Back day', 'focus' => 'back', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
-        'blocks' => [['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]]],
+        'blocks' => [
+            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
+            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'benchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],
+        ],
     ];
 }

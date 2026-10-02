@@ -75,13 +75,32 @@ test('it fills a new template editor from free-form text', function () {
     SingleWorkoutFromTextAgent::fake([templateWorkoutFromTextResponse()])->preventStrayPrompts();
     $this->actingAs($coach);
 
-    Livewire::test('workout-templates.index')
+    $component = Livewire::test('workout-templates.index')
         ->call('openTemplateFromText')
         ->set('workoutText', '1. Remo Tandem — 59 kg — 3 series')
         ->call('generateTemplateFromText')
         ->assertSet('showWorkoutDayEditor', true)
         ->assertSet('workoutDayTitle', 'Back template')
-        ->assertSet('workoutDayBlocks.0.exercises.0.target_weight_kg', '59.00');
+        ->assertSet('workoutDayBlocks.0.exercises.0.target_weight_kg', '59.00')
+        ->assertSee('Block 2');
+
+    $workoutDayBlocks = $component->get('workoutDayBlocks');
+
+    expect($workoutDayBlocks)->toHaveCount(2)
+        ->and($workoutDayBlocks[0]['id'])->toBeString()->not->toBeEmpty()
+        ->and($workoutDayBlocks[1]['id'])->toBeString()->not->toBeEmpty()
+        ->and($workoutDayBlocks[0]['id'])->not->toBe($workoutDayBlocks[1]['id'])
+        ->and($workoutDayBlocks[1]['exercises'][0])->toBeArray();
+
+    $component
+        ->call('selectWorkoutBlock', $workoutDayBlocks[1]['id'])
+        ->assertSet('selectedWorkoutBlockId', $workoutDayBlocks[1]['id'])
+        ->call('saveWorkoutDay')
+        ->assertSet('showWorkoutDayEditor', false);
+
+    $template = WorkoutDay::query()->where('title', 'Back template')->sole();
+
+    expect($template->blocks()->count())->toBe(2);
 });
 
 /** @return array<string, mixed> */
@@ -89,6 +108,9 @@ function templateWorkoutFromTextResponse(): array
 {
     return [
         'title' => 'Back template', 'focus' => 'back', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
-        'blocks' => [['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]]],
+        'blocks' => [
+            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
+            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'benchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],
+        ],
     ];
 }

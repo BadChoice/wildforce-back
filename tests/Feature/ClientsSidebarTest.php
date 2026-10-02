@@ -59,6 +59,7 @@ test('it displays a selected client details and workout plans', function () {
         ->call('selectTab', 'training')
         ->assertSee('Strength foundation')
         ->assertSee('Lower body')
+        ->assertSeeHtml(route('workout-plans.show', $workoutPlan))
         ->assertSee('Progression analysis')
         ->call('openProgressionAnalysis')
         ->assertSet('showProgressionAnalysis', true)

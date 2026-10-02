@@ -225,11 +225,11 @@ new class extends Component
         $this->workoutDayFocus = $workoutDay->focus;
         $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
         $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => [
-            'id' => $block->id,
+            'id' => filled($block->id) ? $block->id : (string) Str::uuid(),
             'type' => $block->type,
             'notes' => $block->notes ?? '',
             'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => [
-                'id' => $exercise->id,
+                'id' => filled($exercise->id) ? $exercise->id : (string) Str::uuid(),
                 'exercise' => $exercise->exercise,
                 'name' => (string) data_get($exerciseNames->get($exercise->exercise), 'name', $exercise->exercise),
                 'notes' => $exercise->notes ?? '',

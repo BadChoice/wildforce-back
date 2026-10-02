@@ -19,8 +19,8 @@
                     </div>
                     <div class="flex items-center gap-2">
                         @if ($editable)
-                            <flux:button type="button" size="sm" variant="ghost" icon="plus" wire:click.stop="openWorkoutDayEditor('{{ $workoutPlan->id }}')">
-                                {{ __('Workout day') }}
+                            <flux:button :href="route('workout-plans.show', $workoutPlan)" size="sm" variant="ghost" icon="arrow-top-right-on-square" wire:navigate>
+                                {{ __('Manage plan') }}
                             </flux:button>
                         @endif
                         <flux:icon name="chevron-down" class="size-5 shrink-0 transition-transform group-open:rotate-180" />

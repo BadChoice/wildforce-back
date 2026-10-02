@@ -305,6 +305,19 @@ new class extends Component {
             'workoutDayNotes' => ['nullable', 'string'],
             'workoutDayFocus' => ['required', 'string', 'max:255'],
             'workoutDayEstimatedDurationMinutes' => ['nullable', 'integer', 'min:1', 'max:1440'],
+            'workoutDayBlocks' => ['required', 'array'],
+            'workoutDayBlocks.*.id' => ['required', 'uuid'],
+            'workoutDayBlocks.*.type' => ['required', 'string', 'max:255'],
+            'workoutDayBlocks.*.notes' => ['nullable', 'string'],
+            'workoutDayBlocks.*.exercises' => ['array'],
+            'workoutDayBlocks.*.exercises.*.id' => ['required', 'uuid'],
+            'workoutDayBlocks.*.exercises.*.exercise' => ['required', 'string', 'max:255'],
+            'workoutDayBlocks.*.exercises.*.notes' => ['nullable', 'string'],
+            'workoutDayBlocks.*.exercises.*.sets' => ['required', 'integer', 'min:1', 'max:100'],
+            'workoutDayBlocks.*.exercises.*.reps_min' => ['required', 'integer', 'min:0', 'max:1000'],
+            'workoutDayBlocks.*.exercises.*.reps_max' => ['required', 'integer', 'gte:workoutDayBlocks.*.exercises.*.reps_min', 'max:1000'],
+            'workoutDayBlocks.*.exercises.*.target_weight_kg' => ['nullable', 'numeric', 'min:0', 'max:999999'],
+            'workoutDayBlocks.*.exercises.*.rest_seconds' => ['required', 'integer', 'min:0', 'max:3600'],
         ]);
         $scheduledDate = $this->selectedScheduledFor === null ? null : $this->scheduledDateWithinVisibleWeeks($this->selectedScheduledFor);
 
@@ -312,33 +325,84 @@ new class extends Component {
             return;
         }
 
-        $workoutDay = $this->editingWorkoutDayId === null
-            ? new WorkoutDay
-            : $this->workoutPlan->workoutDays()->whereKey($this->editingWorkoutDayId)->first();
+        DB::transaction(function () use ($scheduledDate, $validated): void {
+            $workoutDay = $this->editingWorkoutDayId === null
+                ? new WorkoutDay
+                : $this->workoutPlan->workoutDays()->with('blocks.exercises')->whereKey($this->editingWorkoutDayId)->first();
 
-        if ($workoutDay === null) {
-            return;
-        }
+            if ($workoutDay === null) {
+                return;
+            }
 
-        $workoutDay->forceFill([
-            'user_id' => $this->workoutPlan->user_id,
-            'workout_plan_id' => $this->workoutPlan->id,
-            'kind' => WorkoutKind::Workout,
-            'title' => $validated['workoutDayTitle'],
-            'focus' => $validated['workoutDayFocus'],
-            'status' => 'planned',
-            'scheduled_for' => $scheduledDate,
-            'intended_weekday' => strtolower($scheduledDate->format('l')),
-            'estimated_duration_minutes' => $validated['workoutDayEstimatedDurationMinutes'] === '' ? null : $validated['workoutDayEstimatedDurationMinutes'],
-            'notes' => $validated['workoutDayNotes'] ?: null,
-        ]);
+            $workoutDay->forceFill([
+                'user_id' => $this->workoutPlan->user_id,
+                'workout_plan_id' => $this->workoutPlan->id,
+                'kind' => WorkoutKind::Workout,
+                'title' => $validated['workoutDayTitle'],
+                'focus' => $validated['workoutDayFocus'],
+                'status' => 'planned',
+                'scheduled_for' => $scheduledDate,
+                'intended_weekday' => strtolower($scheduledDate->format('l')),
+                'estimated_duration_minutes' => $validated['workoutDayEstimatedDurationMinutes'] === '' ? null : $validated['workoutDayEstimatedDurationMinutes'],
+                'notes' => $validated['workoutDayNotes'] ?: null,
+            ]);
 
-        if (! $workoutDay->exists) {
-            $workoutDay->order_index = ((int) $this->workoutPlan->workoutDays()->max('order_index')) + 1;
-            $workoutDay->creation_source = 'manual';
-        }
+            if (! $workoutDay->exists) {
+                $workoutDay->order_index = ((int) $this->workoutPlan->workoutDays()->max('order_index')) + 1;
+                $workoutDay->creation_source = 'manual';
+            }
 
-        $workoutDay->save();
+            $workoutDay->save();
+
+            $existingBlocks = $workoutDay->blocks->keyBy('id');
+            $submittedBlockIds = collect($validated['workoutDayBlocks'])->pluck('id')->all();
+
+            $existingBlocks
+                ->reject(fn (WorkoutBlock $block): bool => in_array($block->id, $submittedBlockIds, true))
+                ->each(function (WorkoutBlock $block): void {
+                    $block->exercises->each->delete();
+                    $block->delete();
+                });
+
+            foreach ($validated['workoutDayBlocks'] as $blockIndex => $blockData) {
+                $workoutBlock = $existingBlocks->get($blockData['id']) ?? new WorkoutBlock;
+                $workoutBlock->forceFill([
+                    'workout_day_id' => $workoutDay->id,
+                    'type' => $blockData['type'],
+                    'order_index' => $blockIndex,
+                    'rounds' => 1,
+                    'notes' => $blockData['notes'] ?: null,
+                ]);
+                $workoutBlock->save();
+
+                $existingExercises = $existingBlocks->has($workoutBlock->id)
+                    ? $existingBlocks->get($workoutBlock->id)->exercises->keyBy('id')
+                    : collect();
+                $submittedExerciseIds = collect($blockData['exercises'])->pluck('id')->all();
+
+                $existingExercises
+                    ->reject(fn (PlannedExercise $exercise): bool => in_array($exercise->id, $submittedExerciseIds, true))
+                    ->each->delete();
+
+                foreach ($blockData['exercises'] as $exerciseIndex => $exerciseData) {
+                    $plannedExercise = $existingExercises->get($exerciseData['id']) ?? new PlannedExercise;
+                    $plannedExercise->forceFill([
+                        'workout_day_id' => $workoutDay->id,
+                        'workout_block_id' => $workoutBlock->id,
+                        'exercise' => $exerciseData['exercise'],
+                        'order_index' => $exerciseIndex,
+                        'sets' => $exerciseData['sets'],
+                        'reps_min' => $exerciseData['reps_min'],
+                        'reps_max' => $exerciseData['reps_max'],
+                        'target_weight_kg' => $exerciseData['target_weight_kg'] === '' ? null : $exerciseData['target_weight_kg'],
+                        'rest_seconds' => $exerciseData['rest_seconds'],
+                        'notes' => $exerciseData['notes'] ?: null,
+                    ]);
+                    $plannedExercise->save();
+                }
+            }
+        });
+
         $this->showWorkoutDayEditor = false;
         unset($this->workoutsByDate);
     }
@@ -391,7 +455,7 @@ new class extends Component {
         $this->workoutDayNotes = $workoutDay->notes ?? '';
         $this->workoutDayFocus = $workoutDay->focus;
         $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
-        $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => ['id' => $block->id, 'type' => $block->type, 'notes' => $block->notes ?? '', 'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => ['id' => $exercise->id, 'exercise' => $exercise->exercise, 'name' => (string) data_get($names->get($exercise->exercise), 'name', $exercise->exercise), 'notes' => $exercise->notes ?? '', 'sets' => $exercise->sets ?? 3, 'reps_min' => $exercise->reps_min ?? 8, 'reps_max' => $exercise->reps_max ?? 12, 'target_weight_kg' => $exercise->target_weight_kg ?? '', 'rest_seconds' => $exercise->rest_seconds ?? 90])->all()])->all();
+        $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => ['id' => filled($block->id) ? $block->id : (string) Str::uuid(), 'type' => $block->type, 'notes' => $block->notes ?? '', 'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => ['id' => filled($exercise->id) ? $exercise->id : (string) Str::uuid(), 'exercise' => $exercise->exercise, 'name' => (string) data_get($names->get($exercise->exercise), 'name', $exercise->exercise), 'notes' => $exercise->notes ?? '', 'sets' => $exercise->sets ?? 3, 'reps_min' => $exercise->reps_min ?? 8, 'reps_max' => $exercise->reps_max ?? 12, 'target_weight_kg' => $exercise->target_weight_kg ?? '', 'rest_seconds' => $exercise->rest_seconds ?? 90])->all()])->all();
         $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
     }
 
