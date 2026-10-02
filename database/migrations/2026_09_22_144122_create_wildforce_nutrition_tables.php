@@ -47,7 +47,6 @@ return new class extends Migration
             $table->decimal('protein_grams', 10, 2)->default(0);
             $table->decimal('carbs_grams', 10, 2)->default(0);
             $table->decimal('fat_grams', 10, 2)->default(0);
-            $table->string('image_path')->nullable();
             $table->text('notes')->nullable();
             $table->unsignedSmallInteger('order_index')->default(0);
             $table->timestamps();

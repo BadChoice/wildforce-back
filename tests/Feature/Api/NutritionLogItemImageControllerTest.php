@@ -23,7 +23,6 @@ test('it stores an image for a nutrition log item on the default private disk', 
         ->assertJsonPath('data.path', $path);
 
     Storage::disk(config('filesystems.default'))->assertExists($path);
-    expect($item->fresh()->image_path)->toBe($path);
 });
 
 test('it returns 404 when uploading an image for another user nutrition log item', function () {

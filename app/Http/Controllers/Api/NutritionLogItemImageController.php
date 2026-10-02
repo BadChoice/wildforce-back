@@ -37,8 +37,6 @@ class NutritionLogItemImageController extends Controller
             throw new RuntimeException('Unable to store the nutrition log item image.');
         }
 
-        $nutritionLogItem->forceFill(['image_path' => $relativePath])->save();
-
         return response()->json([
             'data' => [
                 'path' => $relativePath,
