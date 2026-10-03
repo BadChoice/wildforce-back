@@ -280,7 +280,7 @@ new class extends Component {
             return;
         }
 
-        if ($workoutDay->status === WorkoutDayStatus::Completed->value) {
+        if (in_array($workoutDay->status, [WorkoutDayStatus::Completed->value, WorkoutDayStatus::InProgress->value])) {
             $this->openWorkoutDayCompleted($workoutDay);
 
             return;

@@ -4,14 +4,16 @@ namespace App\Enums;
 
 enum WorkoutDayStatus: string
 {
+    case Draft = 'draft';
     case Planned = 'planned';
-    case InProgress = 'in_progress';
+    case InProgress = 'inProgress';
     case Completed = 'completed';
     case Skipped = 'skipped';
 
     public function label(): string
     {
         return match ($this) {
+            self::Draft => __('Draft'),
             self::Planned => __('Planned'),
             self::InProgress => __('In Progress'),
             self::Completed => __('Completed'),
@@ -22,8 +24,9 @@ enum WorkoutDayStatus: string
     public function color(): string
     {
         return match ($this) {
+            self::Draft => 'teal',
             self::Planned => 'zinc',
-            self::InProgress => 'sky',
+            self::InProgress => 'yellow',
             self::Completed => 'emerald',
             self::Skipped => 'amber',
         };
@@ -32,6 +35,7 @@ enum WorkoutDayStatus: string
     public function icon(): string
     {
         return match ($this) {
+            self::Draft => 'document',
             self::Planned => 'calendar',
             self::InProgress => 'play-circle',
             self::Completed => 'check-circle',
