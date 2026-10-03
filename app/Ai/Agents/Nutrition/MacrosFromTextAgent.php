@@ -13,7 +13,6 @@ use Laravel\Ai\Promptable;
 
 #[Provider('openai')]
 #[Model('gpt-5.6-luna')]
-#[Reasoning('low')]
 class MacrosFromTextAgent implements Agent, HasStructuredOutput, HasProviderOptions
 {
 
@@ -78,5 +77,6 @@ class MacrosFromTextAgent implements Agent, HasStructuredOutput, HasProviderOpti
             ]))->required(),
             'estimatedMacros' => $macros,
             'analysisNotes' =>  $schema->string()->nullable()
+        ];
     }
 }
