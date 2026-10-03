@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\Equipment;
 use Database\Factories\TrainingLocationFactory;
+use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +22,12 @@ class TrainingLocation extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['latitude' => 'decimal:7', 'longitude' => 'decimal:7', 'is_default' => 'boolean', 'equipment' => 'array'];
+        return [
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
+            'is_default' => 'boolean',
+            'equipment' => AsEnumCollection::of(Equipment::class),
+        ];
     }
 
     public function user(): BelongsTo
@@ -34,7 +41,13 @@ class TrainingLocation extends Model implements Syncable
             'name' => 'Default',
             'is_default' => true,
             'sort_order' => 0,
-            'equipment' => ['dumbbells', 'olympicBarbell', 'flatBench', 'cableMachine', 'pullUpBar'],
+            'equipment' => [
+                Equipment::Dumbbells,
+                Equipment::OlympicBarbell,
+                Equipment::FlatBench,
+                Equipment::CableMachine,
+                Equipment::PullUpBar,
+            ],
         ]);
     }
 }
