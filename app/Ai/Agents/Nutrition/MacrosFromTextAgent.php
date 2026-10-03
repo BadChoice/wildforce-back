@@ -13,21 +13,21 @@ use Laravel\Ai\Promptable;
 
 #[Provider('openai')]
 #[Model('gpt-5.6-luna')]
-class MacrosFromTextAgent implements Agent, HasStructuredOutput, HasProviderOptions
+class MacrosFromTextAgent implements Agent, HasProviderOptions, HasStructuredOutput
 {
-
     use Promptable;
 
-    public function __construct() {}
+    public function __construct(public string $language) {}
 
-    public function instructions(): string {
-        return <<<INSTRUCTIONS
+    public function instructions(): string
+    {
+        $instruction = <<<INSTRUCTIONS
         You are an expert nutrition coach.
         The user will provide a text description of what they ate.
         Your task is to analyze the description and estimate the meal's macronutrients and kilocalories.
 
-        The response must be in \(language).
-        Write the `title`, `name`, and `analysisNotes` fields in \(language).
+        The response must be in {language}.
+        Write the `title`, `name`, and `analysisNotes` fields in {language}.
         Write `canonicalFoodName` in English as a stable food lookup term.
 
         Rules:
@@ -45,6 +45,8 @@ class MacrosFromTextAgent implements Agent, HasStructuredOutput, HasProviderOpti
 
         Return only structured data matching the schema.
     INSTRUCTIONS;
+
+        return str_replace("{language}", $this->language, $instruction);
     }
 
     public function providerOptions(Lab|string $provider): array
@@ -57,10 +59,9 @@ class MacrosFromTextAgent implements Agent, HasStructuredOutput, HasProviderOpti
         };
     }
 
-
     public function schema(JsonSchema $schema): array
     {
-        $macros = fn(JsonSchema $schema): array => [
+        $macros = fn (JsonSchema $schema): array => [
             'calories' => $schema->number()->min(0)->required(),
             'protein' => $schema->number()->min(0)->required(),
             'carbs' => $schema->number()->min(0)->required(),
@@ -68,15 +69,15 @@ class MacrosFromTextAgent implements Agent, HasStructuredOutput, HasProviderOpti
         ];
 
         return [
-            'title' => $schema->string()->description("A user facing title of the analysed food. Ex: Fish with Chips")->required(),
+            'title' => $schema->string()->description('A user facing title of the analysed food. Ex: Fish with Chips')->required(),
             'estimatedFoods' => $schema->array()->items($schema->object(fn (JsonSchema $schema): array => [
-                "name" => $schema->string()->required(),
-                "canonicalFoodName"=> $schema->string()->required()->description("English canonical lookup name for this food"),
-                "amountGrams"=> $schema->integer()->required(),
-                "estimatedMacros"=> $macros,
+                'name' => $schema->string()->required(),
+                'canonicalFoodName' => $schema->string()->required()->description('English canonical lookup name for this food'),
+                'amountGrams' => $schema->integer()->required(),
+                'estimatedMacros' => $macros,
             ]))->required(),
             'estimatedMacros' => $macros,
-            'analysisNotes' =>  $schema->string()->nullable()
+            'analysisNotes' => $schema->string()->nullable(),
         ];
     }
 }
