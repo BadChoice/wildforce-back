@@ -1,18 +1,28 @@
-@props(['trainingLocations', 'editable' => false])
+@props(['trainingLocations', 'userId', 'editable' => false])
 
 <div class="pt-4 border-t border-zinc-200 dark:border-zinc-700">
-    <flux:heading size="sm" class="mb-2">{{ __('Training locations') }}</flux:heading>
+    <div class="flex items-center justify-between mb-2">
+        <flux:heading size="sm">{{ __('Training locations') }}</flux:heading>
+        <flux:button size="xs" variant="ghost" icon="plus" wire:click="$dispatch('open-training-location-modal', { userId: '{{ $userId }}' })">
+            {{ __('Add location') }}
+        </flux:button>
+    </div>
 
     @if ($trainingLocations && $trainingLocations->isNotEmpty())
     <flux:table>
         @foreach ($trainingLocations as $location)
         <flux:table.row class="text-xs">
-
-            @php logger($location->equipment) @endphp
-            @php logger(count($location->equipment)) @endphp
-            <flux:table.cell class=""><span class="text-black">{{ $location->name }}</span></flux:table.cell>
+            <flux:table.cell>
+                <span class="font-medium text-zinc-900 dark:text-zinc-100">{{ $location->name }}</span>
+                @if ($location->is_default)
+                    <flux:badge size="sm" color="zinc" class="ml-2">{{ __('Default') }}</flux:badge>
+                @endif
+            </flux:table.cell>
+            <flux:table.cell class="text-right">
+                {{ trans_choice('{1} :count equipment|[2,*] :count equipments', is_countable($location->equipment) ? count($location->equipment) : 0) }}
+            </flux:table.cell>
             <flux:table.cell class="w-px text-right">
-                {{ trans_choice('{1} :count equipment|[2,*] :count equipments', count($location->equipment)) }}
+                <flux:button size="xs" variant="ghost" icon="ellipsis-horizontal" wire:click="$dispatch('open-training-location-modal', { userId: '{{ $userId }}', locationId: '{{ $location->id }}' })" aria-label="{{ __('Edit location') }}" />
             </flux:table.cell>
         </flux:table.row>
         @endforeach

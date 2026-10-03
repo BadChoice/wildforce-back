@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Equipment;
 use App\Models\TrainingLocation;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -27,7 +28,13 @@ class TrainingLocationFactory extends Factory
             'longitude' => fake()->longitude(2.10, 2.25),
             'is_default' => true,
             'sort_order' => 0,
-            'equipment' => ['dumbbells', 'olympicBarbell', 'flatBench', 'cableMachine', 'pullUpBar'],
+            'equipment' => [
+                Equipment::Dumbbells,
+                Equipment::OlympicBarbell,
+                Equipment::FlatBench,
+                Equipment::CableMachine,
+                Equipment::PullUpBar,
+            ],
         ];
     }
 }
