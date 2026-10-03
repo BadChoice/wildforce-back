@@ -647,6 +647,8 @@ new class extends Component {
         :error="$planPromptPreview->error"
     />
 
+    <x-dashboard.⚡training-location-modal />
+
     @if ($showCoachingEnrollmentForm)
         <flux:modal wire:model="showCoachingEnrollmentForm" class="w-full max-w-lg">
             <form wire:submit="saveCoachingEnrollment" class="space-y-6">

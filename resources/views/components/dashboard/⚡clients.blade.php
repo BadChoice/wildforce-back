@@ -845,5 +845,7 @@ new class extends Component
         </flux:modal>
     @endif
 
+    <x-dashboard.⚡training-location-modal />
+
     <livewire:workout-plans.create-plan-modal />
 </div>

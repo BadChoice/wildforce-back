@@ -1,9 +1,9 @@
-@props(['trainingLocations', 'editable' => false])
+@props(['trainingLocations', 'userId', 'editable' => false])
 
 <div class="pt-4 border-t border-zinc-200 dark:border-zinc-700">
     <div class="flex items-center justify-between mb-2">
         <flux:heading size="sm">{{ __('Training locations') }}</flux:heading>
-        <flux:button size="xs" variant="ghost" icon="plus" wire:click="openTrainingLocationModal()">
+        <flux:button size="xs" variant="ghost" icon="plus" wire:click="$dispatch('open-training-location-modal', { userId: '{{ $userId }}' })">
             {{ __('Add location') }}
         </flux:button>
     </div>
@@ -22,7 +22,7 @@
                 {{ trans_choice('{1} :count equipment|[2,*] :count equipments', is_countable($location->equipment) ? count($location->equipment) : 0) }}
             </flux:table.cell>
             <flux:table.cell class="w-px text-right">
-                <flux:button size="xs" variant="ghost" icon="ellipsis-horizontal" wire:click="editTrainingLocation('{{ $location->id }}')" aria-label="{{ __('Edit location') }}" />
+                <flux:button size="xs" variant="ghost" icon="ellipsis-horizontal" wire:click="$dispatch('open-training-location-modal', { userId: '{{ $userId }}', locationId: '{{ $location->id }}' })" aria-label="{{ __('Edit location') }}" />
             </flux:table.cell>
         </flux:table.row>
         @endforeach
