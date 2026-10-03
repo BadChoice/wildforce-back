@@ -6,13 +6,14 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\HasProviderOptions;
 use Laravel\Ai\Contracts\HasStructuredOutput;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Promptable;
 
 #[Provider('openai')]
 #[Model('gpt-5.6-luna')]
-#[Reasoning('medium')]
-final class SingleWorkoutFromTextAgent implements Agent, HasStructuredOutput
+final class SingleWorkoutFromTextAgent implements Agent, HasStructuredOutput, HasProviderOptions
 {
     use Promptable;
 
@@ -30,6 +31,16 @@ Preserve explicitly stated sets, loads, reps, and notes. For each resistance exe
 
 Return only the structured workout day.
 INSTRUCTIONS;
+    }
+
+    public function providerOptions(Lab|string $provider): array
+    {
+        return match ($provider) {
+            Lab::OpenAI => [
+                'reasoning' => ['effort' => 'low'],
+            ],
+            default => [],
+        };
     }
 
     public function schema(JsonSchema $schema): array

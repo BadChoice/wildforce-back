@@ -8,14 +8,15 @@ use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Attributes\Temperature;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\HasProviderOptions;
 use Laravel\Ai\Contracts\HasStructuredOutput;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Promptable;
 
 #[Provider('openai')]
 #[Model('gpt-5.6-luna')]
-// #[Temperature(0.2)]
-#[Effort('medium')]
-final class WorkoutPlanGeneratorAgent implements Agent, HasStructuredOutput
+
+final class WorkoutPlanGeneratorAgent implements Agent, HasStructuredOutput, HasProviderOptions
 {
     use Promptable;
 
@@ -50,6 +51,16 @@ For intermediate and advanced users, include `setStyleConfiguration` with a `sty
 
 Return only the structured plan. Do not include medical advice or prose outside the structured response.
 INSTRUCTIONS;
+    }
+
+    public function providerOptions(Lab|string $provider): array
+    {
+        return match ($provider) {
+            Lab::OpenAI => [
+                'reasoning' => ['effort' => 'medium'],
+            ],
+            default => [],
+        };
     }
 
     /**

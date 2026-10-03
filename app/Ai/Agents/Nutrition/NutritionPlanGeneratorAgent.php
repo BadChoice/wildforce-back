@@ -8,13 +8,14 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\HasProviderOptions;
 use Laravel\Ai\Contracts\HasStructuredOutput;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Promptable;
 
 #[Provider('openai')]
 #[Model('gpt-5.6-luna')]
-#[Effort('medium')]
-final class NutritionPlanGeneratorAgent implements Agent, HasStructuredOutput
+final class NutritionPlanGeneratorAgent implements Agent, HasStructuredOutput, HasProviderOptions
 {
     use Promptable;
 
@@ -38,6 +39,16 @@ Follow these priorities, in order:
 
 {$mealSuggestionRule}
 INSTRUCTIONS;
+    }
+
+    public function providerOptions(Lab|string $provider): array
+    {
+        return match ($provider) {
+            Lab::OpenAI => [
+                'reasoning' => ['effort' => 'medium'],
+            ],
+            default => [],
+        };
     }
 
     public function schema(JsonSchema $schema): array
