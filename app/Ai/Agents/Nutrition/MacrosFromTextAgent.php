@@ -21,7 +21,7 @@ class MacrosFromTextAgent implements Agent, HasProviderOptions, HasStructuredOut
 
     public function instructions(): string
     {
-        $instruction = <<<INSTRUCTIONS
+        $instruction = <<<'INSTRUCTIONS'
         You are an expert nutrition coach.
         The user will provide a text description of what they ate.
         Your task is to analyze the description and estimate the meal's macronutrients and kilocalories.
@@ -46,7 +46,7 @@ class MacrosFromTextAgent implements Agent, HasProviderOptions, HasStructuredOut
         Return only structured data matching the schema.
     INSTRUCTIONS;
 
-        return str_replace("{language}", $this->language, $instruction);
+        return str_replace('{language}', $this->language, $instruction);
     }
 
     public function providerOptions(Lab|string $provider): array
