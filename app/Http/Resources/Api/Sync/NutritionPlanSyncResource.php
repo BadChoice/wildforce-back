@@ -19,21 +19,11 @@ class NutritionPlanSyncResource extends JsonResource
         return [
             ...$plan->syncPayload(),
             'days' => $plan->days->sortBy(['date', 'id'])->map(fn (NutritionDay $day) => [
-                ...$this->withoutRelationshipKeys($day->syncPayload(), ['nutrition_plan_id']),
+                ...$day->syncPayload(),
                 'meals' => $day->meals->sortBy(['order_index', 'id'])->map(
-                    fn (NutritionMeal $meal) => $this->withoutRelationshipKeys($meal->syncPayload(), ['nutrition_day_id']),
+                    fn (NutritionMeal $meal) => $meal->syncPayload(),
                 )->values()->all(),
             ])->values()->all(),
         ];
-    }
-
-    /**
-     * @param  array<string, mixed>  $payload
-     * @param  list<string>  $keys
-     * @return array<string, mixed>
-     */
-    private function withoutRelationshipKeys(array $payload, array $keys): array
-    {
-        return array_diff_key($payload, array_flip($keys));
     }
 }
