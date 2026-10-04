@@ -31,6 +31,7 @@ test('it returns changed records and soft-deleted tombstones for the authenticat
     $response->assertOk()
         ->assertJsonPath('meta.resource', 'training-locations')
         ->assertJsonCount(2, 'data')
+        ->assertJsonPath('data.0.user_id', $user->id)
         ->assertJsonFragment(['id' => $location->id, 'deleted_at' => null])
         ->assertJsonFragment(['id' => $deletedLocation->id])
         ->assertJsonMissing(['id' => $otherLocation->id]);
@@ -51,6 +52,7 @@ test('it pulls only the authenticated user body metric entries', function () {
         ->assertJsonPath('meta.resource', 'body-metric-entries')
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $bodyMetricEntry->id)
+        ->assertJsonPath('data.0.user_id', $user->id)
         ->assertJsonPath('data.0.type', 'weight')
         ->assertJsonPath('data.0.value', 74.5)
         ->assertJsonPath('data.0.recorded_at', '2026-09-30T07:30:00.000000Z')
@@ -97,6 +99,7 @@ test('it pulls the authenticated user subscription without sensitive provider de
         ->assertJsonPath('meta.resource', 'subscriptions')
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $subscription->id)
+        ->assertJsonPath('data.0.user_id', $user->id)
         ->assertJsonPath('data.0.plan', 'trial')
         ->assertJsonPath('data.0.provider', 'internal')
         ->assertJsonPath('data.0.status', 'active')
@@ -136,10 +139,15 @@ test('it pulls a complete workout day when an exercise result changed', function
     $response->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $workoutDay->id)
+        ->assertJsonPath('data.0.user_id', $user->id)
         ->assertJsonPath('data.0.kind', 'workout')
         ->assertJsonPath('data.0.blocks.0.id', $block->id)
+        ->assertJsonPath('data.0.blocks.0.workout_day_id', $workoutDay->id)
         ->assertJsonPath('data.0.blocks.0.exercises.0.id', $exercise->id)
+        ->assertJsonPath('data.0.blocks.0.exercises.0.workout_day_id', $workoutDay->id)
+        ->assertJsonPath('data.0.blocks.0.exercises.0.workout_block_id', $block->id)
         ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.id', $result->id)
+        ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.planned_exercise_id', $exercise->id)
         ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.watch_set_summary', [
             'rep_count' => 8,
             'cadence_r_p_m' => 0,
@@ -166,8 +174,11 @@ test('it pulls a complete nutrition plan when a meal changed', function () {
     $response->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $plan->id)
+        ->assertJsonPath('data.0.user_id', $user->id)
         ->assertJsonPath('data.0.days.0.id', $day->id)
-        ->assertJsonPath('data.0.days.0.meals.0.id', $meal->id);
+        ->assertJsonPath('data.0.days.0.nutrition_plan_id', $plan->id)
+        ->assertJsonPath('data.0.days.0.meals.0.id', $meal->id)
+        ->assertJsonPath('data.0.days.0.meals.0.nutrition_day_id', $day->id);
 });
 
 function makeTrainingLocation(User $user, string $name, string $updatedAt): TrainingLocation

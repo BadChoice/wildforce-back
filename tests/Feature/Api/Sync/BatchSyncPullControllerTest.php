@@ -69,8 +69,10 @@ test('emits nutrition log entries before their items at the same timestamp', fun
     $response->assertOk()
         ->assertJsonPath('data.0.resource', 'nutrition-log-entries')
         ->assertJsonPath('data.0.record.id', $entry->id)
+        ->assertJsonPath('data.0.record.user_id', $user->id)
         ->assertJsonPath('data.1.resource', 'nutrition-log-items')
-        ->assertJsonPath('data.1.record.id', $item->id);
+        ->assertJsonPath('data.1.record.id', $item->id)
+        ->assertJsonPath('data.1.record.nutrition_log_entry_id', $entry->id);
 });
 
 test('uses a fixed as of timestamp and resumes without duplicate records', function () {

@@ -24,7 +24,7 @@ trait SyncsWithUser
      */
     protected static function syncExcludedAttributes(): array
     {
-        return ['id', 'user_id', 'created_at', 'updated_at', 'deleted_at'];
+        return ['id', 'created_at', 'updated_at', 'deleted_at'];
     }
 
     public function scopeForUser(Builder $query, User $user): Builder

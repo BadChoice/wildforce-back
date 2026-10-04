@@ -86,6 +86,6 @@ class WorkoutDay extends Model implements Syncable
      */
     protected static function syncExcludedAttributes(): array
     {
-        return ['id', 'user_id', 'created_at', 'updated_at', 'deleted_at', 'source_workout_day_id'];
+        return ['id', 'created_at', 'updated_at', 'deleted_at'];
     }
 }
