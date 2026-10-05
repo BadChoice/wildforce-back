@@ -62,8 +62,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
             'is_admin' => 'boolean',
             'birth_date' => 'date',
             'last_completed_workout_at' => 'datetime',
-            'height_cm' => 'integer',
-            'weight_kg' => 'decimal:2',
+            'height' => 'integer',
+            'weight' => 'decimal:2',
             'password' => 'hashed',
         ];
     }

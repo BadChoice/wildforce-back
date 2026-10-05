@@ -123,8 +123,8 @@ test('it does not rewrite an existing primary key when UUID casing differs', fun
             'created_at' => '2030-09-22T12:00:00Z',
             'updated_at' => '2030-09-23T12:00:00Z',
             'name' => 'Updated user',
-            'height_cm' => 170,
-            'weight_kg' => 70,
+            'height' => 170,
+            'weight' => 70,
             'birth_date' => '1990-01-01',
             'gender' => 'male',
             'language' => 'en',
@@ -137,7 +137,9 @@ test('it does not rewrite an existing primary key when UUID casing differs', fun
     ]);
 
     $response->assertOk()
-        ->assertJsonPath('data.0.name', 'Updated user');
+        ->assertJsonPath('data.0.name', 'Updated user')
+        ->assertJsonPath('data.0.height', 170)
+        ->assertJsonPath('data.0.weight', 70);
 
     expect($location->fresh()->user_id)->toBe($user->id);
 });

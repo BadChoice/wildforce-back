@@ -107,8 +107,8 @@ final class NutritionPlanAIGenerator
 - Training level: {$preferences?->general_training_level}
 - Lifestyle: {$preferences?->lifestyle}
 - Age: {$user->birth_date->age}
-- Height: {$user->height_cm} cm
-- Weight: {$user->weight_kg} kg
+- Height: {$user->height} cm
+- Weight: {$user->weight} kg
 - Gender: {$user->gender}
 - Preferred language: {$user->language}
 

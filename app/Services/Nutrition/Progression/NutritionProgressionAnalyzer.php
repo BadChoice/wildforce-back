@@ -25,7 +25,7 @@ final class NutritionProgressionAnalyzer
             throw new RuntimeException('Nutrition plan generation requires a nutrition profile.');
         }
 
-        if ($this->user->height_cm === null || $this->user->weight_kg === null || $this->user->birth_date === null || $this->user->gender === null) {
+        if ($this->user->height === null || $this->user->weight === null || $this->user->birth_date === null || $this->user->gender === null) {
             throw new RuntimeException('Nutrition plan generation requires height, weight, birth date, and gender.');
         }
 
@@ -83,7 +83,7 @@ final class NutritionProgressionAnalyzer
      */
     private function macros(int $maintenanceCalories, string $phase, string $goal, array $demand): array
     {
-        $weight = (float) $this->user->weight_kg;
+        $weight = (float) $this->user->weight;
         $calories = $maintenanceCalories + $this->bodyCompositionAdjustment($phase, $goal) + $demand['calorieAdjustment'];
         $bmr = $this->bmr();
         $minimum = max($this->user->gender === 'male' ? 1500 : 1200, (int) round($bmr * 1.10), (int) round($maintenanceCalories * 0.75));
@@ -113,7 +113,7 @@ final class NutritionProgressionAnalyzer
 
     private function bmr(): float
     {
-        return (10 * (float) $this->user->weight_kg) + (6.25 * $this->user->height_cm) - (5 * $this->user->birth_date->age) + ($this->user->gender === 'male' ? 5 : -161);
+        return (10 * (float) $this->user->weight) + (6.25 * $this->user->height) - (5 * $this->user->birth_date->age) + ($this->user->gender === 'male' ? 5 : -161);
     }
 
     private function bodyCompositionPhase(?string $phase, string $goal): string

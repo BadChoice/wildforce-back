@@ -10,8 +10,8 @@ use App\Services\Nutrition\Progression\NutritionProgressionAnalyzer;
 test('calculates deterministic targets from the user and scheduled workout demand', function () {
     $this->travelTo('2026-10-05 09:00:00');
     $user = User::factory()->create([
-        'height_cm' => 180,
-        'weight_kg' => 80,
+        'height' => 180,
+        'weight' => 80,
         'birth_date' => '1996-10-05',
         'gender' => 'male',
         'language' => 'en',

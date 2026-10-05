@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Auth;
 
 use App\Concerns\PasswordValidationRules;
+use App\Enums\WorkoutFocus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -41,7 +42,7 @@ class RegisterRequest extends FormRequest
             'training_profile.workout_days' => ['required', 'array', 'min:1', 'max:7'],
             'training_profile.workout_days.*' => ['required', 'string', 'distinct', Rule::in(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])],
             'training_profile.custom_workout_focuses' => ['nullable', 'array'],
-            'training_profile.custom_workout_focuses.*' => ['required', 'string', Rule::in(['fullBody', 'upperBody', 'lowerBody', 'push', 'pull', 'legs', 'cardio', 'mobility', 'recovery', 'core'])],
+            'training_profile.custom_workout_focuses.*' => ['required', 'string', Rule::in(WorkoutFocus::allCasesArray())],
             'training_profile.movement_restrictions' => ['nullable', 'array'],
             'training_profile.movement_restrictions.*' => ['required', 'string', Rule::in(['lowerBackPain', 'shoulderPain', 'kneePain', 'hipPain', 'anklePain', 'wristPain', 'elbowPain', 'neckPain', 'limitedShoulderMobility', 'limitedHipMobility', 'limitedAnkleMobility', 'limitedKneeFlexion', 'overheadMovementLimitation', 'impactSensitivity'])],
             'training_profile.body_composition_phase' => ['nullable', 'string', Rule::in(['automatic', 'bulk', 'cut', 'maintain'])],

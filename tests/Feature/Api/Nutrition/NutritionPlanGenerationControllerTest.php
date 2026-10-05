@@ -46,8 +46,8 @@ test('it returns 403 when the user does not have app access', function () {
 function nutritionPlanGenerationUser(): User
 {
     $user = User::factory()->create([
-        'height_cm' => 180,
-        'weight_kg' => 80,
+        'height' => 180,
+        'weight' => 80,
         'birth_date' => Carbon::parse('1996-10-05'),
         'gender' => 'male',
         'language' => 'en',

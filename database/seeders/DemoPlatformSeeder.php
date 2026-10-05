@@ -36,8 +36,8 @@ class DemoPlatformSeeder extends Seeder
     public function run(): void
     {
         $coach = $this->createUser('Sofia Ferrer', 'coach@wildforce.test', [
-            'height_cm' => 168,
-            'weight_kg' => 61.2,
+            'height' => 168,
+            'weight' => 61.2,
             'gender' => 'female',
             'current_streak' => 12,
             'longest_streak' => 45,
@@ -46,8 +46,8 @@ class DemoPlatformSeeder extends Seeder
         ], SubscriptionPlan::CoachProMonthly);
 
         $activeClient = $this->createUser('Marta Soler', 'marta@wildforce.test', [
-            'height_cm' => 172,
-            'weight_kg' => 68.4,
+            'height' => 172,
+            'weight' => 68.4,
             'gender' => 'female',
             'current_streak' => 4,
             'longest_streak' => 18,
@@ -57,8 +57,8 @@ class DemoPlatformSeeder extends Seeder
         ], SubscriptionPlan::CoachedExternal);
 
         $newClient = $this->createUser('Pau Riera', 'pau@wildforce.test', [
-            'height_cm' => 180,
-            'weight_kg' => 82.7,
+            'height' => 180,
+            'weight' => 82.7,
             'gender' => 'male',
             'current_streak' => 0,
             'longest_streak' => 2,
@@ -67,8 +67,8 @@ class DemoPlatformSeeder extends Seeder
         ], SubscriptionPlan::CoachedExternal);
 
         $independentUser = $this->createUser('Laia Costa', 'laia@wildforce.test', [
-            'height_cm' => 165,
-            'weight_kg' => 59.8,
+            'height' => 165,
+            'weight' => 59.8,
             'gender' => 'female',
             'current_streak' => 7,
             'longest_streak' => 22,
@@ -147,7 +147,7 @@ class DemoPlatformSeeder extends Seeder
         BodyMetricEntry::factory()
             ->count(8)
             ->sequence(fn (Sequence $sequence) => [
-                'value' => (float) $user->weight_kg - (($sequence->count - $sequence->index - 1) * 0.2),
+                'value' => (float) $user->weight - (($sequence->count - $sequence->index - 1) * 0.2),
                 'recorded_at' => now()->subWeeks(7 - $sequence->index)->startOfDay(),
             ])
             ->for($user)

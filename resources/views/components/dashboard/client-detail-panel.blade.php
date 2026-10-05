@@ -40,8 +40,8 @@
                 <dl class="grid gap-3 sm:grid-cols-2">
                     <x-dashboard.detail-item :label="__('Name')" :value="$client->name" />
                     <x-dashboard.detail-item :label="__('Email')" :value="$client->email" />
-                    <x-dashboard.detail-item :label="__('Height')" :value="$client->height_cm ? __(':height cm', ['height' => $client->height_cm]) : __('Not set')" />
-                    <x-dashboard.detail-item :label="__('Weight')" :value="$client->weight_kg ? __(':weight kg', ['weight' => $client->weight_kg]) : __('Not set')" />
+                    <x-dashboard.detail-item :label="__('Height')" :value="$client->height ? __(':height cm', ['height' => $client->height]) : __('Not set')" />
+                    <x-dashboard.detail-item :label="__('Weight')" :value="$client->weight ? __(':weight kg', ['weight' => $client->weight]) : __('Not set')" />
                     <x-dashboard.detail-item :label="__('Date of birth')" :value="$client->birth_date?->format('d/m/Y') ?? __('Not set')" />
                     <x-dashboard.detail-item :label="__('Gender')" :value="$client->gender ? str($client->gender)->headline() : __('Not set')" />
                     <x-dashboard.detail-item :label="__('Language')" :value="$client->language ? str($client->language)->upper() : __('Not set')" />

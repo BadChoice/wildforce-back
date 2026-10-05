@@ -37,8 +37,8 @@ test('it displays a selected client details and workout plans', function () {
     $coach = User::factory()->create();
     $client = User::factory()->create([
         'name' => 'Alex Client',
-        'height_cm' => 180,
-        'weight_kg' => 80,
+        'height' => 180,
+        'weight' => 80,
     ]);
     CoachingEnrollment::create([
         'client_user_id' => $client->id,
@@ -130,8 +130,8 @@ test('it previews the next plan prompt and response schema for a selected client
 test('it previews the nutrition plan prompt and response schema for a selected client', function () {
     $coach = User::factory()->create();
     $client = User::factory()->create([
-        'height_cm' => 180,
-        'weight_kg' => 80,
+        'height' => 180,
+        'weight' => 80,
         'birth_date' => '1996-10-05',
         'gender' => 'male',
         'language' => 'en',
