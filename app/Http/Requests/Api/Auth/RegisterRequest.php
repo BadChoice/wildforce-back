@@ -33,6 +33,8 @@ class RegisterRequest extends FormRequest
             'password' => $this->passwordRules(),
             'device_name' => ['required', 'string', 'max:255'],
             'training_profile' => ['required', 'array'],
+            // Lets the client keep its locally created preferences id, so syncing doesn't duplicate the row.
+            'training_profile.id' => ['sometimes', 'uuid', 'unique:training_preferences,id'],
             'training_profile.goal' => ['required', 'string', Rule::in(['generalFitness', 'loseWeight', 'buildMuscle', 'gainStrength', 'improveEndurance', 'improveMobility', 'bodyRecomposition'])],
             'training_profile.lifestyle' => ['required', 'string', Rule::in(['sedentary', 'lightlyActive', 'moderatelyActive', 'veryActive'])],
             'training_profile.gym_type' => ['required', 'string', Rule::in(['bigGym', 'smallGym', 'homeGym', 'someAccessories', 'bodyweightOnly'])],

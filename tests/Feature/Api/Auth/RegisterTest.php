@@ -40,6 +40,23 @@ test('it registers a user and returns a bearer token for the device', function (
         ->assertJsonPath('id', $user->id);
 });
 
+test('it keeps the client generated training preferences id', function () {
+    $preferencesId = '0b6f5c3e-2a8d-4f1b-9c7e-5d4a3b2c1e0f';
+
+    $this->postJson('/api/auth/register', [
+        'name' => 'Jane Doe',
+        'email' => 'jane@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'device_name' => 'Jane’s iPhone',
+        'training_profile' => [...trainingProfilePayload(), 'id' => $preferencesId],
+    ])->assertCreated();
+
+    $user = User::query()->where('email', 'jane@example.com')->firstOrFail();
+
+    expect($user->trainingPreferences->id)->toBe($preferencesId);
+});
+
 test('it validates the registration payload', function () {
     $response = $this->postJson('/api/auth/register', []);
 
