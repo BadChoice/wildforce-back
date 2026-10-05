@@ -17,6 +17,7 @@ tags:
   - name: Sync
   - name: Workouts
   - name: Nutrition
+  - name: AI
 paths:
   /api/auth/register:
     post:
@@ -462,6 +463,67 @@ paths:
           $ref: '#/components/responses/Unauthenticated'
         422:
           $ref: '#/components/responses/ValidationError'
+  /api/subscription/access:
+    get:
+      tags:
+        - 'Subscriptions'
+      summary: "Get the authenticated user's app access"
+      description: 'Reports whether the current subscription grants access to the app, with its status, plan, and renewal date.'
+      responses:
+        200:
+          description: 'Current access state'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionAccessResponse'
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+  /api/subscription/app-store/transactions:
+    post:
+      tags:
+        - 'Subscriptions'
+      summary: 'Sync an App Store transaction'
+      description: "Verifies a StoreKit 2 signed transaction (JWS) and creates or updates the authenticated user's App Store subscription."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncAppStoreTransactionRequest'
+      responses:
+        200:
+          description: 'Synchronized subscription'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        422:
+          $ref: '#/components/responses/ValidationError'
+  /api/subscription/google-play/purchases:
+    post:
+      tags:
+        - 'Subscriptions'
+      summary: 'Sync a Google Play purchase'
+      description: "Verifies a Google Play subscription purchase token and creates or updates the authenticated user's Google Play subscription. The obfuscated account ID must match the one set on the purchase."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncGooglePlayPurchaseRequest'
+      responses:
+        200:
+          description: 'Synchronized subscription'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        422:
+          $ref: '#/components/responses/ValidationError'
   /api/account/coaches:
     get:
       tags:
@@ -476,6 +538,35 @@ paths:
                 $ref: '#/components/schemas/CoachCollection'
         401:
           $ref: '#/components/responses/Unauthenticated'
+  /api/ai/completions:
+    post:
+      tags:
+        - 'AI'
+      summary: 'Generate a structured AI completion'
+      description: 'Sends the prompt to the given provider and model and returns JSON matching the supplied JSON Schema. The response body is the structured object itself.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiCompletionRequest'
+      responses:
+        200:
+          description: 'Structured completion matching the requested schema'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiCompletionResponse'
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        403:
+          description: 'An active subscription, trial, or demo access is required.'
+        422:
+          $ref: '#/components/responses/ValidationError'
+        429:
+          description: 'The completion rate limit of ten requests per minute was exceeded.'
+        502:
+          description: 'The AI provider did not return structured JSON.'
   /api/workout-plans/generate:
     post:
       tags:
@@ -1061,6 +1152,207 @@ components:
             - string
             - 'null'
           format: date-time
+    SubscriptionAccessResponse:
+      type: 'object'
+      required:
+        - 'data'
+      properties:
+        data:
+          type: 'object'
+          required:
+            - 'has_access'
+            - 'status'
+            - 'plan'
+            - 'renews_at'
+          properties:
+            has_access:
+              type: 'boolean'
+            status:
+              type:
+                - 'string'
+                - 'null'
+              enum:
+                - 'pending'
+                - 'active'
+                - 'grace_period'
+                - 'expired'
+                - 'revoked'
+                - null
+            plan:
+              type:
+                - 'string'
+                - 'null'
+              enum:
+                - 'trial'
+                - 'demo'
+                - 'friends'
+                - 'premium'
+                - 'coach_basic_monthly'
+                - 'coach_basic_yearly'
+                - 'coach_pro_monthly'
+                - 'coach_pro_yearly'
+                - 'coached_external'
+                - null
+            renews_at:
+              type:
+                - 'string'
+                - 'null'
+              format: 'date-time'
+    Subscription:
+      type: 'object'
+      required:
+        - 'id'
+        - 'user_id'
+        - 'plan'
+        - 'provider'
+        - 'status'
+        - 'auto_renews'
+      properties:
+        id:
+          type: 'string'
+          format: 'uuid'
+        user_id:
+          type: 'string'
+          format: 'uuid'
+        demo_code_id:
+          type:
+            - 'string'
+            - 'null'
+          format: 'uuid'
+        plan:
+          type: 'string'
+          enum:
+            - 'trial'
+            - 'demo'
+            - 'friends'
+            - 'premium'
+            - 'coach_basic_monthly'
+            - 'coach_basic_yearly'
+            - 'coach_pro_monthly'
+            - 'coach_pro_yearly'
+            - 'coached_external'
+        provider:
+          type: 'string'
+          enum:
+            - 'internal'
+            - 'app_store'
+            - 'google_play'
+            - 'stripe'
+            - 'external'
+        status:
+          type: 'string'
+          enum:
+            - 'pending'
+            - 'active'
+            - 'grace_period'
+            - 'expired'
+            - 'revoked'
+        auto_renews:
+          type: 'boolean'
+        billing_amount:
+          type:
+            - 'string'
+            - 'null'
+          example: '9.990'
+        billing_currency:
+          type:
+            - 'string'
+            - 'null'
+          example: 'EUR'
+        billing_interval:
+          type:
+            - 'string'
+            - 'null'
+          enum:
+            - 'month'
+            - 'year'
+            - null
+        billing_interval_count:
+          type:
+            - 'integer'
+            - 'null'
+        provider_reference:
+          type:
+            - 'string'
+            - 'null'
+        starts_at:
+          type:
+            - 'string'
+            - 'null'
+          format: 'date-time'
+        renews_at:
+          type:
+            - 'string'
+            - 'null'
+          format: 'date-time'
+        cancelled_at:
+          type:
+            - 'string'
+            - 'null'
+          format: 'date-time'
+        created_at:
+          type: 'string'
+          format: 'date-time'
+        updated_at:
+          type: 'string'
+          format: 'date-time'
+    SubscriptionResponse:
+      type: 'object'
+      required:
+        - 'data'
+      properties:
+        data:
+          $ref: '#/components/schemas/Subscription'
+    SyncAppStoreTransactionRequest:
+      type: 'object'
+      required:
+        - 'signed_transaction'
+      properties:
+        signed_transaction:
+          type: 'string'
+          maxLength: 50000
+          description: 'StoreKit 2 JWS signed transaction.'
+    SyncGooglePlayPurchaseRequest:
+      type: 'object'
+      required:
+        - 'purchase_token'
+        - 'obfuscated_account_id'
+      properties:
+        purchase_token:
+          type: 'string'
+          maxLength: 4096
+        obfuscated_account_id:
+          type: 'string'
+          minLength: 64
+          maxLength: 64
+    AiCompletionRequest:
+      type: 'object'
+      required:
+        - 'prompt'
+        - 'schema'
+        - 'provider'
+        - 'model'
+      properties:
+        prompt:
+          type: 'string'
+          maxLength: 50000
+        schema:
+          description: 'JSON Schema of an object describing the expected response. Accepted as a JSON object or as a JSON-encoded string.'
+          oneOf:
+            - type: 'object'
+              additionalProperties: true
+            - type: 'string'
+        provider:
+          type: 'string'
+          description: 'A provider configured in config/ai.php.'
+          example: 'openai'
+        model:
+          type: 'string'
+          maxLength: 100
+    AiCompletionResponse:
+      type: 'object'
+      additionalProperties: true
+      description: 'Object matching the schema sent in the request.'
     SyncPushRequest:
       type: object
       required:

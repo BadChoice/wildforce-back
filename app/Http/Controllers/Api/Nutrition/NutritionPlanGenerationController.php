@@ -14,6 +14,8 @@ class NutritionPlanGenerationController extends Controller
      */
     public function __invoke(Request $request, NutritionPlanAIGenerator $generator): NutritionPlanSyncResource
     {
+        set_time_limit(120);
+
         return new NutritionPlanSyncResource($generator->generateAndPersist($request->user()));
     }
 }

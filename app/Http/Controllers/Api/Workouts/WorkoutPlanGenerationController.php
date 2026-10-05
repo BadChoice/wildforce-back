@@ -14,6 +14,8 @@ class WorkoutPlanGenerationController extends Controller
      */
     public function __invoke(Request $request, WorkoutPlanAIGenerator $generator): WorkoutPlanSyncResource
     {
+        set_time_limit(120);
+
         return new WorkoutPlanSyncResource($generator->generateAndPersist($request->user()));
     }
 }

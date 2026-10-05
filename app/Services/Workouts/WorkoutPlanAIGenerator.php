@@ -3,6 +3,8 @@
 namespace App\Services\Workouts;
 
 use App\Ai\Agents\Workouts\WorkoutPlanGeneratorAgent;
+use App\Enums\Equipment;
+use App\Models\TrainingLocation;
 use App\Models\User;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
@@ -190,7 +192,7 @@ final class WorkoutPlanAIGenerator
 - Preferred duration per workout: {$preferences?->preferred_workout_duration_minutes} minutes
 - Training split: {$preferences?->training_split_preference}
 - Custom workout focuses: {$this->json($preferences?->custom_workout_focuses)}
-- Equipment: {$this->list($location?->equipment)}
+- Equipment: {$this->list($this->equipment($location))}
 - Movement restrictions: {$this->list($preferences?->movement_restrictions)}
 - Include warmups: {$this->yesNo(! $preferences?->skips_warmups)}
 - Include cooldowns: {$this->yesNo(! $preferences?->skips_cooldowns)}
@@ -283,7 +285,7 @@ PROMPT;
     {
         $preferences = $user->trainingPreferences;
         $location = $user->trainingLocations->firstWhere('is_default', true) ?? $user->trainingLocations->first();
-        $equipment = $location?->equipment ?? ['bodyweight'];
+        $equipment = $this->equipment($location) ?? [Equipment::Bodyweight->value];
         $restrictions = $preferences?->movement_restrictions ?? [];
 
         return collect($this->exerciseCatalog->all()['exercises'] ?? [])
@@ -342,6 +344,14 @@ PROMPT;
         $day->setRelation('plan', $plan);
 
         return $day;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    private function equipment(?TrainingLocation $location): ?array
+    {
+        return $location?->equipment?->map(fn (Equipment $item): string => $item->value)->values()->all();
     }
 
     /**

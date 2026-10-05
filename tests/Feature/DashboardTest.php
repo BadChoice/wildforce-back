@@ -5,6 +5,7 @@ use App\Models\BodyMetricEntry;
 use App\Models\CoachingEnrollment;
 use App\Models\ExerciseProfile;
 use App\Models\NutritionPlan;
+use App\Models\NutritionProfile;
 use App\Models\TrainingLocation;
 use App\Models\TrainingPreference;
 use App\Models\User;
@@ -180,6 +181,27 @@ test('dashboard displays app settings for a selected user', function () {
         ->assertSet('selectedTab', 'app-settings')
         ->assertSee('Full focus mode')
         ->assertSee('Workouts, Nutrition');
+});
+
+test('dashboard displays the nutrition profile for a selected user', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+    NutritionProfile::factory()->for($user)->create([
+        'dietary_style' => 'mediterranean',
+        'preferred_eating_window_start_hour' => 8,
+        'preferred_eating_window_end_hour' => 21,
+        'preferred_protein_sources' => ['chicken', 'greekYogurt'],
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('dashboard.user-plan-list')
+        ->call('selectUser', $user->id)
+        ->call('selectTab', 'nutrition')
+        ->assertSee('Nutrition profile')
+        ->assertSee('Mediterranean')
+        ->assertSee('08:00 – 21:00')
+        ->assertSee('Chicken, Greek Yogurt');
 });
 
 test('dashboard previews the next plan prompt and response schema for a selected user', function () {

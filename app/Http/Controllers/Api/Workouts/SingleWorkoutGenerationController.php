@@ -14,6 +14,8 @@ class SingleWorkoutGenerationController extends Controller
      */
     public function __invoke(GenerateSingleWorkoutRequest $request, SingleWorkoutAIGenerator $generator): GeneratedWorkoutDayResource
     {
+        set_time_limit(120);
+
         return new GeneratedWorkoutDayResource($generator->generate($request->user(), $request->singleWorkoutRequest()));
     }
 }
