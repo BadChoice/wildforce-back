@@ -105,6 +105,7 @@ new class extends Component
                 'bodyMetrics' => fn (HasMany $query): HasMany => $query
                     ->select(['id', 'user_id', 'type', 'value', 'recorded_at'])
                     ->orderBy('recorded_at'),
+                'appSettings',
             ])
             ->whereKey($this->selectedClientId)
             ->first();
@@ -184,7 +185,7 @@ new class extends Component
 
     public function selectTab(string $tab): void
     {
-        if (! in_array($tab, ['info', 'training', 'nutrition', 'body-metrics'], true)) {
+        if (! in_array($tab, ['info', 'training', 'nutrition', 'body-metrics', 'app-settings'], true)) {
             return;
         }
 

@@ -8,6 +8,7 @@ use App\Models\NutritionPlan;
 use App\Models\TrainingLocation;
 use App\Models\TrainingPreference;
 use App\Models\User;
+use App\Models\UserAppSettings;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use Illuminate\Support\Str;
@@ -161,6 +162,24 @@ test('dashboard displays subscription information for a selected user', function
         ->assertSee('Trial')
         ->assertSee('Internal')
         ->assertSee('Access ends');
+});
+
+test('dashboard displays app settings for a selected user', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+    UserAppSettings::factory()->for($user)->create([
+        'is_full_focus_mode_enabled' => true,
+        'full_focus_selection' => ['workouts', 'nutrition'],
+    ]);
+
+    $this->actingAs($admin);
+
+    Livewire::test('dashboard.user-plan-list')
+        ->call('selectUser', $user->id)
+        ->call('selectTab', 'app-settings')
+        ->assertSet('selectedTab', 'app-settings')
+        ->assertSee('Full focus mode')
+        ->assertSee('Workouts, Nutrition');
 });
 
 test('dashboard previews the next plan prompt and response schema for a selected user', function () {

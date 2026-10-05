@@ -8,6 +8,7 @@ use App\Models\PlannedExercise;
 use App\Models\TrainingLocation;
 use App\Models\TrainingPreference;
 use App\Models\User;
+use App\Models\UserAppSettings;
 use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
@@ -71,6 +72,35 @@ test('it displays a selected client details and workout plans', function () {
         ->assertSee('Nutrition plan prompt')
         ->call('selectTab', 'body-metrics')
         ->assertSee('No body metrics yet');
+});
+
+test('it displays the app settings of a selected client', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    $this->actingAs($coach);
+
+    $component = Livewire::test('dashboard.clients')
+        ->call('selectClient', $client->id)
+        ->call('selectTab', 'app-settings')
+        ->assertSet('selectedTab', 'app-settings')
+        ->assertSee('This user has not synced app settings yet.');
+
+    UserAppSettings::factory()->for($client)->create([
+        'is_full_focus_mode_enabled' => true,
+        'full_focus_selection' => ['workouts', 'nutrition'],
+    ]);
+
+    $component->call('selectClient', $client->id)
+        ->call('selectTab', 'app-settings')
+        ->assertSee('Full focus mode')
+        ->assertSee('Workouts, Nutrition')
+        ->assertDontSee('This user has not synced app settings yet.');
 });
 
 test('it displays body metric charts for a selected client', function () {

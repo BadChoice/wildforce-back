@@ -88,6 +88,7 @@ new class extends Component {
                     ->select(['id', 'user_id', 'type', 'value', 'recorded_at'])
                     ->orderBy('recorded_at'),
                 'subscription',
+                'appSettings',
             ])
             ->find($this->selectedUserId);
     }
@@ -107,7 +108,7 @@ new class extends Component {
 
     public function selectTab(string $tab): void
     {
-        if (!in_array($tab, ['training', 'exercise-profiles', 'nutrition', 'body-metrics', 'subscription', 'coaching'], true)) {
+        if (!in_array($tab, ['training', 'exercise-profiles', 'nutrition', 'body-metrics', 'subscription', 'coaching', 'app-settings'], true)) {
             return;
         }
 
