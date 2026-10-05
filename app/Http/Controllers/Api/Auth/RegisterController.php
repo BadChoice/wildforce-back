@@ -17,11 +17,18 @@ class RegisterController extends Controller
     public function __invoke(RegisterRequest $request): JsonResponse
     {
         [$user, $trial] = DB::transaction(function () use ($request): array {
-            $user = User::create([
+            $user = new User([
                 'name' => $request->string('name')->toString(),
                 'email' => $request->string('email')->lower()->toString(),
                 'password' => Hash::make($request->string('password')->toString()),
             ]);
+
+            // Keep the client's local id so records it already created stay linked to this user.
+            if ($request->filled('id')) {
+                $user->id = $request->string('id')->lower()->toString();
+            }
+
+            $user->save();
 
             $user->trainingPreferences()->save((new TrainingPreference)->forceFill($request->trainingProfile()));
             $trial = $user->attachSubscription(Subscription::createTrial());

@@ -57,6 +57,23 @@ test('it keeps the client generated training preferences id', function () {
     expect($user->trainingPreferences->id)->toBe($preferencesId);
 });
 
+test('it keeps the client generated user id', function () {
+    $userId = '7C9E6679-7425-40DE-944B-E07FC1F90AE7';
+
+    $response = $this->postJson('/api/auth/register', [
+        'id' => $userId,
+        'name' => 'Jane Doe',
+        'email' => 'jane@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+        'device_name' => 'Jane’s iPhone',
+        'training_profile' => trainingProfilePayload(),
+    ]);
+
+    $response->assertCreated()->assertJsonPath('user.id', strtolower($userId));
+    expect(User::query()->whereKey(strtolower($userId))->exists())->toBeTrue();
+});
+
 test('it validates the registration payload', function () {
     $response = $this->postJson('/api/auth/register', []);
 

@@ -28,6 +28,7 @@ class RegisterRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'id' => ['sometimes', 'uuid', 'unique:users,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => $this->passwordRules(),
@@ -61,6 +62,10 @@ class RegisterRequest extends FormRequest
     {
         /** @var array<string, mixed> $profile */
         $profile = $this->validated('training_profile');
+
+        if (isset($profile['id'])) {
+            $profile['id'] = strtolower($profile['id']);
+        }
 
         return [
             ...$profile,

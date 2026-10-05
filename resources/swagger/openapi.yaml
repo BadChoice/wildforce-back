@@ -1,12 +1,12 @@
 openapi: 3.1.0
 info:
-  title: Wildforce API
+  title: 'Wildforce API'
   version: 1.0.0
   description: |
     API for Wildforce mobile clients. Authenticate with a Sanctum bearer token,
     then use the sync endpoints to exchange user-owned records.
 servers:
-  - url: http://wildforce.test
+  - url: 'http://wildforce.test'
 tags:
   - name: Authentication
   - name: Media
@@ -16,11 +16,13 @@ tags:
   - name: Coaching
   - name: Sync
   - name: Workouts
+  - name: Nutrition
 paths:
   /api/auth/register:
     post:
-      tags: [Authentication]
-      summary: Register a user and issue a bearer token
+      tags:
+        - Authentication
+      summary: 'Register a user and issue a bearer token'
       security: []
       requestBody:
         required: true
@@ -29,18 +31,19 @@ paths:
             schema:
               $ref: '#/components/schemas/RegisterRequest'
       responses:
-        '201':
-          description: User registered
+        201:
+          description: 'User registered'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/auth/login:
     post:
-      tags: [Authentication]
-      summary: Log in and issue a bearer token
+      tags:
+        - Authentication
+      summary: 'Log in and issue a bearer token'
       security: []
       requestBody:
         required: true
@@ -49,19 +52,20 @@ paths:
             schema:
               $ref: '#/components/schemas/LoginRequest'
       responses:
-        '200':
-          description: User authenticated
+        200:
+          description: 'User authenticated'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/auth/google:
     post:
-      tags: [Authentication]
-      summary: Sign in with Google and issue a bearer token
-      description: Verifies a Google OpenID Connect ID token and signs in only when it is already linked to an account. Complete registration before using Google sign-in.
+      tags:
+        - Authentication
+      summary: 'Sign in with Google and issue a bearer token'
+      description: 'Verifies a Google OpenID Connect ID token before signing in or creating the user.'
       security: []
       requestBody:
         required: true
@@ -70,19 +74,28 @@ paths:
             schema:
               $ref: '#/components/schemas/GoogleAuthenticationRequest'
       responses:
-        '200':
-          description: Existing user authenticated
+        200:
+          description: 'Existing user authenticated'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
-        '422':
+        201:
+          description: 'User registered and authenticated'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        409:
+          description: 'The verified email already belongs to an account with another sign-in method.'
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/auth/apple:
     post:
-      tags: [Authentication]
-      summary: Sign in with Apple and issue a bearer token
-      description: Exchanges the native Apple authorization code on the server and signs in only when the Apple ID is already linked to an account. Complete registration before using Apple sign-in.
+      tags:
+        - Authentication
+      summary: 'Sign in with Apple and issue a bearer token'
+      description: 'Exchanges the native Apple authorization code on the server. The optional full name is only used while creating a new user, because Apple may provide it only once.'
       security: []
       requestBody:
         required: true
@@ -91,31 +104,41 @@ paths:
             schema:
               $ref: '#/components/schemas/AppleAuthenticationRequest'
       responses:
-        '200':
-          description: Existing Apple identity authenticated
+        200:
+          description: 'Existing Apple identity authenticated'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
-        '422':
+        201:
+          description: 'New user created from an Apple identity'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        409:
+          $ref: '#/components/responses/Conflict'
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/account/identities:
     get:
-      tags: [Account]
-      summary: List the authenticated user's linked sign-in identities
+      tags:
+        - Account
+      summary: "List the authenticated user's linked sign-in identities"
       responses:
-        '200':
-          description: Linked identities
+        200:
+          description: 'Linked identities'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserIdentityCollection'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
   /api/account/identities/apple:
     post:
-      tags: [Account]
-      summary: Link Apple to the authenticated user
+      tags:
+        - Account
+      summary: 'Link Apple to the authenticated user'
       requestBody:
         required: true
         content:
@@ -123,39 +146,41 @@ paths:
             schema:
               $ref: '#/components/schemas/LinkAppleIdentityRequest'
       responses:
-        '200':
-          description: Apple was already linked to this user
+        200:
+          description: 'Apple was already linked to this user'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserIdentity'
-        '201':
-          description: Apple linked
+        201:
+          description: 'Apple linked'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserIdentity'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '409':
+        409:
           $ref: '#/components/responses/Conflict'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
     delete:
-      tags: [Account]
-      summary: Unlink Apple from the authenticated user
+      tags:
+        - Account
+      summary: 'Unlink Apple from the authenticated user'
       responses:
-        '204':
-          description: Apple unlinked, or was not linked
-        '401':
+        204:
+          description: 'Apple unlinked, or was not linked'
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/account/identities/google:
     post:
-      tags: [Account]
-      summary: Link Google to the authenticated user
-      description: Verifies the Google OpenID Connect ID token before linking the Google account.
+      tags:
+        - Account
+      summary: 'Link Google to the authenticated user'
+      description: 'Verifies the Google OpenID Connect ID token before linking the Google account.'
       requestBody:
         required: true
         content:
@@ -163,67 +188,71 @@ paths:
             schema:
               $ref: '#/components/schemas/GoogleIdentityRequest'
       responses:
-        '200':
-          description: Google account already linked
+        200:
+          description: 'Google account already linked'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserIdentityResponse'
-        '201':
-          description: Google account linked
+        201:
+          description: 'Google account linked'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserIdentityResponse'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '409':
-          description: The Google account is linked to another user.
-        '422':
+        409:
+          description: 'The Google account is linked to another user.'
+        422:
           $ref: '#/components/responses/ValidationError'
     delete:
-      tags: [Account]
-      summary: Unlink Google from the authenticated user
+      tags:
+        - Account
+      summary: 'Unlink Google from the authenticated user'
       responses:
-        '204':
-          description: Google account unlinked
-        '401':
+        204:
+          description: 'Google account unlinked'
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/user:
     get:
-      tags: [Authentication]
-      summary: Get the authenticated user
+      tags:
+        - Authentication
+      summary: 'Get the authenticated user'
       responses:
-        '200':
-          description: Authenticated user
+        200:
+          description: 'Authenticated user'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
   /api/users/avatar:
     post:
-      tags: [Media]
-      summary: Upload the authenticated user's public avatar
-      description: Stores a PNG at `avatars/{user-id}.png` in the public `wildfit` Supabase bucket.
+      tags:
+        - Media
+      summary: "Upload the authenticated user's public avatar"
+      description: 'Stores a PNG at `avatars/{user-id}.png` in the public `wildfit` Supabase bucket.'
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [image]
+              required:
+                - image
               properties:
                 image:
                   type: string
                   format: binary
-                  description: PNG image up to 2 MiB.
+                  description: 'PNG image up to 2 MiB.'
       responses:
-        '200':
-          description: Avatar uploaded
+        200:
+          description: 'Avatar uploaded'
           content:
             application/json:
               schema:
@@ -232,21 +261,18 @@ paths:
                   data:
                     type: object
                     properties:
-                      path:
-                        type: string
-                        example: avatars/018f70f9-66a0-7a26-a4f8-8e0e1433f50e.png
-                      url:
-                        type: string
-                        format: uri
-        '401':
+                      path: { type: string, example: avatars/018f70f9-66a0-7a26-a4f8-8e0e1433f50e.png }
+                      url: { type: string, format: uri }
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
-  /api/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}:
+  '/api/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}':
     post:
-      tags: [Media]
-      summary: Upload a private body progress photo
-      description: Stores a JPEG on the default private S3 disk and updates the matching photo path on the session.
+      tags:
+        - Media
+      summary: 'Upload a private body progress photo'
+      description: 'Stores a JPEG on the default private S3 disk and updates the matching photo path on the session.'
       parameters:
         - name: bodyProgressPhotoSession
           in: path
@@ -259,22 +285,26 @@ paths:
           required: true
           schema:
             type: string
-            enum: [profile, front, torso]
+            enum:
+              - profile
+              - front
+              - torso
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
               type: object
-              required: [image]
+              required:
+                - image
               properties:
                 image:
                   type: string
                   format: binary
-                  description: JPEG image up to 5 MiB.
+                  description: 'JPEG image up to 5 MiB.'
       responses:
-        '200':
-          description: Progress photo uploaded
+        200:
+          description: 'Progress photo uploaded'
           content:
             application/json:
               schema:
@@ -283,22 +313,54 @@ paths:
                   data:
                     type: object
                     properties:
-                      path:
-                        type: string
-                        example: body-progress-photos/018f70f9-66a0-7a26-a4f8-8e0e1433f50e-front.jpg
-        '401':
+                      path: { type: string, example: body-progress-photos/018f70f9-66a0-7a26-a4f8-8e0e1433f50e-front.jpg }
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '404':
-          description: Progress photo session does not belong to the authenticated user.
-        '422':
+        404:
+          description: 'Progress photo session does not belong to the authenticated user.'
+        422:
           $ref: '#/components/responses/ValidationError'
-  /api/nutrition-log-items/{nutritionLogItem}/image:
-    post:
-      tags: [Media]
-      summary: Upload a private nutrition log item image
-      description: Stores a JPEG on the default private S3 disk and updates the image path on the nutrition log item.
+    get:
+      tags:
+        - Media
+      summary: 'Download a private body progress photo'
+      description: 'Streams the stored JPEG inline. Available to the session owner, their active coaches, and administrators.'
       parameters:
-        - name: nutritionLogItem
+        - name: bodyProgressPhotoSession
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: angle
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - profile
+              - front
+              - torso
+      responses:
+        200:
+          description: 'Progress photo'
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        404:
+          description: 'The session is not visible to the authenticated user, or no photo was uploaded for this angle.'
+  '/api/nutrition-log-entries/{nutritionLogEntry}/image':
+    post:
+      tags:
+        - Media
+      summary: 'Upload a private nutrition log entry image'
+      description: 'Stores a JPEG on the default private S3 disk and links it to the nutrition log entry through a `localPhoto` media record. An existing `localPhoto` media record is reused; any other media (e.g. remote) is left untouched and replaced by a new record.'
+      parameters:
+        - name: nutritionLogEntry
           in: path
           required: true
           schema:
@@ -310,15 +372,16 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [image]
+              required:
+                - image
               properties:
                 image:
                   type: string
                   format: binary
-                  description: JPEG image up to 5 MiB.
+                  description: 'JPEG image up to 5 MiB.'
       responses:
-        '200':
-          description: Nutrition log item image uploaded
+        200:
+          description: 'Nutrition log entry image uploaded'
           content:
             application/json:
               schema:
@@ -327,19 +390,42 @@ paths:
                   data:
                     type: object
                     properties:
-                      path:
-                        type: string
-                        example: nutrition-log-items/018f70f9-66a0-7a26-a4f8-8e0e1433f50e.jpg
-        '401':
+                      path: { type: string, example: nutrition-log-entries/018f70f9-66a0-7a26-a4f8-8e0e1433f50e.jpg }
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '404':
-          description: Nutrition log item does not belong to the authenticated user.
-        '422':
+        404:
+          description: 'Nutrition log entry does not belong to the authenticated user.'
+        422:
           $ref: '#/components/responses/ValidationError'
+    get:
+      tags:
+        - Media
+      summary: 'Download a private nutrition log entry image'
+      description: "Streams the entry's `localPhoto` JPEG inline. Available to the entry owner, their active coaches, and administrators."
+      parameters:
+        - name: nutritionLogEntry
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: 'Nutrition log entry image'
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        404:
+          description: 'The entry is not visible to the authenticated user, or it has no stored image.'
   /api/feedback:
     post:
-      tags: [Feedback]
-      summary: Email feedback from the authenticated user
+      tags:
+        - Feedback
+      summary: 'Email feedback from the authenticated user'
       requestBody:
         required: true
         content:
@@ -347,17 +433,18 @@ paths:
             schema:
               $ref: '#/components/schemas/FeedbackRequest'
       responses:
-        '204':
-          description: Feedback accepted and emailed.
-        '401':
+        204:
+          description: 'Feedback accepted and emailed.'
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/subscription/redeem-code:
     post:
-      tags: [Subscriptions]
-      summary: Redeem a demo access code
-      description: Replaces the authenticated user's trial subscription with a demo subscription.
+      tags:
+        - Subscriptions
+      summary: 'Redeem a demo access code'
+      description: "Replaces the authenticated user's trial subscription with a demo subscription."
       requestBody:
         required: true
         content:
@@ -365,49 +452,112 @@ paths:
             schema:
               $ref: '#/components/schemas/RedeemDemoCodeRequest'
       responses:
-        '200':
-          description: Demo subscription activated
+        200:
+          description: 'Demo subscription activated'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RedeemDemoCodeResponse'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/account/coaches:
     get:
-      tags: [Coaching]
-      summary: Get the authenticated user's active coaches
+      tags:
+        - Coaching
+      summary: "Get the authenticated user's active coaches"
       responses:
-        '200':
-          description: Active coaches assigned to the authenticated user
+        200:
+          description: 'Active coaches assigned to the authenticated user'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CoachCollection'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
   /api/workout-plans/generate:
     post:
-      tags: [Workouts]
-      summary: Generate a one-week workout-plan draft
-      description: Generates a draft from the authenticated user's training profile and recent history. The response is not persisted; save and sync it through the existing workout-plan flow.
+      tags:
+        - Workouts
+      summary: 'Generate and save a one-week workout plan'
+      description: "Generates and persists a workout plan from the authenticated user's training profile and recent history. The response uses the sync payload, including IDs and timestamps."
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       responses:
-        '200':
-          description: Generated workout-plan draft
+        201:
+          description: 'Generated and persisted workout plan'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WorkoutPlanGenerationResponse'
-        '401':
+                $ref: '#/components/schemas/WorkoutPlanSyncResponse'
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '403':
-          description: An active subscription, trial, or demo access is required.
+        403:
+          description: 'An active subscription, trial, or demo access is required.'
+        409:
+          description: 'The idempotency key is already in progress or was reused with a different request.'
+        429:
+          description: 'The generation rate limit of five requests per minute was exceeded.'
+  /api/workout-days/generate:
+    post:
+      tags:
+        - Workouts
+      summary: 'Generate a single workout day draft'
+      description: "Generates one workout day from the request and the authenticated user's profile. The draft is not persisted, so the response has no IDs or timestamps; save it through the workout-day sync flow."
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateSingleWorkoutRequest'
+      responses:
+        200:
+          description: 'Generated workout day draft'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratedWorkoutDayResponse'
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        403:
+          description: 'An active subscription, trial, or demo access is required.'
+        409:
+          description: 'The idempotency key is already in progress or was reused with a different request.'
+        422:
+          $ref: '#/components/responses/ValidationError'
+        429:
+          description: 'The generation rate limit of five requests per minute was exceeded.'
+  /api/nutrition-plans/generate:
+    post:
+      tags:
+        - Nutrition
+      summary: 'Generate and save a seven-day nutrition plan'
+      description: "Generates and persists a nutrition plan from the authenticated user's nutrition profile, body metrics, training preferences, and upcoming workout plan. The response uses the same sync payload as the nutrition-plan sync endpoints."
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        201:
+          description: 'Generated and persisted nutrition plan'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NutritionPlanSyncResponse'
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        403:
+          description: 'An active subscription, trial, or demo access is required.'
+        409:
+          description: 'The idempotency key is already in progress or was reused with a different request.'
+        429:
+          description: 'The generation rate limit of five requests per minute was exceeded.'
   /api/sync/push:
     post:
-      tags: [Sync]
-      summary: Push changed records for a registered resource
+      tags:
+        - Sync
+      summary: 'Push changed records for a registered resource'
       requestBody:
         required: true
         content:
@@ -415,38 +565,40 @@ paths:
             schema:
               $ref: '#/components/schemas/SyncPushRequest'
       responses:
-        '200':
-          description: Synchronized records
+        200:
+          description: 'Synchronized records'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncResponse'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/sync/pull:
     get:
-      tags: [Sync]
-      summary: Pull changed records for a registered resource
+      tags:
+        - Sync
+      summary: 'Pull changed records for a registered resource'
       parameters:
         - $ref: '#/components/parameters/SyncResource'
         - $ref: '#/components/parameters/UpdatedAfter'
       responses:
-        '200':
-          description: Changed records and the requested resource name
+        200:
+          description: 'Changed records and the requested resource name'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SyncResponse'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/sync/pull/batch:
     post:
-      tags: [Sync]
-      summary: Pull changed flat-resource records in stable, paginated order
+      tags:
+        - Sync
+      summary: 'Pull changed flat-resource records in stable, paginated order'
       description: |
         The first request supplies the resources and their watermarks. Later requests
         supply only the opaque `cursor` returned by the prior response. Workout-day
@@ -458,43 +610,46 @@ paths:
             schema:
               $ref: '#/components/schemas/BatchSyncPullRequest'
       responses:
-        '200':
-          description: A page of changed records. `next_cursor` is null on the final page.
+        200:
+          description: 'A page of changed records. `next_cursor` is null on the final page.'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/BatchSyncPullResponse'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/sync/workout-days:
     get:
-      tags: [Sync]
-      summary: Pull workout days and templates with their blocks, exercises, and results
+      tags:
+        - Sync
+      summary: 'Pull workout days and templates with their blocks, exercises, and results'
       description: 'Each workout day includes `kind`: `workout` for an executable workout or `template` for a reusable coach-owned workout day.'
       parameters:
         - $ref: '#/components/parameters/UpdatedAfter'
       responses:
-        '200':
-          description: Changed workout days
+        200:
+          description: 'Changed workout days'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkoutDayResponse'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
     post:
-      tags: [Sync]
-      summary: Push workout days and templates with their blocks, exercises, and results
-      description: Set `kind` to `template` for a reusable coach-owned workout day. It must not be attached to a workout plan.
+      tags:
+        - Sync
+      summary: 'Push workout days and templates with their blocks, exercises, and results'
+      description: 'Set `kind` to `template` for a reusable coach-owned workout day. It must not be attached to a workout plan.'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [records]
+              required:
+                - records
               properties:
                 records:
                   type: array
@@ -502,41 +657,44 @@ paths:
                   items:
                     $ref: '#/components/schemas/WorkoutDay'
       responses:
-        '200':
-          description: Synchronized workout days
+        200:
+          description: 'Synchronized workout days'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/WorkoutDayResponse'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
   /api/sync/nutrition-plans:
     get:
-      tags: [Sync]
-      summary: Pull nutrition plans with their days and meals
+      tags:
+        - Sync
+      summary: 'Pull nutrition plans with their days and meals'
       parameters:
         - $ref: '#/components/parameters/UpdatedAfter'
       responses:
-        '200':
-          description: Changed nutrition plans
+        200:
+          description: 'Changed nutrition plans'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NutritionPlanResponse'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
     post:
-      tags: [Sync]
-      summary: Push nutrition plans with their days and meals
+      tags:
+        - Sync
+      summary: 'Push nutrition plans with their days and meals'
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [records]
+              required:
+                - records
               properties:
                 records:
                   type: array
@@ -544,15 +702,15 @@ paths:
                   items:
                     $ref: '#/components/schemas/NutritionPlan'
       responses:
-        '200':
-          description: Synchronized nutrition plans
+        200:
+          description: 'Synchronized nutrition plans'
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NutritionPlanResponse'
-        '401':
+        401:
           $ref: '#/components/responses/Unauthenticated'
-        '422':
+        422:
           $ref: '#/components/responses/ValidationError'
 components:
   securitySchemes:
@@ -561,37 +719,65 @@ components:
       scheme: bearer
       bearerFormat: Sanctum
   parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: 'A client-generated, unique key. Repeating a completed request with the same key within 24 hours returns its original response without repeating the operation.'
+      schema:
+        type: string
+        maxLength: 255
     SyncResource:
       name: resource
       in: query
       required: true
       schema:
         type: string
-        enum: [users, user-app-settings, training-preferences, training-locations, body-metric-entries, body-progress-photo-sessions, exercise-profiles, nutrition-profiles, nutrition-log-media, nutrition-log-entries, nutrition-log-items, nutrition-plans, nutrition-days, nutrition-meals, workout-plans, workout-days, workout-blocks, planned-exercises, exercise-results, subscriptions]
+        enum:
+          - users
+          - user-app-settings
+          - training-preferences
+          - training-locations
+          - body-metric-entries
+          - body-progress-photo-sessions
+          - exercise-profiles
+          - nutrition-profiles
+          - nutrition-log-media
+          - nutrition-log-entries
+          - nutrition-log-items
+          - nutrition-plans
+          - nutrition-days
+          - nutrition-meals
+          - workout-plans
+          - workout-days
+          - workout-blocks
+          - planned-exercises
+          - exercise-results
+          - subscriptions
     UpdatedAfter:
       name: updated_after
       in: query
       required: false
-      description: Only return records changed after this ISO 8601 timestamp.
+      description: 'Only return records changed after this ISO 8601 timestamp.'
       schema:
         type: string
         format: date-time
   responses:
     Unauthenticated:
-      description: Authentication is required.
+      description: 'Authentication is required.'
     ValidationError:
-      description: The request payload is invalid. Field-specific messages are returned in `errors`.
+      description: 'The request payload is invalid. Field-specific messages are returned in `errors`.'
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ValidationError'
           example:
-            message: The given data was invalid.
+            message: 'The given data was invalid.'
             errors:
               password:
-                - The password must be at least 12 characters.
+                - 'The password must be at least 12 characters.'
     Conflict:
-      description: The requested identity cannot be linked.
+      description: 'The requested identity cannot be linked.'
       content:
         application/json:
           schema:
@@ -599,168 +785,392 @@ components:
   schemas:
     User:
       type: object
-      required: [id, name, email]
+      required:
+        - id
+        - name
+        - email
       properties:
-        id: {type: string, format: uuid}
-        name: {type: string}
-        email: {type: string, format: email}
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
     Coach:
       type: object
-      required: [id, name]
+      required:
+        - id
+        - name
       properties:
-        id: {type: string, format: uuid}
-        name: {type: string}
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
     CoachCollection:
       type: object
-      required: [data]
+      required:
+        - data
       properties:
-        data: {type: array, items: {$ref: '#/components/schemas/Coach'}}
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coach'
     RegisterRequest:
       type: object
-      required: [name, email, password, password_confirmation, device_name, training_profile]
+      required:
+        - name
+        - email
+        - password
+        - password_confirmation
+        - device_name
+        - training_profile
       properties:
-        name: {type: string, maxLength: 255}
-        email: {type: string, format: email, maxLength: 255}
+        id:
+          type: string
+          format: uuid
+          description: 'Optional client-generated user id. Keeps records created locally before registration linked to the new user. Stored lowercased and must not already exist.'
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
         password:
           type: string
           format: password
           minLength: 12
-          description: Must contain uppercase and lowercase letters, a number, a symbol, and must not appear in a known data leak.
-        password_confirmation: {type: string, format: password}
-        device_name: {type: string, maxLength: 255}
+          description: 'Must contain uppercase and lowercase letters, a number, a symbol, and must not appear in a known data leak.'
+        password_confirmation:
+          type: string
+          format: password
+        device_name:
+          type: string
+          maxLength: 255
         training_profile:
           $ref: '#/components/schemas/TrainingProfile'
     TrainingProfile:
       type: object
-      required: [goal, lifestyle, gym_type, general_training_level, training_split_preference, preferred_workout_duration_minutes, workout_days]
+      required:
+        - goal
+        - lifestyle
+        - gym_type
+        - general_training_level
+        - training_split_preference
+        - preferred_workout_duration_minutes
+        - workout_days
       properties:
-        goal: {type: string, enum: [generalFitness, loseWeight, buildMuscle, gainStrength, improveEndurance, improveMobility, bodyRecomposition]}
-        lifestyle: {type: string, enum: [sedentary, lightlyActive, moderatelyActive, veryActive]}
-        gym_type: {type: string, enum: [bigGym, smallGym, homeGym, someAccessories, bodyweightOnly]}
-        general_training_level: {type: string, enum: [completeBeginner, beginner, novice, intermediate, advanced, elite]}
-        training_split_preference: {type: string, enum: [automatic, fullBody, upperLower, pushPullLegs, bodyPartSplit, custom]}
-        preferred_workout_duration_minutes: {type: integer, minimum: 10, maximum: 300}
+        id:
+          type: string
+          format: uuid
+          description: "Optional client-generated training preferences id, so syncing the locally created preferences doesn't duplicate the row. Stored lowercased and must not already exist."
+        goal:
+          type: string
+          enum:
+            - generalFitness
+            - loseWeight
+            - buildMuscle
+            - gainStrength
+            - improveEndurance
+            - improveMobility
+            - bodyRecomposition
+        lifestyle:
+          type: string
+          enum:
+            - sedentary
+            - lightlyActive
+            - moderatelyActive
+            - veryActive
+        gym_type:
+          type: string
+          enum:
+            - bigGym
+            - smallGym
+            - homeGym
+            - someAccessories
+            - bodyweightOnly
+        general_training_level:
+          type: string
+          enum:
+            - completeBeginner
+            - beginner
+            - novice
+            - intermediate
+            - advanced
+            - elite
+        training_split_preference:
+          type: string
+          enum:
+            - automatic
+            - fullBody
+            - upperLower
+            - pushPullLegs
+            - bodyPartSplit
+            - custom
+        preferred_workout_duration_minutes:
+          type: integer
+          minimum: 10
+          maximum: 300
         workout_days:
           type: array
           minItems: 1
           maxItems: 7
-          items: {type: string, enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]}
-        custom_workout_focuses: {type: object, additionalProperties: {type: string}}
-        movement_restrictions: {type: array, items: {type: string}}
-        body_composition_phase: {type: [string, 'null'], enum: [automatic, bulk, cut, maintain, null]}
-        skips_warmups: {type: boolean}
-        skips_cooldowns: {type: boolean}
-        skips_rest_periods: {type: boolean}
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - monday
+              - tuesday
+              - wednesday
+              - thursday
+              - friday
+              - saturday
+              - sunday
+        custom_workout_focuses:
+          type:
+            - array
+            - 'null'
+          items:
+            type: string
+            enum:
+              - fullBody
+              - upperBody
+              - lowerBody
+              - push
+              - pull
+              - legs
+              - core
+              - cardio
+              - mobility
+              - recovery
+        movement_restrictions:
+          type:
+            - array
+            - 'null'
+          items:
+            type: string
+            enum:
+              - lowerBackPain
+              - shoulderPain
+              - kneePain
+              - hipPain
+              - anklePain
+              - wristPain
+              - elbowPain
+              - neckPain
+              - limitedShoulderMobility
+              - limitedHipMobility
+              - limitedAnkleMobility
+              - limitedKneeFlexion
+              - overheadMovementLimitation
+              - impactSensitivity
+        body_composition_phase:
+          type:
+            - string
+            - 'null'
+          enum:
+            - automatic
+            - bulk
+            - cut
+            - maintain
+            - ~
+        skips_warmups:
+          type: boolean
+        skips_cooldowns:
+          type: boolean
+        skips_rest_periods:
+          type: boolean
     LoginRequest:
       type: object
-      required: [email, password, device_name]
+      required:
+        - email
+        - password
+        - device_name
       properties:
-        email: {type: string, format: email, maxLength: 255}
-        password: {type: string, format: password}
-        device_name: {type: string, maxLength: 255}
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          format: password
+        device_name:
+          type: string
+          maxLength: 255
     AppleAuthenticationRequest:
       type: object
-      required: [authorization_code, device_name]
+      required:
+        - authorization_code
+        - device_name
       properties:
         authorization_code:
           type: string
-          description: Single-use authorization code returned by Apple's native authorization flow.
+          description: "Single-use authorization code returned by Apple's native authorization flow."
           maxLength: 8192
-        device_name: {type: string, maxLength: 255}
-        full_name: {type: string, maxLength: 255}
+        device_name:
+          type: string
+          maxLength: 255
+        full_name:
+          type: string
+          maxLength: 255
     GoogleAuthenticationRequest:
       type: object
-      required: [id_token, device_name]
+      required:
+        - id_token
+        - device_name
       properties:
         id_token:
           type: string
           maxLength: 8192
-          description: Google OpenID Connect ID token returned by Google Sign-In.
-        device_name: {type: string, maxLength: 255}
+          description: 'Google OpenID Connect ID token returned by Google Sign-In.'
+        device_name:
+          type: string
+          maxLength: 255
     GoogleIdentityRequest:
       type: object
-      required: [id_token]
+      required:
+        - id_token
       properties:
         id_token:
           type: string
           maxLength: 8192
-          description: Google OpenID Connect ID token returned by Google Sign-In.
+          description: 'Google OpenID Connect ID token returned by Google Sign-In.'
     LinkAppleIdentityRequest:
       type: object
-      required: [authorization_code]
+      required:
+        - authorization_code
       properties:
         authorization_code:
           type: string
-          description: A newly issued, single-use Apple authorization code.
+          description: 'A newly issued, single-use Apple authorization code.'
           maxLength: 8192
     AuthResponse:
       type: object
-      required: [user, token, token_type]
+      required:
+        - user
+        - token
+        - token_type
       properties:
-        user: {$ref: '#/components/schemas/User'}
-        token: {type: string}
-        token_type: {type: string, example: Bearer}
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
     UserIdentityResponse:
       type: object
-      required: [data]
+      required:
+        - data
       properties:
         data:
           type: object
-          required: [provider, email, linked_at]
+          required:
+            - provider
+            - email
+            - linked_at
           properties:
-            provider: {type: string, example: google}
-            email: {type: [string, 'null'], format: email}
-            linked_at: {type: string, format: date-time}
+            provider:
+              type: string
+              example: google
+            email:
+              type:
+                - string
+                - 'null'
+              format: email
+            linked_at:
+              type: string
+              format: date-time
     UserIdentity:
       type: object
-      required: [provider, email, linked_at]
+      required:
+        - provider
+        - email
+        - linked_at
       properties:
-        provider: {type: string, example: apple}
-        email: {type: [string, 'null'], format: email}
-        linked_at: {type: string, format: date-time}
+        provider:
+          type: string
+          example: apple
+        email:
+          type:
+            - string
+            - 'null'
+          format: email
+        linked_at:
+          type: string
+          format: date-time
     UserIdentityCollection:
       type: object
-      required: [data]
+      required:
+        - data
       properties:
         data:
           type: array
-          items: {$ref: '#/components/schemas/UserIdentity'}
+          items:
+            $ref: '#/components/schemas/UserIdentity'
     Error:
       type: object
-      required: [message]
+      required:
+        - message
       properties:
-        message: {type: string}
+        message:
+          type: string
     FeedbackRequest:
       type: object
-      required: [category, message]
+      required:
+        - category
+        - message
       properties:
-        category: {type: string, maxLength: 100}
-        message: {type: string, minLength: 1, maxLength: 5000}
+        category:
+          type: string
+          maxLength: 100
+        message:
+          type: string
+          minLength: 1
+          maxLength: 5000
     RedeemDemoCodeRequest:
       type: object
-      required: [code]
+      required:
+        - code
       properties:
-        code: {type: string, maxLength: 255, example: WILDFORCE-DEMO}
+        code:
+          type: string
+          maxLength: 255
+          example: WILDFORCE-DEMO
     RedeemDemoCodeResponse:
       type: object
-      required: [demo_code, demo_access_ends_at]
+      required:
+        - demo_code
+        - demo_access_ends_at
       properties:
-        demo_code: {type: string}
-        demo_access_ends_at: {type: [string, 'null'], format: date-time}
+        demo_code:
+          type: string
+        demo_access_ends_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
     SyncPushRequest:
       type: object
-      required: [resource, records]
+      required:
+        - resource
+        - records
       properties:
         resource:
           $ref: '#/components/parameters/SyncResource/schema'
         records:
           type: array
           maxItems: 100
-          items: {$ref: '#/components/schemas/SyncRecord'}
+          items:
+            $ref: '#/components/schemas/SyncRecord'
     BatchSyncPullRequest:
       oneOf:
         - type: object
-          required: [resources]
+          required:
+            - resources
           properties:
             resources:
               type: array
@@ -768,178 +1178,542 @@ components:
               maxItems: 20
               items:
                 type: object
-                required: [resource, updated_after]
+                required:
+                  - resource
+                  - updated_after
                 properties:
                   resource:
                     type: string
-                    enum: [users, user-app-settings, training-preferences, training-locations, body-metric-entries, body-progress-photo-sessions, exercise-profiles, nutrition-profiles, nutrition-log-entries, nutrition-log-items, workout-plans, subscriptions]
-                  updated_after: {type: [string, 'null'], format: date-time}
+                    enum:
+                      - users
+                      - user-app-settings
+                      - training-preferences
+                      - training-locations
+                      - body-metric-entries
+                      - body-progress-photo-sessions
+                      - exercise-profiles
+                      - nutrition-profiles
+                      - nutrition-log-entries
+                      - nutrition-log-items
+                      - workout-plans
+                      - subscriptions
+                  updated_after:
+                    type:
+                      - string
+                      - 'null'
+                    format: date-time
         - type: object
-          required: [cursor]
+          required:
+            - cursor
           properties:
             cursor:
               type: string
-              description: Opaque, user-bound continuation cursor.
+              description: 'Opaque, user-bound continuation cursor.'
     BatchSyncPullResponse:
       type: object
-      required: [data, meta]
+      required:
+        - data
+        - meta
       properties:
         data:
           type: array
           items:
             type: object
-            required: [resource, record]
+            required:
+              - resource
+              - record
             properties:
-              resource: {type: string}
-              record: {$ref: '#/components/schemas/SyncRecord'}
+              resource:
+                type: string
+              record:
+                $ref: '#/components/schemas/SyncRecord'
         meta:
           type: object
-          required: [as_of, next_cursor]
+          required:
+            - as_of
+            - next_cursor
           properties:
-            as_of: {type: string, format: date-time}
-            next_cursor: {type: [string, 'null']}
+            as_of:
+              type: string
+              format: date-time
+            next_cursor:
+              type:
+                - string
+                - 'null'
     SyncResponse:
       type: object
-      required: [data, meta]
+      required:
+        - data
+        - meta
       properties:
         data:
           type: array
-          items: {$ref: '#/components/schemas/SyncRecord'}
+          items:
+            $ref: '#/components/schemas/SyncRecord'
         meta:
           type: object
-          required: [resource]
+          required:
+            - resource
           properties:
-            resource: {type: string}
+            resource:
+              type: string
     SyncRecord:
       type: object
-      required: [id, created_at, updated_at]
+      description: "A synced record. Besides the listed fields it carries the model's synced columns, including its relationship foreign keys (e.g. `user_id`, `workout_plan_id`, `workout_day_id`, `workout_block_id`, `planned_exercise_id`, `nutrition_plan_id`, `nutrition_day_id`)."
+      required:
+        - id
+        - created_at
+        - updated_at
       properties:
-        id: {type: string, format: uuid}
-        created_at: {type: string, format: date-time}
-        updated_at: {type: string, format: date-time}
-        deleted_at: {type: [string, 'null'], format: date-time}
+        id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
       additionalProperties: true
-    WorkoutPlanGenerationResponse:
+    WorkoutPlanSyncResponse:
       type: object
-      required: [data]
+      required:
+        - data
       properties:
         data:
-          $ref: '#/components/schemas/GeneratedWorkoutPlan'
-    GeneratedWorkoutPlan:
+          $ref: '#/components/schemas/WorkoutPlanSync'
+    WorkoutPlanSync:
+      allOf:
+        - $ref: '#/components/schemas/SyncRecord'
+        - type: object
+          required:
+            - name
+            - goal
+            - status
+            - workout_days
+          properties:
+            name:
+              type: string
+            goal:
+              type: string
+            status:
+              type: string
+              enum:
+                - draft
+            notes:
+              type:
+                - string
+                - 'null'
+            mesocycle_number:
+              type:
+                - integer
+                - 'null'
+            phase:
+              type:
+                - string
+                - 'null'
+            phase_week:
+              type:
+                - integer
+                - 'null'
+            cycle_length:
+              type:
+                - integer
+                - 'null'
+            body_composition_phase:
+              type:
+                - string
+                - 'null'
+            starts_on:
+              type:
+                - string
+                - 'null'
+              format: date-time
+            workout_days:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkoutDaySync'
+    WorkoutDaySync:
+      allOf:
+        - $ref: '#/components/schemas/SyncRecord'
+        - type: object
+          required:
+            - title
+            - focus
+            - status
+            - order_index
+            - blocks
+            - exercises
+          properties:
+            user_id:
+              type: string
+              format: uuid
+            workout_plan_id:
+              type:
+                - string
+                - 'null'
+              format: uuid
+            source_workout_day_id:
+              type:
+                - string
+                - 'null'
+              format: uuid
+              description: 'The template this workout day was created from, if any.'
+            title:
+              type: string
+            focus:
+              type: string
+            status:
+              type: string
+            order_index:
+              type: integer
+            intended_weekday:
+              type:
+                - string
+                - 'null'
+            day_type:
+              type:
+                - string
+                - 'null'
+            estimated_duration_minutes:
+              type:
+                - integer
+                - 'null'
+            blocks:
+              type: array
+              items:
+                $ref: '#/components/schemas/SyncRecord'
+            exercises:
+              type: array
+              items:
+                $ref: '#/components/schemas/SyncRecord'
+    NutritionPlanSyncResponse:
       type: object
-      required: [name, goal, status, workout_days]
+      required:
+        - data
       properties:
-        name: {type: string}
-        goal: {type: string}
-        status: {type: string, enum: [draft]}
-        notes: {type: [string, 'null']}
-        mesocycle_number: {type: integer}
-        phase: {type: [string, 'null']}
-        phase_week: {type: [integer, 'null']}
-        cycle_length: {type: [integer, 'null']}
-        body_composition_phase: {type: [string, 'null']}
-        starts_on: {type: [string, 'null'], format: date-time}
-        workout_days:
+        data:
+          $ref: '#/components/schemas/NutritionPlan'
+    GenerateSingleWorkoutRequest:
+      type: object
+      required:
+        - focuses
+        - muscleGroups
+        - equipment
+        - includeWarmup
+        - includeCooldown
+        - durationMinutes
+      properties:
+        goal:
+          type:
+            - string
+            - 'null'
+          enum:
+            - generalFitness
+            - loseWeight
+            - buildMuscle
+            - gainStrength
+            - improveEndurance
+            - improveMobility
+            - bodyRecomposition
+            - ~
+        focuses:
           type: array
-          items: {$ref: '#/components/schemas/GeneratedWorkoutDay'}
+          maxItems: 10
+          items:
+            type: string
+            enum:
+              - fullBody
+              - upperBody
+              - lowerBody
+              - chest
+              - back
+              - shoulders
+              - arms
+              - core
+              - cardio
+              - mobility
+        muscleGroups:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            maxLength: 100
+        equipment:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 100
+        includeWarmup:
+          type: boolean
+        includeCooldown:
+          type: boolean
+        durationMinutes:
+          type: integer
+          minimum: 10
+          maximum: 180
+    GeneratedWorkoutDayResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/GeneratedWorkoutDay'
     GeneratedWorkoutDay:
       type: object
-      required: [title, focus, status, order_index, intended_weekday, day_type, estimated_duration_minutes, blocks]
+      required:
+        - title
+        - focus
+        - status
+        - order_index
+        - blocks
       properties:
-        title: {type: string}
-        focus: {type: string}
-        status: {type: string, enum: [planned]}
-        order_index: {type: integer}
-        intended_weekday: {type: string}
-        day_type: {type: string}
-        estimated_duration_minutes: {type: integer}
-        notes: {type: [string, 'null']}
+        title:
+          type: string
+        focus:
+          type: string
+        status:
+          type: string
+        order_index:
+          type: integer
+        intended_weekday:
+          type:
+            - string
+            - 'null'
+        day_type:
+          type:
+            - string
+            - 'null'
+        estimated_duration_minutes:
+          type:
+            - integer
+            - 'null'
+        creation_source:
+          type:
+            - string
+            - 'null'
+        notes:
+          type:
+            - string
+            - 'null'
         blocks:
           type: array
-          items: {$ref: '#/components/schemas/GeneratedWorkoutBlock'}
+          items:
+            $ref: '#/components/schemas/GeneratedWorkoutBlock'
     GeneratedWorkoutBlock:
       type: object
-      required: [type, order_index, rounds, exercises]
+      required:
+        - type
+        - order_index
+        - exercises
       properties:
-        type: {type: string, enum: [warmup, standard, superset, cooldown]}
-        order_index: {type: integer}
-        rounds: {type: integer}
-        rest_after_block_seconds: {type: [integer, 'null']}
-        notes: {type: [string, 'null']}
+        type:
+          type: string
+          enum:
+            - warmup
+            - standard
+            - superset
+            - cooldown
+        order_index:
+          type: integer
+        rounds:
+          type:
+            - integer
+            - 'null'
+        rest_after_block_seconds:
+          type:
+            - integer
+            - 'null'
+        notes:
+          type:
+            - string
+            - 'null'
         exercises:
           type: array
-          items: {$ref: '#/components/schemas/GeneratedPlannedExercise'}
+          items:
+            $ref: '#/components/schemas/GeneratedPlannedExercise'
     GeneratedPlannedExercise:
       type: object
-      required: [exercise, order_index]
+      required:
+        - exercise
+        - order_index
       properties:
-        exercise: {type: string}
-        order_index: {type: integer}
-        sets: {type: [integer, 'null']}
-        reps_min: {type: [integer, 'null']}
-        reps_max: {type: [integer, 'null']}
-        target_reps: {type: [array, 'null'], items: {type: integer}}
-        target_weight_kg: {type: [number, 'null']}
-        target_weights_kg: {type: [array, 'null'], items: {type: number}}
-        target_duration_minutes: {type: [integer, 'null']}
-        target_duration_seconds: {type: [integer, 'null']}
-        target_distance_km: {type: [number, 'null']}
-        target_pace_seconds_per_km: {type: [integer, 'null']}
-        rest_seconds: {type: [integer, 'null']}
+        exercise:
+          type: string
+        order_index:
+          type: integer
+        sets:
+          type:
+            - integer
+            - 'null'
+        reps_min:
+          type:
+            - integer
+            - 'null'
+        reps_max:
+          type:
+            - integer
+            - 'null'
+        target_reps:
+          type:
+            - array
+            - 'null'
+          items:
+            type: integer
+        target_weight_kg:
+          type:
+            - number
+            - 'null'
+        target_weights_kg:
+          type:
+            - array
+            - 'null'
+          items:
+            type: number
+        target_duration_minutes:
+          type:
+            - integer
+            - 'null'
+        target_duration_seconds:
+          type:
+            - integer
+            - 'null'
+        target_distance_km:
+          type:
+            - number
+            - 'null'
+        target_pace_seconds_per_km:
+          type:
+            - integer
+            - 'null'
+        rest_seconds:
+          type:
+            - integer
+            - 'null'
         set_style_configuration:
           anyOf:
             - $ref: '#/components/schemas/SetStyleConfiguration'
             - type: 'null'
-        notes: {type: [string, 'null']}
+        notes:
+          type:
+            - string
+            - 'null'
     SetStyleConfiguration:
       type: object
-      required: [style]
+      required:
+        - style
       properties:
-        style: {type: string, enum: [warmup, straight, topSetBackoff, ascendingPyramid, dropSet, restPause, intervals, tempo]}
-        applies_to_final_set_only: {type: boolean}
-        drop_count: {type: integer, minimum: 1}
-        drop_weight_percent: {type: number, minimum: 1, maximum: 100}
-        backoff_set_count: {type: integer, minimum: 1}
-        backoff_weight_percent: {type: number, minimum: 1, maximum: 100}
-        intra_set_rest_seconds: {type: integer, minimum: 1}
-        tempo: {type: string}
-        target_rir: {type: integer, minimum: 0, maximum: 10}
+        style:
+          type: string
+          enum:
+            - warmup
+            - straight
+            - topSetBackoff
+            - ascendingPyramid
+            - dropSet
+            - restPause
+            - intervals
+            - tempo
+        applies_to_final_set_only:
+          type: boolean
+        drop_count:
+          type: integer
+          minimum: 1
+        drop_weight_percent:
+          type: number
+          minimum: 1
+          maximum: 100
+        backoff_set_count:
+          type: integer
+          minimum: 1
+        backoff_weight_percent:
+          type: number
+          minimum: 1
+          maximum: 100
+        intra_set_rest_seconds:
+          type: integer
+          minimum: 1
+        tempo:
+          type: string
+        target_rir:
+          type: integer
+          minimum: 0
+          maximum: 10
     WorkoutDay:
       allOf:
         - $ref: '#/components/schemas/SyncRecord'
         - type: object
-          required: [title, kind, blocks, exercises]
+          required:
+            - title
+            - kind
+            - blocks
+            - exercises
           properties:
-            title: {type: string}
-            kind: {type: string, enum: [workout, template], description: '`template` is a reusable coach-owned workout day; `workout` is an executable workout day.'}
-            blocks: {type: array, items: {$ref: '#/components/schemas/SyncRecord'}}
-            exercises: {type: array, items: {$ref: '#/components/schemas/SyncRecord'}}
+            title:
+              type: string
+            kind:
+              type: string
+              enum:
+                - workout
+                - template
+              description: '`template` is a reusable coach-owned workout day; `workout` is an executable workout day.'
+            blocks:
+              type: array
+              items:
+                $ref: '#/components/schemas/SyncRecord'
+            exercises:
+              type: array
+              items:
+                $ref: '#/components/schemas/SyncRecord'
     WorkoutDayResponse:
       type: object
-      required: [data]
+      required:
+        - data
       properties:
-        data: {type: array, items: {$ref: '#/components/schemas/WorkoutDay'}}
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutDay'
     NutritionPlan:
       allOf:
         - $ref: '#/components/schemas/SyncRecord'
         - type: object
-          required: [days]
+          required:
+            - days
           properties:
-            days: {type: array, items: {$ref: '#/components/schemas/SyncRecord'}}
+            days:
+              type: array
+              items:
+                $ref: '#/components/schemas/SyncRecord'
     NutritionPlanResponse:
       type: object
-      required: [data]
+      required:
+        - data
       properties:
-        data: {type: array, items: {$ref: '#/components/schemas/NutritionPlan'}}
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/NutritionPlan'
     ValidationError:
       type: object
-      required: [message, errors]
+      required:
+        - message
+        - errors
       properties:
-        message: {type: string}
+        message:
+          type: string
         errors:
           type: object
           additionalProperties:
             type: array
-            items: {type: string}
+            items:
+              type: string
 security:
   - bearerAuth: []
