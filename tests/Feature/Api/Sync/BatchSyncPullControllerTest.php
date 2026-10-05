@@ -4,6 +4,8 @@ use App\Models\NutritionLogEntry;
 use App\Models\NutritionLogItem;
 use App\Models\TrainingLocation;
 use App\Models\User;
+use App\Models\WorkoutBlock;
+use App\Models\WorkoutDay;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
@@ -19,7 +21,7 @@ test('returns 422 for unsupported resources and invalid cursors', function () {
     Sanctum::actingAs($user);
 
     $this->postJson('/api/sync/pull/batch', [
-        'resources' => [['resource' => 'workout-days', 'updated_after' => null]],
+        'resources' => [['resource' => 'nutrition-log-media', 'updated_after' => null]],
     ])->assertUnprocessable()->assertJsonValidationErrors(['resources.0.resource']);
 
     $this->postJson('/api/sync/pull/batch', ['cursor' => 'not-a-valid-cursor'])
@@ -50,6 +52,27 @@ test('returns only the authenticated users records and tombstones', function () 
         ->assertJsonMissing(['id' => $otherLocation->id]);
 
     expect(collect($response->json('data'))->firstWhere('record.id', $deletedLocation->id)['record']['deleted_at'])->not->toBeNull();
+});
+
+test('returns workout graph rows flat, scoped through their parents', function () {
+    $user = User::factory()->create();
+    $block = WorkoutBlock::factory()->for(WorkoutDay::factory()->for($user))->create();
+    $otherBlock = WorkoutBlock::factory()->create();
+    Sanctum::actingAs($user);
+
+    $response = $this->postJson('/api/sync/pull/batch', [
+        'resources' => [
+            ['resource' => 'workout-days', 'updated_after' => null],
+            ['resource' => 'workout-blocks', 'updated_after' => null],
+        ],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonFragment(['resource' => 'workout-days'])
+        ->assertJsonFragment(['resource' => 'workout-blocks'])
+        ->assertJsonFragment(['workout_day_id' => $block->workout_day_id])
+        ->assertJsonMissing(['id' => $otherBlock->id]);
 });
 
 test('emits nutrition log entries before their items at the same timestamp', function () {

@@ -101,13 +101,6 @@ class SyncRegistry
     {
         return array_values(array_diff(array_keys(self::MODELS), [
             'nutrition-log-media',
-            'nutrition-plans',
-            'nutrition-days',
-            'nutrition-meals',
-            'workout-days',
-            'workout-blocks',
-            'planned-exercises',
-            'exercise-results',
         ]));
     }
 
