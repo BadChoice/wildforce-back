@@ -963,7 +963,7 @@
           "Sync"
         ],
         "summary": "Pull changed flat-resource records in stable, paginated order",
-        "description": "The first request supplies the resources and their watermarks. Later requests\nsupply only the opaque `cursor` returned by the prior response. Workout-day\nand nutrition-plan graphs, plus nutrition-log media, are not available here.\n",
+        "description": "The first request supplies the resources and their watermarks. Later requests\nsupply only the opaque `cursor` returned by the prior response. Nutrition-log\nmedia is not available here.\n",
         "requestBody": {
           "required": true,
           "content": {
@@ -981,156 +981,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BatchSyncPullResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthenticated"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
-      }
-    },
-    "/api/sync/workout-days": {
-      "get": {
-        "tags": [
-          "Sync"
-        ],
-        "summary": "Pull workout days and templates with their blocks, exercises, and results",
-        "description": "Each workout day includes `kind`: `workout` for an executable workout or `template` for a reusable coach-owned workout day.",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/UpdatedAfter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Changed workout days",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkoutDayResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthenticated"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Sync"
-        ],
-        "summary": "Push workout days and templates with their blocks, exercises, and results",
-        "description": "Set `kind` to `template` for a reusable coach-owned workout day. It must not be attached to a workout plan.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "records"
-                ],
-                "properties": {
-                  "records": {
-                    "type": "array",
-                    "maxItems": 100,
-                    "items": {
-                      "$ref": "#/components/schemas/WorkoutDay"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Synchronized workout days",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WorkoutDayResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthenticated"
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
-          }
-        }
-      }
-    },
-    "/api/sync/nutrition-plans": {
-      "get": {
-        "tags": [
-          "Sync"
-        ],
-        "summary": "Pull nutrition plans with their days and meals",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/UpdatedAfter"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Changed nutrition plans",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NutritionPlanResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthenticated"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Sync"
-        ],
-        "summary": "Push nutrition plans with their days and meals",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "records"
-                ],
-                "properties": {
-                  "records": {
-                    "type": "array",
-                    "maxItems": 100,
-                    "items": {
-                      "$ref": "#/components/schemas/NutritionPlan"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Synchronized nutrition plans",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NutritionPlanResponse"
                 }
               }
             }
@@ -1990,20 +1840,6 @@
             }
           }
         ]
-      },
-      "NutritionPlanResponse": {
-        "type": "object",
-        "required": [
-          "data"
-        ],
-        "properties": {
-          "data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/NutritionPlan"
-            }
-          }
-        }
       },
       "ValidationError": {
         "type": "object",

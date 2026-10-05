@@ -25,7 +25,7 @@ class SyncService
     {
         return DB::transaction(function () use ($user, $modelClass, $records): Collection {
             return collect($records)->map(function (array $record) use ($user, $modelClass): Model {
-                $record['id'] = Str::lower($record['id']);
+                $record = $this->normalizeUuidKeys($record);
                 $clientUpdatedAt = Carbon::parse($record['updated_at']);
                 $deletedAt = isset($record['deleted_at'])
                     ? Carbon::parse($record['deleted_at'])
@@ -87,6 +87,26 @@ class SyncService
                 return $model;
             });
         });
+    }
+
+    /**
+     * Lowercase the primary key and UUID foreign keys so Eloquent can match
+     * related models, as it compares keys case-sensitively when eager loading.
+     *
+     * @param  array<string, mixed>  $record
+     * @return array<string, mixed>
+     */
+    private function normalizeUuidKeys(array $record): array
+    {
+        $record['id'] = Str::lower($record['id']);
+
+        foreach ($record as $attribute => $value) {
+            if (str_ends_with($attribute, '_id') && is_string($value) && Str::isUuid($value)) {
+                $record[$attribute] = Str::lower($value);
+            }
+        }
+
+        return $record;
     }
 
     /**

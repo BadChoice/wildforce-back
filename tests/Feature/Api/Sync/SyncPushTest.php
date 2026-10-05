@@ -1,7 +1,9 @@
 <?php
 
+use App\Models\PlannedExercise;
 use App\Models\TrainingLocation;
 use App\Models\User;
+use App\Models\WorkoutDay;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
@@ -144,6 +146,35 @@ test('it does not rewrite an existing primary key when UUID casing differs', fun
     expect($location->fresh()->user_id)->toBe($user->id);
 });
 
+test('it lowercases UUID foreign keys so pushed records attach to their parent', function () {
+    $user = User::factory()->create();
+    $plannedExercise = PlannedExercise::factory()
+        ->for(WorkoutDay::factory()->for($user))
+        ->create();
+    Sanctum::actingAs($user);
+    $exerciseResultId = (string) Str::uuid();
+
+    $response = $this->postJson('/api/sync/push', [
+        'resource' => 'exercise-results',
+        'records' => [[
+            'id' => strtoupper($exerciseResultId),
+            'created_at' => '2026-10-05T14:44:00Z',
+            'updated_at' => '2026-10-05T14:44:05Z',
+            'planned_exercise_id' => strtoupper($plannedExercise->id),
+            'completed_at' => '2026-10-05T14:44:00Z',
+            'completed_sets' => 3,
+            'completed_reps' => 8,
+            'per_set_reps' => [8, 8, 8],
+        ]],
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('data.0.planned_exercise_id', $plannedExercise->id);
+
+    expect($plannedExercise->load('exerciseResults')->exerciseResults->pluck('id')->all())
+        ->toBe([$exerciseResultId]);
+});
+
 test('it returns 401 when no token is provided', function () {
     $response = $this->postJson('/api/sync/push', []);
 
@@ -214,126 +245,4 @@ test('it rejects updates to a record owned by another user', function () {
         ->assertJsonValidationErrors(['records']);
 
     expect($location->fresh()->name)->toBe('Private gym');
-});
-
-test('it synchronizes a complete workout day graph atomically', function () {
-    $user = User::factory()->create();
-    Sanctum::actingAs($user);
-    $workoutDayId = (string) Str::uuid();
-    $blockId = (string) Str::uuid();
-    $exerciseId = (string) Str::uuid();
-    $resultId = (string) Str::uuid();
-
-    $response = $this->postJson('/api/sync/workout-days', [
-        'records' => [[
-            'id' => $workoutDayId,
-            'created_at' => '2026-09-24T12:00:00Z',
-            'updated_at' => '2026-09-24T12:00:00Z',
-            'deleted_at' => null,
-            'kind' => 'template',
-            'title' => 'Upper body',
-            'focus' => 'upperBody',
-            'status' => 'planned',
-            'did_count_toward_streak' => false,
-            'order_index' => 0,
-            'creation_source' => 'generated',
-            'blocks' => [[
-                'id' => $blockId,
-                'created_at' => '2026-09-24T12:00:00Z',
-                'updated_at' => '2026-09-24T12:00:00Z',
-                'deleted_at' => null,
-                'type' => 'standard',
-                'order_index' => 0,
-                'rounds' => 1,
-                'exercises' => [[
-                    'id' => $exerciseId,
-                    'created_at' => '2026-09-24T12:00:00Z',
-                    'updated_at' => '2026-09-24T12:00:00Z',
-                    'deleted_at' => null,
-                    'exercise' => 'benchPress',
-                    'order_index' => 0,
-                    'exercise_results' => [[
-                        'id' => $resultId,
-                        'created_at' => '2026-09-24T12:00:00Z',
-                        'updated_at' => '2026-09-24T12:00:00Z',
-                        'deleted_at' => null,
-                        'feedback' => 'justRight',
-                        'completed_at' => '2026-09-24T12:00:00Z',
-                        'watch_set_summary' => ['rep_count' => 8],
-                    ]],
-                ]],
-            ]],
-            'exercises' => [],
-        ]],
-    ]);
-
-    $response->assertOk()
-        ->assertJsonPath('data.0.id', $workoutDayId)
-        ->assertJsonPath('data.0.kind', 'template')
-        ->assertJsonPath('data.0.blocks.0.id', $blockId)
-        ->assertJsonPath('data.0.blocks.0.exercises.0.id', $exerciseId)
-        ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.id', $resultId)
-        ->assertJsonPath('data.0.blocks.0.exercises.0.exercise_results.0.watch_set_summary.cadence_r_p_m', 0);
-
-    $this->assertDatabaseHas('workout_days', ['id' => $workoutDayId, 'user_id' => $user->id, 'kind' => 'template']);
-    $this->assertDatabaseHas('workout_blocks', ['id' => $blockId, 'workout_day_id' => $workoutDayId]);
-    $this->assertDatabaseHas('planned_exercises', ['id' => $exerciseId, 'workout_day_id' => $workoutDayId, 'workout_block_id' => $blockId]);
-    $this->assertDatabaseHas('exercise_results', ['id' => $resultId, 'planned_exercise_id' => $exerciseId]);
-});
-
-test('it synchronizes a complete nutrition plan graph atomically', function () {
-    $user = User::factory()->create();
-    Sanctum::actingAs($user);
-    $planId = (string) Str::uuid();
-    $dayId = (string) Str::uuid();
-    $mealId = (string) Str::uuid();
-
-    $response = $this->postJson('/api/sync/nutrition-plans', [
-        'records' => [[
-            'id' => $planId,
-            'created_at' => '2026-09-25T12:00:00Z',
-            'updated_at' => '2026-09-25T12:00:00Z',
-            'deleted_at' => null,
-            'starts_on' => '2026-09-25T00:00:00Z',
-            'goal' => 'generalFitness',
-            'daily_calorie_average' => 2200,
-            'days' => [[
-                'id' => $dayId,
-                'created_at' => '2026-09-25T12:00:00Z',
-                'updated_at' => '2026-09-25T12:00:00Z',
-                'deleted_at' => null,
-                'date' => '2026-09-25',
-                'weekday' => 'thursday',
-                'day_type' => 'rest',
-                'target_calories' => 2200,
-                'target_protein_grams' => 150,
-                'target_carbs_grams' => 200,
-                'target_fat_grams' => 70,
-                'energy_demand' => 'low',
-                'meals' => [[
-                    'id' => $mealId,
-                    'created_at' => '2026-09-25T12:00:00Z',
-                    'updated_at' => '2026-09-25T12:00:00Z',
-                    'deleted_at' => null,
-                    'title' => 'Breakfast',
-                    'order_index' => 0,
-                    'meal_type' => 'breakfast',
-                    'target_calories' => 550,
-                    'target_protein_grams' => 35,
-                    'target_carbs_grams' => 50,
-                    'target_fat_grams' => 20,
-                    'example_foods' => [],
-                ]],
-            ]],
-        ]],
-    ]);
-
-    $response->assertOk()
-        ->assertJsonPath('data.0.id', $planId)
-        ->assertJsonPath('data.0.days.0.id', $dayId)
-        ->assertJsonPath('data.0.days.0.meals.0.id', $mealId);
-
-    $this->assertDatabaseHas('nutrition_plans', ['id' => $planId, 'user_id' => $user->id]);
-    $this->assertDatabaseHas('nutrition_days', ['id' => $dayId, 'nutrition_plan_id' => $planId]);
-    $this->assertDatabaseHas('nutrition_meals', ['id' => $mealId, 'nutrition_day_id' => $dayId]);
 });
