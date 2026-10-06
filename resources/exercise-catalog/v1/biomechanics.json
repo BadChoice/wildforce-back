@@ -119,6 +119,36 @@
             "head higher than hips"
         ]
     },
+    "dumbbellInclineBenchPress": {
+        "phase": "mid-to-bottom",
+        "bodyPosition": [
+            "lying supine on a clearly inclined bench",
+            "head and upper back supported",
+            "feet planted on floor"
+        ],
+        "equipment": [
+            "one dumbbell in each hand",
+            "incline bench"
+        ],
+        "arms": [
+            "elbows bent beside upper chest",
+            "forearms approximately vertical"
+        ],
+        "movement": [
+            "dumbbells press upward from upper-chest line"
+        ],
+        "camera": {
+            "angle": "side 3/4",
+            "priority": "the upward bench angle and two independent dumbbells must be unmistakable"
+        },
+        "mustNot": [
+            "flat bench",
+            "decline bench",
+            "barbell",
+            "dumbbell fly",
+            "head lower than hips"
+        ]
+    },
     "hammerCurl": {
         "phase": "mid-curl",
         "bodyPosition": [

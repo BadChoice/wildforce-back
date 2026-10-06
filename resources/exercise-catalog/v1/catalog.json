@@ -3,7 +3,7 @@
         "schemaVersion": "1.0.0",
         "locale": "en",
         "source": "WildforceShared ExerciseCatalog.swift",
-        "exerciseCount": 132
+        "exerciseCount": 133
     },
     "referenceData": {
         "exerciseCategories": [
@@ -3016,6 +3016,68 @@
             "assets": {
                 "verticalImageKey": "inclineBenchPress_{gender}.jpeg",
                 "tutorialImageKey": "inclineBenchPress_{gender}.png"
+            }
+        },
+        {
+            "id": "dumbbellInclineBenchPress",
+            "name": "Dumbbell Incline Bench Press",
+            "category": "strength",
+            "requiredEquipment": [
+                "adjustableBench",
+                "dumbbells"
+            ],
+            "compatibleGoals": [
+                "buildMuscle",
+                "gainStrength",
+                "bodyRecomposition"
+            ],
+            "movementPatterns": [
+                "horizontalPush"
+            ],
+            "difficulty": "beginner",
+            "isUnilateral": false,
+            "isPerSideLoad": true,
+            "contraindicatedRestrictions": [
+                "shoulderPain",
+                "wristPain",
+                "elbowPain"
+            ],
+            "substitutionCandidates": [
+                "inclineBenchPress",
+                "barbellInclineBenchPress",
+                "smithMachineInclineBenchPress",
+                "dumbbellBenchPress"
+            ],
+            "description": "Pressing dumbbells on an incline bench emphasizes the upper chest while allowing each arm to move independently.",
+            "instructions": [
+                "Set an adjustable bench to a 30-45 degree incline.",
+                "Sit with a dumbbell resting on each thigh, then lean back against the bench.",
+                "Press the dumbbells upward from upper-chest level until your arms are extended.",
+                "Lower the weights back to the starting position with control."
+            ],
+            "tips": [
+                "Keep your shoulder blades retracted against the bench.",
+                "Use a moderate incline to keep the emphasis on your upper chest.",
+                "Keep your wrists stacked over your elbows throughout the press."
+            ],
+            "primaryMuscles": [
+                "chest"
+            ],
+            "secondaryMuscles": [
+                "shoulders",
+                "triceps"
+            ],
+            "supportsExternalLoad": true,
+            "trackingMode": "reps",
+            "targetMetrics": [
+                "reps",
+                "weight"
+            ],
+            "metValue": 5,
+            "notesForLlm": "Upper-chest biased press performed with independent dumbbells.",
+            "assets": {
+                "verticalImageKey": "dumbbellInclineBenchPress_{gender}.jpeg",
+                "tutorialImageKey": "dumbbellInclineBenchPress_{gender}.png"
             }
         },
         {

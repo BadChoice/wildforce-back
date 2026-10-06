@@ -9,7 +9,7 @@ test('exports the canonical catalog as Swift source files', function () {
     app(IOSExerciseCatalogExporter::class)->export(app(ExerciseCatalog::class)->all(), $directory);
 
     expect(file_get_contents("{$directory}/Exercise.swift"))
-        ->toContain('public enum Exercise: String, Codable, CaseIterable')
+        ->toContain('public enum Exercise: String, Codable, CaseIterable, Sendable')
         ->toContain('case walking')
         ->toContain('case neckCircles')
         ->toContain('func remoteImage(gender: Gender = .female) -> URL?')
