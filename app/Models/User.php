@@ -222,6 +222,16 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
             ->exists();
     }
 
+    public function isCoach(): bool
+    {
+        return $this->clients(CoachingEnrollmentStatus::Active)->exists();
+    }
+
+    public function coachExerciseMedia(): HasMany
+    {
+        return $this->hasMany(CoachExerciseMedia::class, 'coach_user_id');
+    }
+
     public function clients(?CoachingEnrollmentStatus $status = null): BelongsToMany
     {
         $clients = $this->belongsToMany(self::class, 'coaching_enrollments', 'coach_user_id', 'client_user_id')

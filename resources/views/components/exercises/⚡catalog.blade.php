@@ -1,18 +1,26 @@
 <?php
 
+use App\Models\CoachExerciseMedia;
 use App\Models\ExerciseProfile;
 use App\Models\User;
 use App\Enums\Generated\MajorMuscleGroup;
 use App\Enums\Generated\MuscleGroup;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Support\YouTubeVideoId;
+use Flux\Flux;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\WithFileUploads;
 
 new class extends Component
 {
+    use WithFileUploads;
+
     #[Locked]
     public ?string $userId = null;
 
@@ -27,6 +35,10 @@ new class extends Component
     public bool $showExerciseDetail = false;
 
     public string $selectedExerciseTab = 'details';
+
+    public ?TemporaryUploadedFile $coachExerciseImage = null;
+
+    public string $coachExerciseYoutubeUrl = '';
 
     protected ExerciseCatalog $exerciseCatalog;
 
@@ -157,6 +169,24 @@ new class extends Component
             ->first();
     }
 
+    #[Computed]
+    public function isCoach(): bool
+    {
+        return auth()->user()?->isCoach() ?? false;
+    }
+
+    #[Computed]
+    public function selectedCoachExerciseMedia(): ?CoachExerciseMedia
+    {
+        if (! $this->isCoach || $this->selectedExerciseId === null) {
+            return null;
+        }
+
+        return auth()->user()->coachExerciseMedia()
+            ->where('exercise', $this->selectedExerciseId)
+            ->first();
+    }
+
     /**
      * @param  array<string, mixed>  $exercise
      */
@@ -172,6 +202,7 @@ new class extends Component
                 $this->selectedExerciseId = $exerciseId;
                 $this->selectedExerciseTab = 'details';
                 $this->showExerciseDetail = true;
+                $this->resetCoachExerciseMediaForm();
 
                 return;
             }
@@ -191,11 +222,98 @@ new class extends Component
             $tabs[] = 'profile';
         }
 
+        if ($this->isCoach) {
+            $tabs[] = 'coach';
+        }
+
         if (! in_array($tab, $tabs, true)) {
             return;
         }
 
         $this->selectedExerciseTab = $tab;
+    }
+
+    public function saveCoachExerciseMedia(): void
+    {
+        abort_unless($this->isCoach && $this->selectedExercise !== null, 403);
+
+        $this->validate([
+            'coachExerciseImage' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:max_width=2160,max_height=2700'],
+            'coachExerciseYoutubeUrl' => ['nullable', 'string', 'max:255', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (YouTubeVideoId::fromUrl((string) $value) === null) {
+                    $fail(__('Enter a valid YouTube video URL.'));
+                }
+            }],
+        ]);
+
+        /** @var User $coach */
+        $coach = auth()->user();
+        $media = CoachExerciseMedia::withTrashed()->firstOrNew([
+            'coach_user_id' => $coach->id,
+            'exercise' => $this->selectedExerciseId,
+        ]);
+
+        if ($this->coachExerciseImage !== null) {
+            $previousImagePath = $media->image_path;
+            $media->image_path = $this->coachExerciseImage->storePubliclyAs(
+                'coach-exercise-images/'.Str::lower($coach->id),
+                $this->selectedExerciseId.'-'.Str::lower(Str::random(8)).'.'.$this->coachExerciseImage->guessExtension(),
+                (string) config('filesystems.public_storage_disc'),
+            );
+
+            if ($previousImagePath !== null) {
+                Storage::disk((string) config('filesystems.public_storage_disc'))->delete($previousImagePath);
+            }
+        }
+
+        $media->youtube_video_id = $this->coachExerciseYoutubeUrl === ''
+            ? null
+            : YouTubeVideoId::fromUrl($this->coachExerciseYoutubeUrl);
+
+        $this->persistCoachExerciseMedia($media);
+    }
+
+    public function removeCoachExerciseImage(): void
+    {
+        abort_unless($this->isCoach, 403);
+
+        $media = $this->selectedCoachExerciseMedia;
+
+        if ($media?->image_path === null) {
+            return;
+        }
+
+        Storage::disk((string) config('filesystems.public_storage_disc'))->delete($media->image_path);
+        $media->image_path = null;
+
+        $this->persistCoachExerciseMedia($media);
+    }
+
+    /**
+     * Save the media, soft deleting it once it no longer overrides anything so clients sync the removal.
+     */
+    private function persistCoachExerciseMedia(CoachExerciseMedia $media): void
+    {
+        if ($media->image_path === null && $media->youtube_video_id === null) {
+            if ($media->exists && ! $media->trashed()) {
+                $media->delete();
+            }
+        } else {
+            $media->deleted_at = null;
+            $media->save();
+        }
+
+        unset($this->selectedCoachExerciseMedia);
+        $this->resetCoachExerciseMediaForm();
+
+        Flux::toast(variant: 'success', text: __('Exercise media saved.'));
+    }
+
+    private function resetCoachExerciseMediaForm(): void
+    {
+        $this->reset('coachExerciseImage');
+        $this->resetValidation();
+        $this->coachExerciseYoutubeUrl = $this->selectedCoachExerciseMedia?->youtubeUrl() ?? '';
     }
 
     public function resetFilters(): void
@@ -321,6 +439,8 @@ new class extends Component
                 :active-tab="$selectedExerciseTab"
                 :user="$this->user"
                 :exercise-profile="$this->selectedExerciseProfile"
+                :is-coach="$this->isCoach"
+                :coach-exercise-media="$this->selectedCoachExerciseMedia"
             />
         </flux:modal>
     @endif

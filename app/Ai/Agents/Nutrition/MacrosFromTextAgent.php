@@ -74,9 +74,9 @@ class MacrosFromTextAgent implements Agent, HasProviderOptions, HasStructuredOut
                 'name' => $schema->string()->required(),
                 'canonicalFoodName' => $schema->string()->required()->description('English canonical lookup name for this food'),
                 'amountGrams' => $schema->integer()->required(),
-                'estimatedMacros' => $macros,
+                'estimatedMacros' => $schema->object($macros)->required(),
             ]))->required(),
-            'estimatedMacros' => $macros,
+            'estimatedMacros' => $schema->object($macros)->required(),
             'analysisNotes' => $schema->string()->nullable(),
         ];
     }

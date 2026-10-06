@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\BodyProgressPhotoController;
 use App\Http\Controllers\Api\FeedbackController;
+use App\Http\Controllers\Api\Nutrition\MacrosFromTextGenerationController;
 use App\Http\Controllers\Api\Nutrition\NutritionPlanGenerationController;
 use App\Http\Controllers\Api\NutritionLogEntryImageController;
 use App\Http\Controllers\Api\Subscription\SubscriptionAccessController;
@@ -53,6 +54,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('/workout-plans/generate', WorkoutPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1']);
         Route::post('/workout-days/generate', SingleWorkoutGenerationController::class)->middleware(['idempotency', 'throttle:5,1']);
         Route::post('/nutrition-plans/generate', NutritionPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1']);
+        Route::post('/nutrition-macros/generate', MacrosFromTextGenerationController::class)->middleware(['idempotency', 'throttle:10,1']);
         Route::get('/account/coaches', CoachController::class);
         Route::post('/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}', [BodyProgressPhotoController::class, 'store'])
             ->whereIn('angle', ['profile', 'front', 'torso']);

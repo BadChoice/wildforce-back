@@ -1,4 +1,4 @@
-@props(['exercise', 'imageUrls', 'activeTab' => 'details', 'user' => null, 'exerciseProfile' => null])
+@props(['exercise', 'imageUrls', 'activeTab' => 'details', 'user' => null, 'exerciseProfile' => null, 'isCoach' => false, 'coachExerciseMedia' => null])
 
 <div class="flex min-h-dvh flex-col bg-white dark:bg-zinc-900">
     <header class="border-zinc-200 p-5 dark:border-zinc-700">
@@ -56,6 +56,18 @@
                     class="shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition {{ $activeTab === 'profile' ? 'border-zinc-950 text-zinc-950 dark:border-white dark:text-white' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100' }}"
                 >
                     {{ __('Profile') }}
+                </button>
+            @endif
+
+            @if ($isCoach)
+                <button
+                    type="button"
+                    role="tab"
+                    wire:click="selectExerciseTab('coach')"
+                    aria-selected="{{ $activeTab === 'coach' ? 'true' : 'false' }}"
+                    class="shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition {{ $activeTab === 'coach' ? 'border-zinc-950 text-zinc-950 dark:border-white dark:text-white' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100' }}"
+                >
+                    {{ __('Coach media') }}
                 </button>
             @endif
         </nav>
@@ -164,6 +176,100 @@
                         {{ __('This user has not created a profile for this exercise yet.') }}
                     </div>
                 @endif
+                @break
+
+            @case('coach')
+                <form wire:submit="saveCoachExerciseMedia" class="space-y-7">
+                    <flux:text variant="subtle">{{ __('Your clients will see this image and video instead of the default ones.') }}</flux:text>
+
+                    <section
+                        class="space-y-3"
+                        x-data="{
+                            previewUrl: null,
+                            uploading: false,
+                            async upload(event) {
+                                const file = event.target.files[0];
+                                event.target.value = '';
+
+                                if (! file) {
+                                    return;
+                                }
+
+                                this.uploading = true;
+                                const resized = await this.resize(file, 1080, 1350);
+
+                                $wire.$upload(
+                                    'coachExerciseImage',
+                                    resized,
+                                    () => {
+                                        this.previewUrl = URL.createObjectURL(resized);
+                                        this.uploading = false;
+                                    },
+                                    () => this.uploading = false,
+                                );
+                            },
+                            async resize(file, maxWidth, maxHeight) {
+                                const bitmap = await createImageBitmap(file);
+                                const scale = Math.min(1, maxWidth / bitmap.width, maxHeight / bitmap.height);
+                                const canvas = document.createElement('canvas');
+                                canvas.width = Math.round(bitmap.width * scale);
+                                canvas.height = Math.round(bitmap.height * scale);
+                                canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                                bitmap.close();
+
+                                const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+
+                                return new File([blob], 'exercise.jpg', { type: 'image/jpeg' });
+                            },
+                            get hasPendingImage() {
+                                return this.previewUrl !== null && !! $wire.coachExerciseImage;
+                            },
+                        }"
+                    >
+                        <flux:heading size="sm">{{ __('Image') }}</flux:heading>
+
+                        <div class="flex items-start gap-4">
+                            <div class="aspect-[4/5] w-28 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                <img x-show="hasPendingImage" x-bind:src="previewUrl" alt="" class="h-full w-full object-cover" />
+                                @if ($coachExerciseMedia?->imageUrl())
+                                    <img x-show="! hasPendingImage" src="{{ $coachExerciseMedia->imageUrl() }}" alt="{{ $exercise['name'] }}" class="h-96 w-80 object-cover" />
+                                @else
+                                    <div x-show="! hasPendingImage" class="flex h-full items-center justify-center p-2 text-center text-xs text-zinc-500 dark:text-zinc-400">{{ __('Default image') }}</div>
+                                @endif
+                            </div>
+
+                            <div class="flex flex-col items-start gap-2">
+                                <input type="file" accept="image/*" class="hidden" x-ref="imageInput" x-on:change="upload($event)" />
+                                <flux:button type="button" size="sm" icon="photo" x-on:click="$refs.imageInput.click()" x-bind:disabled="uploading">
+                                    {{ __('Choose image') }}
+                                </flux:button>
+                                <flux:text size="sm" variant="subtle" x-show="uploading">{{ __('Uploading…') }}</flux:text>
+                                <flux:text size="sm" variant="subtle" x-show="hasPendingImage">{{ __('Press save to apply the new image.') }}</flux:text>
+
+                                @if ($coachExerciseMedia?->image_path)
+                                    <flux:button type="button" size="sm" variant="ghost" icon="trash" wire:click="removeCoachExerciseImage" wire:confirm="{{ __('Remove your image for this exercise?') }}">
+                                        {{ __('Use default image') }}
+                                    </flux:button>
+                                @endif
+                            </div>
+                        </div>
+
+                        <flux:error name="coachExerciseImage" />
+                    </section>
+
+                    <section class="space-y-3">
+                        <flux:heading size="sm">{{ __('Video') }}</flux:heading>
+                        <flux:input wire:model="coachExerciseYoutubeUrl" :label="__('YouTube link')" placeholder="https://www.youtube.com/watch?v=…" />
+
+                        @if ($coachExerciseMedia?->youtube_video_id)
+                            <div class="aspect-video w-full overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+                                <iframe src="https://www.youtube-nocookie.com/embed/{{ $coachExerciseMedia->youtube_video_id }}" title="{{ $exercise['name'] }}" class="h-full w-full" allowfullscreen loading="lazy"></iframe>
+                            </div>
+                        @endif
+                    </section>
+
+                    <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
+                </form>
                 @break
         @endswitch
     </div>

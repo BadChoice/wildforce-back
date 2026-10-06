@@ -644,6 +644,39 @@ paths:
           description: 'The idempotency key is already in progress or was reused with a different request.'
         429:
           description: 'The generation rate limit of five requests per minute was exceeded.'
+  /api/nutrition-macros/generate:
+    post:
+      tags:
+        - Nutrition
+      summary: 'Estimate meal macros from a text description'
+      description: "Estimates the foods, gram amounts, and macronutrients of a meal from a free-text description. Text fields are written in the authenticated user's preferred language. Nothing is persisted; store the estimate through the nutrition-log sync flow."
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateMacrosFromTextRequest'
+      responses:
+        200:
+          description: 'Estimated meal macros'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MacrosFromTextResponse'
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        403:
+          description: 'An active subscription, trial, or demo access is required.'
+        409:
+          description: 'The idempotency key is already in progress or was reused with a different request.'
+        422:
+          $ref: '#/components/responses/ValidationError'
+        429:
+          description: 'The estimation rate limit of ten requests per minute was exceeded.'
+        502:
+          description: 'The AI provider did not return structured JSON.'
   /api/sync/push:
     post:
       tags:
@@ -671,6 +704,13 @@ paths:
       tags:
         - Sync
       summary: 'Pull changed records for a registered resource'
+      description: |
+        Returns the records changed after `updated_after`, including soft-deleted tombstones.
+
+        `coach-exercise-media` is read-only: it returns the custom exercise images and
+        YouTube videos uploaded by the coaches the user is actively enrolled with, shaped as
+        `CoachExerciseMediaSync`. A coach removing both the image and the video produces a
+        tombstone. Media from coaches whose enrollment is no longer active is not returned.
       parameters:
         - $ref: '#/components/parameters/SyncResource'
         - $ref: '#/components/parameters/UpdatedAfter'
@@ -753,6 +793,7 @@ components:
           - planned-exercises
           - exercise-results
           - subscriptions
+          - coach-exercise-media
     UpdatedAfter:
       name: updated_after
       in: query
@@ -1397,6 +1438,7 @@ components:
                       - nutrition-log-items
                       - workout-plans
                       - subscriptions
+                      - coach-exercise-media
                   updated_after:
                     type:
                       - string
@@ -1480,6 +1522,40 @@ components:
             - 'null'
           format: date-time
       additionalProperties: true
+    CoachExerciseMediaSync:
+      description: "A coach's custom media for a catalog exercise. Use it instead of the default catalog image and video when present; a null field falls back to the default."
+      allOf:
+        - $ref: '#/components/schemas/SyncRecord'
+        - type: object
+          required:
+            - coach_user_id
+            - exercise
+            - image_url
+            - youtube_video_id
+            - youtube_url
+          properties:
+            coach_user_id:
+              type: string
+              format: uuid
+            exercise:
+              type: string
+              description: 'Exercise catalog identifier, e.g. `barbellBackSquat`.'
+            image_url:
+              type:
+                - string
+                - 'null'
+              format: uri
+              description: 'Public URL of the JPEG image. Each upload gets a new URL, so it can be cached indefinitely.'
+            youtube_video_id:
+              type:
+                - string
+                - 'null'
+              pattern: '^[A-Za-z0-9_-]{11}$'
+            youtube_url:
+              type:
+                - string
+                - 'null'
+              format: uri
     WorkoutPlanSyncResponse:
       type: object
       required:
@@ -1599,6 +1675,88 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/NutritionPlan'
+    GenerateMacrosFromTextRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          maxLength: 2000
+          description: 'Free-text description of what the user ate.'
+        meal_title:
+          type:
+            - string
+            - 'null'
+          maxLength: 255
+          description: 'Optional meal context, for example Breakfast.'
+    MacrosFromTextResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/MacrosFromText'
+    MacrosFromText:
+      type: object
+      required:
+        - title
+        - estimatedFoods
+        - estimatedMacros
+      properties:
+        title:
+          type: string
+        estimatedFoods:
+          type: array
+          items:
+            $ref: '#/components/schemas/EstimatedFood'
+        estimatedMacros:
+          $ref: '#/components/schemas/EstimatedMacros'
+        analysisNotes:
+          type:
+            - string
+            - 'null'
+    EstimatedFood:
+      type: object
+      required:
+        - name
+        - canonicalFoodName
+        - amountGrams
+        - estimatedMacros
+      properties:
+        name:
+          type: string
+        canonicalFoodName:
+          type: string
+          description: 'English canonical lookup name for the food.'
+        amountGrams:
+          type: integer
+        estimatedMacros:
+          $ref: '#/components/schemas/EstimatedMacros'
+    EstimatedMacros:
+      type: object
+      required:
+        - calories
+        - protein
+        - carbs
+        - fat
+      properties:
+        calories:
+          type: number
+          minimum: 0
+          description: 'Kilocalories.'
+        protein:
+          type: number
+          minimum: 0
+          description: 'Grams.'
+        carbs:
+          type: number
+          minimum: 0
+          description: 'Grams.'
+        fat:
+          type: number
+          minimum: 0
+          description: 'Grams.'
     GenerateSingleWorkoutRequest:
       type: object
       required:
