@@ -170,6 +170,63 @@ test('it renders unscheduled workout days using intended weekday', function () {
         ->assertSee('Leg day');
 });
 
+test('it reschedules a planned workout day dropped on a visible date', function () {
+    $user = User::factory()->create();
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
+    $workoutDay = WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'scheduled_for' => now()->startOfWeek()->addDay(),
+    ]);
+    $targetDate = now()->startOfWeek()->addDays(4)->toDateString();
+    $this->actingAs($user);
+
+    Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+        ->call('rescheduleWorkoutDay', $workoutDay->id, $targetDate);
+
+    $this->assertDatabaseHas('workout_days', [
+        'id' => $workoutDay->id,
+        'scheduled_for' => $targetDate.' 00:00:00',
+        'intended_weekday' => 'friday',
+    ]);
+});
+
+test('it does not reschedule a workout day that is not planned', function () {
+    $user = User::factory()->create();
+    $originalDate = now()->startOfWeek()->addDay();
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
+    $workoutDay = WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'status' => WorkoutDayStatus::Completed->value,
+        'scheduled_for' => $originalDate,
+    ]);
+    $this->actingAs($user);
+
+    Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+        ->call('rescheduleWorkoutDay', $workoutDay->id, now()->startOfWeek()->addDays(4)->toDateString());
+
+    $this->assertDatabaseHas('workout_days', [
+        'id' => $workoutDay->id,
+        'scheduled_for' => $originalDate->toDateTimeString(),
+    ]);
+});
+
+test('it does not reschedule a workout day from another plan', function () {
+    $user = User::factory()->create();
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
+    $otherWorkoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
+    $originalDate = now()->startOfWeek()->addDay();
+    $otherWorkoutDay = WorkoutDay::factory()->for($user)->for($otherWorkoutPlan, 'plan')->create([
+        'scheduled_for' => $originalDate,
+    ]);
+    $this->actingAs($user);
+
+    Livewire::test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+        ->call('rescheduleWorkoutDay', $otherWorkoutDay->id, now()->startOfWeek()->addDays(4)->toDateString());
+
+    $this->assertDatabaseHas('workout_days', [
+        'id' => $otherWorkoutDay->id,
+        'scheduled_for' => $originalDate->toDateTimeString(),
+    ]);
+});
+
 test('it displays and updates workout plan details', function () {
     $coach = User::factory()->create();
     $client = User::factory()->create();

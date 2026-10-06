@@ -8,7 +8,14 @@
             @php($date = $visibleStartDate->addDays($dayOffset))
             @php($dateKey = $date->toDateString())
 
-            <div wire:key="kanban-day-column-{{ $dateKey }}" class="flex w-72 shrink-0 flex-col rounded-xl bg-zinc-50 p-2 dark:bg-zinc-950">
+            <div
+                wire:key="kanban-day-column-{{ $dateKey }}"
+                x-on:dragover.prevent="allowDrop($event, '{{ $dateKey }}')"
+                x-on:dragleave="leave($event, '{{ $dateKey }}')"
+                x-on:drop.prevent="drop($event, '{{ $dateKey }}')"
+                x-bind:class="{ 'ring-2 ring-indigo-500': isDropTarget('{{ $dateKey }}') }"
+                class="flex w-72 shrink-0 flex-col rounded-xl bg-zinc-50 p-2 transition-shadow dark:bg-zinc-950"
+            >
                 <div class="mb-2 flex items-start justify-between gap-1 px-1">
                     <div class="min-w-0">
                         <p class="text-[10px] font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">{{ __('Week') }} {{ intdiv($dayOffset, 7) + 1 }} · {{ $date->format('D') }}</p>
@@ -22,7 +29,20 @@
                     @foreach ($workoutsByDate->get($dateKey, collect()) as $workoutDay)
                         @php($statusEnum = WorkoutDayStatus::tryFrom($workoutDay->status ?? ''))
 
-                        <div wire:key="kanban-workout-{{ $workoutDay->id }}" wire:click="openWorkoutDay('{{ $workoutDay->id }}')" role="button" tabindex="0" class="cursor-pointer rounded-lg border border-zinc-200 bg-white p-3 text-xs shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800">
+                        <div
+                            wire:key="kanban-workout-{{ $workoutDay->id }}"
+                            wire:click="openWorkoutDay('{{ $workoutDay->id }}')"
+                            role="button"
+                            tabindex="0"
+                            @if ($statusEnum === WorkoutDayStatus::Planned)
+                                draggable="true"
+                                x-on:dragstart="start($event, '{{ $workoutDay->id }}')"
+                                x-on:dragend="end()"
+                                x-on:click.capture="suppressClickAfterDrag($event)"
+                                x-bind:class="{ 'cursor-grab active:cursor-grabbing opacity-50': isDragging('{{ $workoutDay->id }}') }"
+                            @endif
+                            class="cursor-pointer rounded-lg border border-zinc-200 bg-white p-3 text-xs shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800"
+                        >
                             <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
                                     <p class="font-semibold text-zinc-900 dark:text-white">{{ $workoutDay->title }}</p>

@@ -6,6 +6,7 @@ use App\Enums\WorkoutKind;
 use App\Enums\Generated\MajorMuscleGroup;
 use App\Enums\Generated\MuscleGroup;
 use App\Jobs\CopyTemplateWorkoutToWorkoutPlan;
+use App\Jobs\RescheduleWorkoutDay;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutBlock;
 use App\Models\PlannedExercise;
@@ -293,6 +294,29 @@ new class extends Component {
         $this->openWorkoutDayEditor($workoutDayId);
     }
 
+    public function rescheduleWorkoutDay(string $workoutDayId, string $scheduledFor): void
+    {
+        Gate::authorize('update', $this->workoutPlan);
+
+        $scheduledDate = $this->scheduledDateWithinVisibleWeeks($scheduledFor);
+
+        if ($scheduledDate === null) {
+            return;
+        }
+
+        $workoutDay = $this->workoutPlan->workoutDays()
+            ->whereKey($workoutDayId)
+            ->first();
+
+        if ($workoutDay === null || $workoutDay->status !== WorkoutDayStatus::Planned->value) {
+            return;
+        }
+
+        RescheduleWorkoutDay::dispatchSync($workoutDay, $scheduledDate);
+
+        unset($this->workoutsByDate);
+    }
+
     public function openWorkoutDayCompleted(WorkoutDay $workoutDay): void
     {
         Gate::authorize('view', $this->workoutPlan);
@@ -568,7 +592,11 @@ new class extends Component {
 };
 ?>
 
-<div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
+<div
+    x-data="workoutDayDragDrop()"
+    x-on:workout-day-dropped="$wire.rescheduleWorkoutDay($event.detail.workoutDayId, $event.detail.scheduledFor)"
+    class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl"
+>
 
     <!-- Header -->
     @php($statusColor = match ($this->workoutPlan->status) { 'active' => 'green', 'completed' => 'indigo', default => 'zinc' })
