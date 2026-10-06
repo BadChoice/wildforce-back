@@ -5,8 +5,10 @@ namespace App\Services\Apple\Auth;
 use App\Contracts\AppleAuthentication;
 use App\Models\User;
 use App\Models\UserIdentity;
+use App\Services\Auth\InitialRegistrationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -28,6 +30,33 @@ class AppleAuthenticator implements AppleAuthentication
         $token = $authentication->user->createToken($deviceName);
 
         return new AppleAuthenticationResult($authentication->user, $token->plainTextToken, $authentication->trialEndsAt);
+    }
+
+    /** @param array<string, array<string, mixed>> $initialData */
+    public function register(string $authorizationCode, string $deviceName, ?string $fullName, array $initialData): AppleAuthenticationResult
+    {
+        $claims = $this->claimsForAuthorizationCode($authorizationCode, $this->appleClientSecret->clientId());
+        $providerUserId = $this->providerUserId($claims);
+        $identity = $this->appleIdentityQuery()->with('user.subscription')->where('provider_user_id', $providerUserId)->first();
+
+        if ($identity !== null) {
+            $token = $identity->user->createToken($deviceName);
+
+            return new AppleAuthenticationResult($identity->user, $token->plainTextToken);
+        }
+
+        $email = $claims['email'] ?? null;
+        if (! is_string($email) || $email === '') {
+            throw ValidationException::withMessages(['authorization_code' => ['Apple did not return an email address.']]);
+        }
+
+        return DB::transaction(function () use ($initialData, $email, $providerUserId, $claims, $deviceName): AppleAuthenticationResult {
+            $user = app(InitialRegistrationService::class)->register($initialData, $email);
+            $this->createAppleIdentity($user, $providerUserId, $claims);
+            $token = $user->createToken($deviceName);
+
+            return new AppleAuthenticationResult($user, $token->plainTextToken, $user->subscription->renews_at);
+        });
     }
 
     public function resolveWeb(string $authorizationCode, ?string $fullName): AppleUserAuthenticationResult

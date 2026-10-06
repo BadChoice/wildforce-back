@@ -35,3 +35,11 @@ test('it returns 422 when the Google authentication payload is invalid', functio
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['id_token', 'device_name']);
 });
+
+test('it returns 422 when initial registration data is sent to Google login', function () {
+    $this->postJson('/api/auth/google', [
+        'id_token' => 'google-id-token',
+        'device_name' => 'Jane’s iPhone',
+        'initial_data' => [],
+    ])->assertUnprocessable()->assertJsonValidationErrors(['initial_data']);
+});

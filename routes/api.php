@@ -7,7 +7,9 @@ use App\Http\Controllers\Api\Account\CoachController;
 use App\Http\Controllers\Api\Account\GoogleIdentityController;
 use App\Http\Controllers\Api\Ai\CompletionController;
 use App\Http\Controllers\Api\Auth\AppleAuthenticationController;
+use App\Http\Controllers\Api\Auth\AppleRegistrationController;
 use App\Http\Controllers\Api\Auth\GoogleAuthenticationController;
+use App\Http\Controllers\Api\Auth\GoogleRegistrationController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
 use App\Http\Controllers\Api\BodyProgressPhotoController;
@@ -33,6 +35,8 @@ Route::post('/auth/register', RegisterController::class)->middleware('throttle:5
 Route::post('/auth/login', LoginController::class)->middleware('throttle:5,1');
 Route::post('/auth/apple', AppleAuthenticationController::class)->middleware('throttle:5,1');
 Route::post('/auth/google', GoogleAuthenticationController::class)->middleware('throttle:5,1');
+Route::post('/auth/apple/register', AppleRegistrationController::class)->middleware('throttle:5,1');
+Route::post('/auth/google/register', GoogleRegistrationController::class)->middleware('throttle:5,1');
 Route::post('/webhooks/app-store', AppStoreServerNotificationController::class)->middleware('throttle:120,1');
 Route::post('/webhooks/stripe', StripeWebhookController::class)->middleware('throttle:120,1');
 

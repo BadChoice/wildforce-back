@@ -12,6 +12,9 @@ interface AppleAuthentication
 {
     public function authenticate(string $authorizationCode, string $deviceName, ?string $fullName): AppleAuthenticationResult;
 
+    /** @param array<string, array<string, mixed>> $initialData */
+    public function register(string $authorizationCode, string $deviceName, ?string $fullName, array $initialData): AppleAuthenticationResult;
+
     public function resolveWeb(string $authorizationCode, ?string $fullName): AppleUserAuthenticationResult;
 
     public function link(User $user, string $authorizationCode): UserIdentity;

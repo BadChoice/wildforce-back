@@ -5,7 +5,9 @@ namespace App\Services\Google\Auth;
 use App\Contracts\GoogleAuthentication;
 use App\Models\User;
 use App\Models\UserIdentity;
+use App\Services\Auth\InitialRegistrationService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
@@ -20,6 +22,33 @@ class GoogleAuthenticator implements GoogleAuthentication
         $token = $result->user->createToken($deviceName);
 
         return new GoogleAuthenticationResult($result->user, $token->plainTextToken, $result->trialEndsAt);
+    }
+
+    /** @param array<string, array<string, mixed>> $initialData */
+    public function register(string $identityToken, string $deviceName, array $initialData): GoogleAuthenticationResult
+    {
+        $claims = $this->googleIdentityTokenVerifier->verify($identityToken);
+        $providerUserId = $this->providerUserId($claims);
+        $identity = $this->googleIdentityQuery()->with('user.subscription')->where('provider_user_id', $providerUserId)->first();
+
+        if ($identity !== null) {
+            $token = $identity->user->createToken($deviceName);
+
+            return new GoogleAuthenticationResult($identity->user, $token->plainTextToken);
+        }
+
+        $email = $claims['email'] ?? null;
+        if (! is_string($email) || $email === '') {
+            throw ValidationException::withMessages(['id_token' => ['Google did not return an email address.']]);
+        }
+
+        return DB::transaction(function () use ($initialData, $email, $providerUserId, $claims, $deviceName): GoogleAuthenticationResult {
+            $user = app(InitialRegistrationService::class)->register($initialData, $email);
+            $this->createGoogleIdentity($user, $providerUserId, $claims);
+            $token = $user->createToken($deviceName);
+
+            return new GoogleAuthenticationResult($user, $token->plainTextToken, $user->subscription->renews_at);
+        });
     }
 
     public function resolve(string $identityToken): GoogleUserAuthenticationResult

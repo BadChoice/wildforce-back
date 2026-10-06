@@ -36,3 +36,11 @@ test('it returns 422 when the Apple authentication payload is invalid', function
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['authorization_code', 'device_name']);
 });
+
+test('it returns 422 when initial registration data is sent to Apple login', function () {
+    $this->postJson('/api/auth/apple', [
+        'authorization_code' => 'apple-authorization-code',
+        'device_name' => 'Jane’s iPhone',
+        'initial_data' => [],
+    ])->assertUnprocessable()->assertJsonValidationErrors(['initial_data']);
+});

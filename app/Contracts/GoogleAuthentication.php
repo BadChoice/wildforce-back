@@ -11,6 +11,9 @@ interface GoogleAuthentication
 {
     public function authenticate(string $identityToken, string $deviceName): GoogleAuthenticationResult;
 
+    /** @param array<string, array<string, mixed>> $initialData */
+    public function register(string $identityToken, string $deviceName, array $initialData): GoogleAuthenticationResult;
+
     public function resolve(string $identityToken): GoogleUserAuthenticationResult;
 
     public function link(User $user, string $identityToken): UserIdentity;

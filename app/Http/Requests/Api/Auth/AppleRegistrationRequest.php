@@ -2,13 +2,10 @@
 
 namespace App\Http\Requests\Api\Auth;
 
-use App\Concerns\PasswordValidationRules;
 use Illuminate\Contracts\Validation\ValidationRule;
 
-class RegisterRequest extends InitialRegistrationDataRequest
+class AppleRegistrationRequest extends InitialRegistrationDataRequest
 {
-    use PasswordValidationRules;
-
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -25,9 +22,9 @@ class RegisterRequest extends InitialRegistrationDataRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => $this->passwordRules(),
+            'authorization_code' => ['required', 'string', 'max:8192'],
             'device_name' => ['required', 'string', 'max:255'],
+            'full_name' => ['nullable', 'string', 'max:255'],
             ...$this->initialDataRules(true),
         ];
     }

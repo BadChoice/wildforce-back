@@ -4,18 +4,19 @@ namespace App\Http\Controllers\Api\Auth;
 
 use App\Contracts\GoogleAuthentication;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\Auth\GoogleAuthenticationRequest;
+use App\Http\Requests\Api\Auth\GoogleRegistrationRequest;
 use Illuminate\Http\JsonResponse;
 
-class GoogleAuthenticationController extends Controller
+class GoogleRegistrationController extends Controller
 {
     public function __construct(private GoogleAuthentication $googleAuthentication) {}
 
-    public function __invoke(GoogleAuthenticationRequest $request): JsonResponse
+    public function __invoke(GoogleRegistrationRequest $request): JsonResponse
     {
-        $result = $this->googleAuthentication->authenticate(
+        $result = $this->googleAuthentication->register(
             $request->string('id_token')->toString(),
             $request->string('device_name')->toString(),
+            $request->initialData(),
         );
 
         return response()->json([
@@ -26,7 +27,7 @@ class GoogleAuthenticationController extends Controller
             ],
             'token' => $result->token,
             'token_type' => 'Bearer',
-            ...($result->trialEndsAt === null ? [] : ['trial_ends_at' => $result->trialEndsAt]),
-        ]);
+            'trial_ends_at' => $result->trialEndsAt,
+        ], 201);
     }
 }
