@@ -9,6 +9,7 @@ use App\Services\ExerciseCatalog\ExerciseCatalog;
 use App\Support\YouTubeVideoId;
 use Flux\Flux;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -175,6 +176,21 @@ new class extends Component
         return auth()->user()?->isCoach() ?? false;
     }
 
+    /**
+     * @return Collection<string, CoachExerciseMedia>
+     */
+    #[Computed]
+    public function coachExerciseMediaByExercise(): Collection
+    {
+        if (! $this->isCoach) {
+            return collect();
+        }
+
+        return auth()->user()->coachExerciseMedia()
+            ->get(['exercise', 'image_path', 'youtube_video_id'])
+            ->keyBy('exercise');
+    }
+
     #[Computed]
     public function selectedCoachExerciseMedia(): ?CoachExerciseMedia
     {
@@ -303,7 +319,7 @@ new class extends Component
             $media->save();
         }
 
-        unset($this->selectedCoachExerciseMedia);
+        unset($this->selectedCoachExerciseMedia, $this->coachExerciseMediaByExercise);
         $this->resetCoachExerciseMediaForm();
 
         Flux::toast(variant: 'success', text: __('Exercise media saved.'));
@@ -387,6 +403,17 @@ new class extends Component
                                     </flux:button>
                                     <span class="font-mono text-xs ml-1 font-normal text-zinc-500 dark:text-zinc-400">{{ $exercise['id'] }}</span>
                                 </div>
+                                @if ($coachMedia = $this->coachExerciseMediaByExercise->get($exercise['id']))
+                                    <flux:badge size="sm" color="lime" :title="__('You uploaded your own media for this exercise')">
+                                        @if ($coachMedia->image_path)
+                                            <flux:icon.photo variant="micro" />
+                                        @endif
+                                        @if ($coachMedia->youtube_video_id)
+                                            <flux:icon.play variant="micro" />
+                                        @endif
+                                        <span class="ml-1">{{ __('Custom') }}</span>
+                                    </flux:badge>
+                                @endif
                             </div>
                         </flux:table.cell>
                         <flux:table.cell>

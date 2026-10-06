@@ -122,3 +122,19 @@ test('saving media again restores previously removed media', function () {
         ->trashed()->toBeFalse()
         ->youtube_video_id->toBe('aaaaaaaaaaa');
 });
+
+test('the exercise list marks the exercises with coach media', function () {
+    CoachExerciseMedia::factory()->create(['coach_user_id' => $this->coach->id, 'exercise' => 'walking']);
+    $removedMedia = CoachExerciseMedia::factory()->create(['coach_user_id' => $this->coach->id, 'exercise' => 'airSquat']);
+    $removedMedia->delete();
+    CoachExerciseMedia::factory()->create(['exercise' => 'benchPress']);
+
+    Livewire::actingAs($this->coach)
+        ->test('exercises.catalog')
+        ->set('search', 'walking')
+        ->assertSee('Custom')
+        ->set('search', 'airSquat')
+        ->assertDontSee('Custom')
+        ->set('search', 'benchPress')
+        ->assertDontSee('Custom');
+});
