@@ -1342,6 +1342,7 @@
         "required": [
           "name",
           "email",
+          "language",
           "password",
           "password_confirmation",
           "device_name",
@@ -1361,6 +1362,11 @@
             "type": "string",
             "format": "email",
             "maxLength": 255
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Preferred language used to generate the user's first workout plan."
           },
           "password": {
             "type": "string",

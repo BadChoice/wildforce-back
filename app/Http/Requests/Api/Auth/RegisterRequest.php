@@ -31,6 +31,7 @@ class RegisterRequest extends FormRequest
             'id' => ['sometimes', 'uuid', 'unique:users,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'language' => ['required', 'string', 'max:255'],
             'password' => $this->passwordRules(),
             'device_name' => ['required', 'string', 'max:255'],
             'training_profile' => ['required', 'array'],

@@ -20,6 +20,7 @@ class RegisterController extends Controller
             $user = new User([
                 'name' => $request->string('name')->toString(),
                 'email' => $request->string('email')->lower()->toString(),
+                'language' => $request->string('language')->toString(),
                 'password' => Hash::make($request->string('password')->toString()),
             ]);
 

@@ -7,6 +7,7 @@ test('it registers a user and returns a bearer token for the device', function (
     $response = $this->postJson('/api/auth/register', [
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
+        'language' => 'ca',
         'password' => 'password123',
         'password_confirmation' => 'password123',
         'device_name' => 'Jane’s iPhone',
@@ -30,6 +31,7 @@ test('it registers a user and returns a bearer token for the device', function (
         ->and($user->subscription->renews_at)->toEqual($user->subscription->starts_at->copy()->addDays(15))
         ->and($user->tokens)->toHaveCount(1)
         ->and($user->tokens->sole()->name)->toBe('Jane’s iPhone')
+        ->and($user->language)->toBe('ca')
         ->and($user->trainingPreferences->only(['goal', 'gym_type', 'workout_days']))->toBe([
             'goal' => 'buildMuscle',
             'gym_type' => 'bigGym',
@@ -46,6 +48,7 @@ test('it keeps the client generated training preferences id', function () {
     $this->postJson('/api/auth/register', [
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
+        'language' => 'ca',
         'password' => 'password123',
         'password_confirmation' => 'password123',
         'device_name' => 'Jane’s iPhone',
@@ -64,6 +67,7 @@ test('it keeps the client generated user id', function () {
         'id' => $userId,
         'name' => 'Jane Doe',
         'email' => 'jane@example.com',
+        'language' => 'ca',
         'password' => 'password123',
         'password_confirmation' => 'password123',
         'device_name' => 'Jane’s iPhone',
@@ -78,7 +82,7 @@ test('it validates the registration payload', function () {
     $response = $this->postJson('/api/auth/register', []);
 
     $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['name', 'email', 'password', 'device_name', 'training_profile']);
+        ->assertJsonValidationErrors(['name', 'email', 'language', 'password', 'device_name', 'training_profile']);
 
     $this->assertDatabaseCount('users', 0);
 });
