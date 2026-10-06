@@ -246,3 +246,22 @@ test('it rejects updates to a record owned by another user', function () {
 
     expect($location->fresh()->name)->toBe('Private gym');
 });
+
+test('it synchronizes the user timezone', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/sync/push', [
+        'resource' => 'users',
+        'records' => [[
+            'id' => $user->id,
+            'created_at' => '2030-09-22T12:00:00Z',
+            'updated_at' => '2030-09-23T12:00:00Z',
+            'timezone' => 'Europe/Madrid',
+        ]],
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.0.timezone', 'Europe/Madrid');
+
+    expect($user->fresh()->timezone)->toBe('Europe/Madrid');
+});

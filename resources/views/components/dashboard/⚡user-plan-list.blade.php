@@ -78,7 +78,6 @@ new class extends Component {
         return User::query()
             ->with([
                 'trainingPreferences',
-                'nutritionProfile',
                 'exerciseProfiles' => fn(HasMany $query): HasMany => $query->orderBy('exercise'),
                 'workoutPlans' => fn(HasMany $query): HasMany => $query
                     ->orderByDesc('updated_at')

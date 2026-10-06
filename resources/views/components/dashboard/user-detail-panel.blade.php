@@ -57,7 +57,7 @@
                     <div class="flex justify-end gap-2">
                         <flux:button size="sm" variant="ghost" icon="document-text" wire:click="openNutritionPlanPrompt">{{ __('Nutrition plan prompt') }}</flux:button>
                     </div>
-                    <x-dashboard.nutrition-profile :profile="$user->nutritionProfile" />
+                    <livewire:dashboard.nutrition-overview :user="$user" :key="'nutrition-overview-'.$user->id" />
                 </div>
                 @break
 

@@ -151,6 +151,32 @@ test('it returns 401 when requesting a private nutrition log image without a bea
         ->assertUnauthorized();
 });
 
+test('it returns a private nutrition log image to an active coach in the backend', function () {
+    Storage::fake(config('filesystems.default'));
+    $client = User::factory()->create();
+    $coach = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    $entry = nutritionLogEntryWithImage($client);
+
+    $this->actingAs($coach)
+        ->get(route('nutrition-log-entries.image', $entry))
+        ->assertOk();
+});
+
+test('it returns 404 when an unauthorized user requests a private nutrition log image in the backend', function () {
+    Storage::fake(config('filesystems.default'));
+    $entry = nutritionLogEntryWithImage(User::factory()->create());
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('nutrition-log-entries.image', $entry))
+        ->assertNotFound();
+});
+
 function nutritionLogEntryWithImage(User $user): NutritionLogEntry
 {
     $entry = NutritionLogEntry::factory()->for($user)->create();

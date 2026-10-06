@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\NutritionPlanStatus;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Database\Factories\NutritionPlanFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,5 +38,32 @@ class NutritionPlan extends Model implements Syncable
     public function days(): HasMany
     {
         return $this->hasMany(NutritionDay::class);
+    }
+
+    /**
+     * The plan's first calendar day.
+     */
+    public function startDate(): CarbonImmutable
+    {
+        return CarbonImmutable::parse($this->starts_on->toDateString());
+    }
+
+    /**
+     * The plan's last calendar day; generated plans always cover seven days.
+     */
+    public function endDate(): CarbonImmutable
+    {
+        return $this->startDate()->addDays(6);
+    }
+
+    public function statusOn(CarbonInterface $date): NutritionPlanStatus
+    {
+        $day = $date->toDateString();
+
+        return match (true) {
+            $day < $this->startDate()->toDateString() => NutritionPlanStatus::Upcoming,
+            $day > $this->endDate()->toDateString() => NutritionPlanStatus::Past,
+            default => NutritionPlanStatus::Active,
+        };
     }
 }

@@ -71,11 +71,13 @@
                 <div class="space-y-5">
                     <div class="flex items-center justify-between gap-3">
                         <div>
-                            <flux:heading size="sm">{{ __('Nutrition plans') }}</flux:heading>
-                            <flux:text variant="subtle">{{ __('Review the generator prompt and response schema for this client.') }}</flux:text>
+                            <flux:heading size="sm">{{ __('Nutrition') }}</flux:heading>
+                            <flux:text variant="subtle">{{ __('Follow this client’s nutrition plans and logged food.') }}</flux:text>
                         </div>
                         <flux:button size="sm" variant="ghost" icon="document-text" wire:click="openNutritionPlanPrompt">{{ __('Nutrition plan prompt') }}</flux:button>
                     </div>
+
+                    <livewire:dashboard.nutrition-overview :user="$client" :key="'nutrition-overview-'.$client->id" />
                 </div>
                 @break
 

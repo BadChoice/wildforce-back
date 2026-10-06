@@ -222,6 +222,18 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
             ->exists();
     }
 
+    /**
+     * The user's IANA timezone, falling back to the application timezone when missing or invalid.
+     */
+    public function preferredTimezone(): string
+    {
+        if ($this->timezone !== null && in_array($this->timezone, timezone_identifiers_list(), true)) {
+            return $this->timezone;
+        }
+
+        return (string) config('app.timezone');
+    }
+
     public function isCoach(): bool
     {
         return $this->clients(CoachingEnrollmentStatus::Active)->exists();

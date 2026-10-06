@@ -3,6 +3,10 @@
 use App\Enums\CoachingEnrollmentStatus;
 use App\Models\BodyMetricEntry;
 use App\Models\CoachingEnrollment;
+use App\Models\NutritionDay;
+use App\Models\NutritionLogEntry;
+use App\Models\NutritionLogItem;
+use App\Models\NutritionPlan;
 use App\Models\NutritionProfile;
 use App\Models\PlannedExercise;
 use App\Models\TrainingLocation;
@@ -323,4 +327,45 @@ test('it updates a workout day and removes its deleted blocks and exercises', fu
         ->and($retainedExercise->sets)->toBe(5)
         ->and(WorkoutBlock::query()->whereBelongsTo($workoutDay, 'workoutDay')->count())->toBe(2)
         ->and(PlannedExercise::query()->whereBelongsTo($workoutDay, 'workoutDay')->count())->toBe(2);
+});
+
+test('it displays the nutrition status, plans and logged day of a selected client', function () {
+    $this->travelTo('2026-10-06 12:00:00');
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    $plan = NutritionPlan::factory()->for($client)->create(['starts_on' => '2026-10-05']);
+    NutritionDay::factory()->for($plan, 'plan')->create(['date' => '2026-10-05', 'target_calories' => 2000]);
+    $entry = NutritionLogEntry::factory()->for($client)->create(['title' => 'Chicken bowl', 'logged_at' => '2026-10-05 13:00:00']);
+    NutritionLogItem::factory()->for($entry, 'entry')->create(['calories' => 1500]);
+    $this->actingAs($coach);
+
+    Livewire::test('dashboard.clients')
+        ->assertSee('1/7 days logged')
+        ->call('selectClient', $client->id)
+        ->call('selectTab', 'nutrition')
+        ->assertSee('Nutrition status')
+        ->assertSee('Daily adherence')
+        ->assertSeeHtml(route('nutrition-plans.show', $plan))
+        ->assertSee('Active');
+
+    Livewire::test('dashboard.nutrition-overview', ['user' => $client])
+        ->assertSee('-25%')
+        ->call('selectDay', '2026-10-05')
+        ->assertSet('selectedDate', '2026-10-05')
+        ->assertSee('Chicken bowl')
+        ->call('selectDay', '2026-01-01')
+        ->assertSet('selectedDate', null);
+});
+
+test('it forbids the nutrition overview of a user the coach does not follow', function () {
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test('dashboard.nutrition-overview', ['user' => User::factory()->create()])
+        ->assertForbidden();
 });

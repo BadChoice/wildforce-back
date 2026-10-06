@@ -25,6 +25,9 @@
                     <flux:sidebar.item icon="dumbbell" :href="route('workout-plans.index')" :current="request()->routeIs('workout-plans.*')" wire:navigate>
                         {{ __('Workout plans') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="utensils" :href="route('nutrition-plans.index')" :current="request()->routeIs('nutrition-plans.*')" wire:navigate>
+                        {{ __('Nutrition plans') }}
+                    </flux:sidebar.item>
 
                 </flux:sidebar.group>
 

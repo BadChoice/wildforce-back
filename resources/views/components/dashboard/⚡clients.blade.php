@@ -9,12 +9,14 @@ use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Nutrition\NutritionAdherenceCalculator;
 use App\Services\Nutrition\NutritionPlanAIGenerator;
 use App\Services\Workouts\WorkoutPlanAIGenerator;
 use App\Services\Workouts\Progression\ProgressionAnalysis;
 use App\Services\Workouts\Progression\TrainingHistory;
 use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
 use App\ViewModels\PlanPromptPreview;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
@@ -84,6 +86,15 @@ new class extends Component
             ->clients(CoachingEnrollmentStatus::Active)
             ->orderBy('users.name')
             ->get();
+    }
+
+    /**
+     * @return array<string, array{loggedDays: int, periodDays: int, lastLoggedAt: CarbonImmutable|null}>
+     */
+    #[Computed]
+    public function nutritionLogging(): array
+    {
+        return app(NutritionAdherenceCalculator::class)->recentLogging($this->clients);
     }
 
     #[Computed]
@@ -580,6 +591,7 @@ new class extends Component
             <flux:table.columns>
                 <flux:table.column>{{ __('Client') }}</flux:table.column>
                 <flux:table.column>{{ __('Email') }}</flux:table.column>
+                <flux:table.column>{{ __('Nutrition') }}</flux:table.column>
             </flux:table.columns>
 
             <flux:table.rows>
@@ -592,10 +604,13 @@ new class extends Component
                             </div>
                         </flux:table.cell>
                         <flux:table.cell>{{ $client->email }}</flux:table.cell>
+                        <flux:table.cell>
+                            <x-nutrition.logging-badge :logging="$this->nutritionLogging[$client->id] ?? null" />
+                        </flux:table.cell>
                     </flux:table.row>
                 @empty
                     <flux:table.row>
-                        <flux:table.cell colspan="2" class="py-8 text-center">{{ __('No clients have been added yet.') }}</flux:table.cell>
+                        <flux:table.cell colspan="3" class="py-8 text-center">{{ __('No clients have been added yet.') }}</flux:table.cell>
                     </flux:table.row>
                 @endforelse
             </flux:table.rows>
