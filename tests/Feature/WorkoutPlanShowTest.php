@@ -109,6 +109,7 @@ test('it opens completed workout day view popup when pressing a completed workou
         'reps_min' => 8,
         'reps_max' => 10,
         'target_weight_kg' => 80,
+        'skipped_at' => now(),
     ]);
 
     ExerciseResult::factory()->for($plannedExercise)->create([
@@ -131,7 +132,8 @@ test('it opens completed workout day view popup when pressing a completed workou
         ->assertSee('Exercise Results')
         ->assertSee('Logged Results')
         ->assertSee('82.5 kg')
-        ->assertSee('10 reps');
+        ->assertSee('10 reps')
+        ->assertSee('Skipped');
 });
 
 test('it opens editor when pressing a planned workout day', function () {

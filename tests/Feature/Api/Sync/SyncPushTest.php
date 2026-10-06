@@ -175,6 +175,29 @@ test('it lowercases UUID foreign keys so pushed records attach to their parent',
         ->toBe([$exerciseResultId]);
 });
 
+test('it synchronizes a skipped planned exercise', function () {
+    $user = User::factory()->create();
+    $plannedExercise = PlannedExercise::factory()
+        ->for(WorkoutDay::factory()->for($user))
+        ->create();
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/sync/push', [
+        'resource' => 'planned-exercises',
+        'records' => [[
+            ...$plannedExercise->syncPayload(),
+            'updated_at' => '2030-10-06T09:45:00Z',
+            'skipped_at' => '2026-10-06T09:30:00Z',
+        ]],
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $plannedExercise->id)
+        ->assertJsonPath('data.0.skipped_at', '2026-10-06T09:30:00.000000Z');
+
+    expect($plannedExercise->fresh()->skipped_at?->toISOString())
+        ->toBe('2026-10-06T09:30:00.000000Z');
+});
+
 test('it returns 401 when no token is provided', function () {
     $response = $this->postJson('/api/sync/push', []);
 

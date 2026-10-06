@@ -107,7 +107,11 @@
                                 <div class="min-w-0 flex-1">
                                     <div class="flex flex-wrap items-center justify-between gap-2">
                                         <h4 class="truncate font-semibold text-zinc-900 dark:text-white">{{ str($exercise->exercise)->headline() }}</h4>
-                                        @if ($latestResult?->feedback)
+                                        @if ($exercise->skipped_at)
+                                            <flux:badge size="sm" color="amber" variant="subtle">
+                                                {{ __('Skipped: :date', ['date' => $exercise->skipped_at->toDayDateTimeString()]) }}
+                                            </flux:badge>
+                                        @elseif ($latestResult?->feedback)
                                             <flux:badge size="sm" variant="subtle">{{ __('Feedback: :feedback', ['feedback' => str($latestResult->feedback)->headline()]) }}</flux:badge>
                                         @endif
                                     </div>

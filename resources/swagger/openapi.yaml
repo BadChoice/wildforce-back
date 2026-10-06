@@ -1955,6 +1955,11 @@ components:
           type:
             - integer
             - 'null'
+        skipped_at:
+          type:
+            - string
+            - 'null'
+          format: date-time
         set_style_configuration:
           anyOf:
             - $ref: '#/components/schemas/SetStyleConfiguration'

@@ -2322,6 +2322,7 @@
           "target_distance_km": {"type": ["number", "null"]},
           "target_pace_seconds_per_km": {"type": ["integer", "null"]},
           "rest_seconds": {"type": ["integer", "null"]},
+          "skipped_at": {"type": ["string", "null"], "format": "date-time"},
           "set_style_configuration": {"anyOf": [{"$ref": "#/components/schemas/SetStyleConfiguration"}, {"type": "null"}]},
           "notes": {"type": ["string", "null"]}
         }

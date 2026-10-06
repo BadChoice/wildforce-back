@@ -51,6 +51,7 @@ class GeneratedWorkoutDayResource extends JsonResource
                     'target_pace_seconds_per_km' => $exercise->target_pace_seconds_per_km,
                     'rest_seconds' => $exercise->rest_seconds,
                     'set_style_configuration' => $exercise->set_style_configuration,
+                    'skipped_at' => $exercise->skipped_at?->toISOString(),
                     'notes' => $exercise->notes,
                 ])->values()->all(),
             ])->values()->all(),

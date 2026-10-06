@@ -24,6 +24,7 @@ test('it returns a generated single workout without persisting it', function () 
         ->assertJsonMissingPath('data.blocks.0.exercises.0.id')
         ->assertJsonPath('data.title', 'Full body express')
         ->assertJsonPath('data.blocks.0.exercises.0.exercise', 'pushUp')
+        ->assertJsonPath('data.blocks.0.exercises.0.skipped_at', null)
         ->assertJsonPath('data.blocks.0.exercises.0.set_style_configuration.target_rir', 2);
 
     $this->assertDatabaseCount('workout_days', 0);
