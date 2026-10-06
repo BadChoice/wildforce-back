@@ -21,10 +21,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 new class extends Component {
     public WorkoutPlan $workoutPlan;
+
+    #[Url(as: 'view', except: 'calendar')]
+    public string $viewMode = 'calendar';
 
     public bool $showWorkoutDayEditor = false;
     public bool $showWorkoutDayCompleted = false;
@@ -608,71 +612,16 @@ new class extends Component {
     <!-- Display options -->
     <div class="flex justify-end">
         <flux:button.group>
-            <flux:button :variant="false ? 'primary' : 'ghost'" size="sm" icon="calendar-days" />
-            <flux:button :variant="true ? 'primary' : 'ghost'"  size="sm" icon="kanban" />
+            <flux:button :variant="$viewMode === 'calendar' ? 'primary' : 'ghost'" size="sm" icon="calendar-days" wire:click="$set('viewMode', 'calendar')" :aria-label="__('Calendar view')" />
+            <flux:button :variant="$viewMode === 'kanban' ? 'primary' : 'ghost'" size="sm" icon="kanban" wire:click="$set('viewMode', 'kanban')" :aria-label="__('Kanban view')" />
         </flux:button.group>
     </div>
 
-    <!-- Calendar -->
-    <div class="overflow-x-auto pb-2">
-        <div class="grid min-w-[52rem] grid-cols-[32px_repeat(7,minmax(0,1fr))] gap-2">
-            @foreach (range(0, 3) as $weekOffset)
-                @php($weekStart = $this->visibleStartDate->addWeeks($weekOffset))
-
-                <div wire:key="workout-week-{{ $weekStart->toDateString() }}" class="group flex min-h-44 items-center justify-center rounded-xl bg-zinc-100 p-1 dark:bg-zinc-800">
-                    <span class="-rotate-90 whitespace-nowrap text-xs font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">{{ __('Week') }} {{ $weekOffset + 1 }}</span>
-                </div>
-
-                @foreach (range(0, 6) as $dayOffset)
-                    @php($date = $weekStart->addDays($dayOffset))
-                    @php($dateKey = $date->toDateString())
-
-                    <div wire:key="workout-day-cell-{{ $dateKey }}" class="min-h-44 rounded-xl bg-zinc-50 p-2 dark:bg-zinc-950">
-                        <div class="mb-2 flex items-start justify-between gap-1">
-                            <div class="min-w-0">
-                                <p class="text-[10px] font-semibold tracking-wide text-zinc-500 uppercase dark:text-zinc-400">{{ $date->format('D') }}</p>
-                                <p class="text-sm font-semibold text-zinc-950 dark:text-white">{{ $date->format('j') }}</p>
-                            </div>
-
-                            <flux:dropdown position="bottom" align="end">
-                                <flux:button size="xs" variant="subtle" icon="ellipsis-horizontal" :aria-label="__('Workout day options for :date', ['date' => $date->toFormattedDateString()])" />
-
-                                <flux:menu>
-                                    <flux:menu.item icon="plus" wire:click="createWorkoutDay('{{ $dateKey }}')">
-                                        {{ __('Create workout day') }}
-                                    </flux:menu.item>
-
-                                    <flux:menu.separator />
-                                    <flux:menu.item icon="document-text" wire:click="openWorkoutFromText('{{ $dateKey }}')">{{ __('From text') }}</flux:menu.item>
-                                    <flux:menu.item icon="document-duplicate" wire:click="openTemplatePicker('{{ $dateKey }}')">{{ __('Add workout from template') }}</flux:menu.item>
-                                </flux:menu>
-                            </flux:dropdown>
-                        </div>
-
-                        <div class="space-y-2">
-                            @foreach ($this->workoutsByDate->get($dateKey, collect()) as $workoutDay)
-                                @php($statusEnum = WorkoutDayStatus::tryFrom($workoutDay->status ?? ''))
-                                <button type="button" wire:key="scheduled-workout-{{ $workoutDay->id }}" wire:click="openWorkoutDay('{{ $workoutDay->id }}')" class="w-full rounded-lg border border-zinc-200 bg-white p-2 text-left text-xs shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800">
-                                    <div class="flex items-start justify-between gap-1">
-                                        <p class="font-semibold text-zinc-900 dark:text-white">{{ $workoutDay->title }}</p>
-                                        @if ($statusEnum && ! $statusEnum->isDefault())
-                                            <flux:badge size="sm" :color="$statusEnum->color()" :icon="$statusEnum->icon()">
-                                                {{ $statusEnum->label() }}
-                                            </flux:badge>
-                                        @endif
-                                    </div>
-                                    <p class="mt-1 text-zinc-500 dark:text-zinc-400">{{ str($workoutDay->focus)->headline() }}</p>
-                                    @if ($workoutDay->estimated_duration_minutes)
-                                        <p class="mt-1 text-zinc-500 dark:text-zinc-400">{{ trans_choice(':count min', $workoutDay->estimated_duration_minutes, ['count' => $workoutDay->estimated_duration_minutes]) }}</p>
-                                    @endif
-                                </button>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
-            @endforeach
-        </div>
-    </div>
+    @if ($viewMode === 'kanban')
+        <x-workout-plans.kanban-view :visible-start-date="$this->visibleStartDate" :workouts-by-date="$this->workoutsByDate" />
+    @else
+        <x-workout-plans.calendar-view :visible-start-date="$this->visibleStartDate" :workouts-by-date="$this->workoutsByDate" />
+    @endif
 
     <!-- Modals -->
     <flux:modal wire:model="showWorkoutDayCompleted" class="w-full max-w-4xl p-0">

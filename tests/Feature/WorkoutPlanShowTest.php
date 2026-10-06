@@ -27,6 +27,33 @@ test('it renders scheduled workout days in their calendar cells', function () {
         ->assertSee('Upper body');
 });
 
+test('it renders workout days with their blocks and exercises in kanban view', function () {
+    $user = User::factory()->create();
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
+    $workoutDay = WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'title' => 'Push day',
+        'scheduled_for' => now()->startOfWeek()->addDays(2),
+    ]);
+    $block = WorkoutBlock::factory()->for($workoutDay)->create(['type' => 'superset']);
+    PlannedExercise::factory()->for($workoutDay)->for($block, 'block')->create([
+        'exercise' => 'benchPress',
+        'sets' => 4,
+        'reps_min' => 6,
+        'reps_max' => 8,
+    ]);
+    $this->actingAs($user);
+
+    Livewire::withQueryParams(['view' => 'kanban'])
+        ->test('workout-plans.show', ['workoutPlan' => $workoutPlan])
+        ->assertSet('viewMode', 'kanban')
+        ->assertSee('Push day')
+        ->assertSee('Superset')
+        ->assertSee('Bench Press')
+        ->assertSee('4 × 6–8')
+        ->call('openWorkoutDayEditor', $workoutDay->id)
+        ->assertSet('showWorkoutDayEditor', true);
+});
+
 test('it displays status badge for non-default workout day states', function () {
     $user = User::factory()->create();
     $workoutPlan = WorkoutPlan::factory()->for($user)->create(['starts_on' => now()->startOfWeek()]);
