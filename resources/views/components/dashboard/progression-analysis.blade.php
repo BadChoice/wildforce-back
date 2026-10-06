@@ -1,4 +1,4 @@
-@props(['analysis'])
+@props(['analysis', 'userId'])
 
 @php
     $readiness = match ($analysis->readinessLevel) {
@@ -131,6 +131,6 @@
 
     <div class="flex justify-end gap-3 border-t border-zinc-200 pt-5 dark:border-zinc-700">
         <flux:button variant="ghost" wire:click="closeProgressionAnalysis">{{ __('Back to training') }}</flux:button>
-        <flux:button variant="primary" icon="plus" wire:click="openWorkoutPlanForm">{{ __('Create workout plan') }}</flux:button>
+        <flux:button variant="primary" icon="plus" wire:click="$dispatch('open-create-workout-plan-modal', { clientId: '{{ $userId }}' })">{{ __('Create workout plan') }}</flux:button>
     </div>
 </section>

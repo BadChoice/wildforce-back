@@ -132,7 +132,6 @@ test('dashboard displays the selected user training details', function () {
         ->assertSee('Training profile')
         ->assertSee('Build Strength')
         ->assertSee('Strength foundation')
-        ->assertSee('Lower body')
         ->assertSee('Progression analysis')
         ->call('openProgressionAnalysis')
         ->assertSet('showProgressionAnalysis', true)

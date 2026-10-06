@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\PlannedExercise;
+use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,6 +21,7 @@ class PlannedExerciseFactory extends Factory
     {
         return [
             'workout_day_id' => WorkoutDay::factory(),
+            'workout_block_id' => fn (array $attributes): string => WorkoutBlock::factory()->create(['workout_day_id' => $attributes['workout_day_id']])->id,
             'exercise' => fake()->randomElement(['benchPress', 'barbellBackSquat', 'latPulldown', 'romanianDeadlift', 'dumbbellShoulderPress']),
             'order_index' => 0,
             'sets' => 3,

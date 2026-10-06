@@ -21,7 +21,6 @@ new class extends Component {
                     ->orderByRaw('coalesce(completed_at, started_at, scheduled_for, created_at) desc'),
                 'workoutDays.blocks' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
                 'workoutDays.blocks.exercises' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
-                'workoutDays.directExercises' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
             ]))
             ->orderByDesc('starts_on')
             ->orderByDesc('created_at')

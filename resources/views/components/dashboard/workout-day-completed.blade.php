@@ -81,7 +81,6 @@
 
         @php
             $blocks = $workoutDay->blocks ?? collect();
-            $directExercises = $workoutDay->directExercises ?? collect();
         @endphp
 
         @forelse ($blocks as $blockIndex => $block)
@@ -176,93 +175,7 @@
                 </div>
             </div>
         @empty
-            @if ($directExercises->isEmpty())
-                <p class="py-4 text-center text-sm text-zinc-500">{{ __('No exercises found for this workout day.') }}</p>
-            @endif
+            <p class="py-4 text-center text-sm text-zinc-500">{{ __('No exercises found for this workout day.') }}</p>
         @endforelse
-
-        @if ($directExercises->isNotEmpty())
-            <div class="space-y-3">
-                <div class="border-b border-zinc-200 pb-2 dark:border-zinc-800">
-                    <span class="text-xs font-bold tracking-wider text-zinc-400 uppercase">{{ __('Direct Exercises') }}</span>
-                </div>
-
-                <div class="space-y-4">
-                    @foreach ($directExercises as $exercise)
-                        @php
-                            $exerciseImage = $catalog->imageUrl($exercise->exercise);
-                            $results = $exercise->exerciseResults ?? collect();
-                            $latestResult = $results->first();
-                        @endphp
-
-                        <div wire:key="completed-direct-exercise-{{ $exercise->id }}" class="rounded-xl border border-zinc-200 bg-white p-4 shadow-xs dark:border-zinc-800 dark:bg-zinc-900">
-                            <div class="flex min-w-0 items-start gap-3">
-                                <img src="{{ $exerciseImage }}" class="size-14 shrink-0 rounded-xl bg-zinc-100 object-cover dark:bg-zinc-800" alt="" loading="lazy" />
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-center justify-between gap-2">
-                                        <h4 class="truncate font-semibold text-zinc-900 dark:text-white">{{ str($exercise->exercise)->headline() }}</h4>
-                                        @if ($latestResult?->feedback)
-                                            <flux:badge size="sm" variant="subtle">{{ __('Feedback: :feedback', ['feedback' => str($latestResult->feedback)->headline()]) }}</flux:badge>
-                                        @endif
-                                    </div>
-
-                                    <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                        <span>{{ __('Target: :sets sets × :min-:max reps', ['sets' => $exercise->sets, 'min' => $exercise->reps_min, 'max' => $exercise->reps_max]) }}</span>
-                                        @if ($exercise->target_weight_kg)
-                                            <span>•</span>
-                                            <span>{{ __('Target Weight: :weight kg', ['weight' => number_format((float) $exercise->target_weight_kg, 1)]) }}</span>
-                                        @endif
-                                    </div>
-
-                                    @if ($exercise->notes)
-                                        <p class="mt-1.5 text-xs text-zinc-600 dark:text-zinc-400">{{ $exercise->notes }}</p>
-                                    @endif
-                                </div>
-                            </div>
-
-                            @if ($results->isNotEmpty())
-                                <div class="mt-4 border-t border-zinc-100 pt-3 dark:border-zinc-800">
-                                    <h5 class="mb-2 text-xs font-semibold text-zinc-500 uppercase dark:text-zinc-400">{{ __('Logged Results') }}</h5>
-
-                                    @foreach ($results as $result)
-                                        <div wire:key="result-direct-{{ $result->id }}" class="space-y-2 rounded-lg bg-zinc-50 p-3 text-xs dark:bg-zinc-800/50">
-                                            <div class="flex flex-wrap items-center justify-between gap-2 text-zinc-600 dark:text-zinc-300">
-                                                <span>{{ __('Completed Sets: :sets', ['sets' => $result->completed_sets ?? (is_array($result->per_set_reps) ? count($result->per_set_reps) : '—')]) }}</span>
-                                                @if ($result->completed_weight)
-                                                    <span>{{ __('Weight: :weight kg', ['weight' => number_format((float) $result->completed_weight, 1)]) }}</span>
-                                                @endif
-                                                @if ($result->completed_distance_km)
-                                                    <span>{{ __('Distance: :dist km', ['dist' => number_format((float) $result->completed_distance_km, 2)]) }}</span>
-                                                @endif
-                                                @if ($result->completed_at)
-                                                    <span class="text-zinc-400">{{ $result->completed_at->format('H:i') }}</span>
-                                                @endif
-                                            </div>
-
-                                            @if (is_array($result->per_set_reps) && count($result->per_set_reps) > 0)
-                                                <div class="flex flex-wrap gap-2 pt-1">
-                                                    @foreach ($result->per_set_reps as $idx => $reps)
-                                                        @php
-                                                            $weightKg = is_array($result->per_set_weights_kg) ? ($result->per_set_weights_kg[$idx] ?? null) : null;
-                                                        @endphp
-                                                        <span class="inline-flex items-center gap-1 rounded-md bg-white px-2 py-1 font-medium text-zinc-800 shadow-2xs dark:bg-zinc-800 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700">
-                                                            <span class="text-zinc-400">#{{ $idx + 1 }}:</span>
-                                                            <span>{{ $reps }} {{ __('reps') }}</span>
-                                                            @if ($weightKg)
-                                                                <span class="text-zinc-500">@ {{ number_format((float) $weightKg, 1) }}kg</span>
-                                                            @endif
-                                                        </span>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
     </div>
 </div>

@@ -21,7 +21,6 @@
                 <div class="space-y-2">
                     @foreach ($workoutsByDate->get($dateKey, collect()) as $workoutDay)
                         @php($statusEnum = WorkoutDayStatus::tryFrom($workoutDay->status ?? ''))
-                        @php($directExercises = $workoutDay->directExercises->sortBy('order_index'))
 
                         <div wire:key="kanban-workout-{{ $workoutDay->id }}" wire:click="openWorkoutDay('{{ $workoutDay->id }}')" role="button" tabindex="0" class="cursor-pointer rounded-lg border border-zinc-200 bg-white p-3 text-xs shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800">
                             <div class="flex items-start justify-between gap-2">
@@ -50,14 +49,6 @@
                                         </ul>
                                     </div>
                                 @endforeach
-
-                                @if ($directExercises->isNotEmpty())
-                                    <ul class="space-y-1.5">
-                                        @foreach ($directExercises as $plannedExercise)
-                                            <x-workout-plans.exercise-summary :planned-exercise="$plannedExercise" wire:key="kanban-exercise-{{ $plannedExercise->id }}" />
-                                        @endforeach
-                                    </ul>
-                                @endif
                             </div>
                         </div>
                     @endforeach

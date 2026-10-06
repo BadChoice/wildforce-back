@@ -33,7 +33,7 @@
 
     <div class="flex-1 overflow-y-auto p-5">
         @if ($showProgressionAnalysis && $progressionAnalysis)
-            <x-dashboard.progression-analysis :analysis="$progressionAnalysis" />
+            <x-dashboard.progression-analysis :analysis="$progressionAnalysis" :user-id="$user->id" />
         @else
             @switch($activeTab)
             @case('training')

@@ -200,7 +200,7 @@ new class extends Component {
         ];
 
         return $this->workoutPlan->workoutDays()
-            ->with(['blocks.exercises.exerciseResults', 'directExercises.exerciseResults'])
+            ->with(['blocks.exercises.exerciseResults'])
             ->orderBy('order_index')
             ->get()
             ->groupBy(function (WorkoutDay $workoutDay) use ($baseStart, $visibleStart, $weekdayOffsets): string {
@@ -276,7 +276,7 @@ new class extends Component {
         Gate::authorize('view', $this->workoutPlan);
 
         $workoutDay = $this->workoutPlan->workoutDays()
-            ->with(['blocks.exercises.exerciseResults', 'directExercises.exerciseResults'])
+            ->with(['blocks.exercises.exerciseResults'])
             ->whereKey($workoutDayId)
             ->first();
 
@@ -545,7 +545,7 @@ new class extends Component {
         $this->workoutDayNotes = $workoutDay->notes ?? '';
         $this->workoutDayFocus = $workoutDay->focus;
         $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
-        $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => ['id' => filled($block->id) ? $block->id : (string) Str::uuid(), 'type' => $block->type, 'notes' => $block->notes ?? '', 'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => ['id' => filled($exercise->id) ? $exercise->id : (string) Str::uuid(), 'exercise' => $exercise->exercise, 'name' => (string) data_get($names->get($exercise->exercise), 'name', $exercise->exercise), 'notes' => '', 'sets' => 3, 'reps_min' => 8, 'reps_max' => 12, 'target_weight_kg' => '', 'rest_seconds' => 90])->all()])->all();
+        $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => ['id' => filled($block->id) ? $block->id : (string) Str::uuid(), 'type' => $block->type, 'notes' => $block->notes ?? '', 'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => ['id' => filled($exercise->id) ? $exercise->id : (string) Str::uuid(), 'exercise' => $exercise->exercise, 'name' => (string) data_get($names->get($exercise->exercise), 'name', $exercise->exercise), 'notes' => $exercise->notes ?? '', 'sets' => $exercise->sets ?? 3, 'reps_min' => $exercise->reps_min ?? 8, 'reps_max' => $exercise->reps_max ?? 12, 'target_weight_kg' => $exercise->target_weight_kg ?? '', 'rest_seconds' => $exercise->rest_seconds ?? 90])->all()])->all();
         $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
     }
 

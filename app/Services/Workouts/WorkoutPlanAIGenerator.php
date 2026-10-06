@@ -76,7 +76,6 @@ final class WorkoutPlanAIGenerator
 
             return $plan->load([
                 'workoutDays.blocks.exercises.exerciseResults',
-                'workoutDays.directExercises.exerciseResults',
             ]);
         });
     }

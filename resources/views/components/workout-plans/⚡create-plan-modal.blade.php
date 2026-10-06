@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\WorkoutPlan;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\Attributes\On;
 
@@ -49,6 +50,7 @@ new class extends Component {
             'notes' => $validated['workoutPlanNotes'] ?: null,
             'status' => 'draft',
         ]);
+        Gate::authorize('update', $workoutPlan);
         $workoutPlan->save();
 
         $this->show = false;

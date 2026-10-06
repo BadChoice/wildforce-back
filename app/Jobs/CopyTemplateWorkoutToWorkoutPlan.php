@@ -36,7 +36,7 @@ class CopyTemplateWorkoutToWorkoutPlan implements ShouldBeUnique, ShouldQueue
 
     public function handle(): void
     {
-        $templateWorkout = $this->templateWorkout->fresh(['blocks.exercises', 'directExercises']);
+        $templateWorkout = $this->templateWorkout->fresh(['blocks.exercises']);
         $userWorkoutPlan = $this->userWorkoutPlan->fresh();
 
         if ($templateWorkout === null
@@ -80,10 +80,6 @@ class CopyTemplateWorkoutToWorkoutPlan implements ShouldBeUnique, ShouldQueue
                     $this->copyExercise($templateExercise, $workoutDay, $workoutBlock);
                 }
             }
-
-            foreach ($templateWorkout->directExercises as $templateExercise) {
-                $this->copyExercise($templateExercise, $workoutDay);
-            }
         });
     }
 
@@ -102,13 +98,13 @@ class CopyTemplateWorkoutToWorkoutPlan implements ShouldBeUnique, ShouldQueue
         ]);
     }
 
-    private function copyExercise(PlannedExercise $templateExercise, WorkoutDay $workoutDay, ?WorkoutBlock $workoutBlock = null): void
+    private function copyExercise(PlannedExercise $templateExercise, WorkoutDay $workoutDay, WorkoutBlock $workoutBlock): void
     {
         $plannedExercise = new PlannedExercise;
         $plannedExercise->forceFill([
             ...$this->copyAttributes($templateExercise, ['workout_day_id', 'workout_block_id']),
             'workout_day_id' => $workoutDay->id,
-            'workout_block_id' => $workoutBlock?->id,
+            'workout_block_id' => $workoutBlock->id,
         ]);
         $plannedExercise->save();
     }

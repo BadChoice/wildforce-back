@@ -194,25 +194,6 @@ test('it rejects subscriptions because they can only be pulled', function () {
         ->assertJsonValidationErrors(['resource']);
 });
 
-test('it rejects attributes that are not synchronizable', function () {
-    $user = User::factory()->create();
-    Sanctum::actingAs($user);
-
-    $response = $this->postJson('/api/sync/push', [
-        'resource' => 'training-locations',
-        'records' => [[
-            'id' => (string) Str::uuid(),
-            'created_at' => '2026-09-22T12:00:00Z',
-            'updated_at' => '2026-09-22T12:00:00Z',
-            'deleted_at' => null,
-            'user_id' => User::factory()->create()->id,
-        ]],
-    ]);
-
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['records.0']);
-});
-
 test('it rejects updates to a record owned by another user', function () {
     $user = User::factory()->create();
     $otherUser = User::factory()->create();

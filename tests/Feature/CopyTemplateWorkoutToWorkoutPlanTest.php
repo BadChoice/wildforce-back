@@ -41,7 +41,6 @@ test('it deep copies a template workout into a user workout plan', function () {
         'completed_at' => now(),
     ]);
     $templateExerciseResult->save();
-    PlannedExercise::factory()->for($templateWorkout, 'workoutDay')->create(['exercise' => 'plank']);
     $workoutPlan = WorkoutPlan::factory()->for($client)->create();
 
     $job = new CopyTemplateWorkoutToWorkoutPlan($templateWorkout, $workoutPlan, '2026-10-06');
@@ -49,7 +48,7 @@ test('it deep copies a template workout into a user workout plan', function () {
 
     $copiedWorkout = $workoutPlan->workoutDays()
         ->where('source_workout_day_id', $templateWorkout->id)
-        ->with('blocks.exercises', 'directExercises')
+        ->with('blocks.exercises')
         ->sole();
 
     expect($copiedWorkout->user_id)->toBe($client->id)
@@ -64,9 +63,7 @@ test('it deep copies a template workout into a user workout plan', function () {
         ->and($copiedWorkout->blocks->sole()->notes)->toBe('Main lift')
         ->and($copiedWorkout->blocks->sole()->exercises)->toHaveCount(1)
         ->and($copiedWorkout->blocks->sole()->exercises->sole()->exercise)->toBe('barbellBackSquat')
-        ->and($copiedWorkout->blocks->sole()->exercises->sole()->sets)->toBe(5)
-        ->and($copiedWorkout->directExercises)->toHaveCount(1)
-        ->and($copiedWorkout->directExercises->sole()->exercise)->toBe('plank');
+        ->and($copiedWorkout->blocks->sole()->exercises->sole()->sets)->toBe(5);
 
     expect(ExerciseResult::query()
         ->whereBelongsTo($copiedWorkout->blocks->sole()->exercises->sole(), 'plannedExercise')

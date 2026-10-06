@@ -167,7 +167,7 @@
                         <x-dashboard.detail-item :label="__('Estimated one-rep max')" :value="$exerciseProfile->estimated_one_rep_max ? __(':weight kg', ['weight' => $exerciseProfile->estimated_one_rep_max]) : __('Not set')" />
                         <x-dashboard.detail-item :label="__('Maximum reps')" :value="$exerciseProfile->max_reps ?? __('Not set')" />
                         <x-dashboard.detail-item :label="__('Preferred rep range')" :value="$exerciseProfile->preferred_rep_range_min && $exerciseProfile->preferred_rep_range_max ? __(':min–:max reps', ['min' => $exerciseProfile->preferred_rep_range_min, 'max' => $exerciseProfile->preferred_rep_range_max]) : __('Not set')" />
-                        <x-dashboard.detail-item :label="__('Typical duration')" :value="$exerciseProfile->typical_duration_minutes ? trans_choice(':count min', ['count' => $exerciseProfile->typical_duration_minutes]) : __('Not set')" />
+                        <x-dashboard.detail-item :label="__('Typical duration')" :value="$exerciseProfile->typical_duration_minutes ? __(':count min', ['count' => $exerciseProfile->typical_duration_minutes]) : __('Not set')" />
                         <x-dashboard.detail-item :label="__('Typical distance')" :value="$exerciseProfile->typical_distance_km ? __(':distance km', ['distance' => $exerciseProfile->typical_distance_km]) : __('Not set')" />
                         <x-dashboard.detail-item :label="__('Typical pace')" :value="$exerciseProfile->typical_pace_seconds_per_km ? gmdate('i:s', $exerciseProfile->typical_pace_seconds_per_km).' / km' : __('Not set')" />
                     </dl>

@@ -551,4 +551,6 @@ new class extends Component {
             </form>
         </flux:modal>
     @endif
+
+    <livewire:workout-plans.create-plan-modal />
 </div>

@@ -213,16 +213,14 @@ test('it creates a draft workout plan for a selected client', function () {
     ]);
     $this->actingAs($coach);
 
-    Livewire::test('dashboard.clients')
-        ->call('selectClient', $client->id)
-        ->call('selectTab', 'training')
-        ->call('openWorkoutPlanForm')
+    Livewire::test('workout-plans.create-plan-modal')
+        ->call('open', $client->id)
         ->set('workoutPlanName', 'Autumn strength')
         ->set('workoutPlanGoal', 'gainStrength')
         ->set('workoutPlanNotes', 'Build a strong base.')
-        ->call('saveWorkoutPlan')
-        ->assertSet('showWorkoutPlanForm', false)
-        ->assertSee('Autumn strength');
+        ->call('save')
+        ->assertSet('show', false)
+        ->assertRedirect(route('workout-plans.show', WorkoutPlan::query()->sole()));
 
     $this->assertDatabaseHas('workout_plans', [
         'user_id' => $client->id,
@@ -231,6 +229,20 @@ test('it creates a draft workout plan for a selected client', function () {
         'notes' => 'Build a strong base.',
         'status' => 'draft',
     ]);
+});
+
+test('it does not create a workout plan for a user who is not an active client', function () {
+    $coach = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $this->actingAs($coach);
+
+    Livewire::test('workout-plans.create-plan-modal')
+        ->call('open', $otherUser->id)
+        ->set('workoutPlanName', 'Autumn strength')
+        ->call('save')
+        ->assertForbidden();
+
+    $this->assertDatabaseCount('workout_plans', 0);
 });
 
 test('it saves a complete workout day for a selected client plan', function () {

@@ -26,11 +26,6 @@ class WorkoutDaySyncResource extends JsonResource
                 ->map(fn (WorkoutBlock $block) => $this->blockPayload($block))
                 ->values()
                 ->all(),
-            'exercises' => $workoutDay->directExercises
-                ->sortBy(['order_index', 'id'])
-                ->map(fn (PlannedExercise $exercise) => $this->exercisePayload($exercise))
-                ->values()
-                ->all(),
         ];
     }
 

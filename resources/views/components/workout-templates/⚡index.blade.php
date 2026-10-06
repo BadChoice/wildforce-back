@@ -69,7 +69,6 @@ new class extends Component
             ->with([
                 'blocks' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
                 'blocks.exercises' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
-                'directExercises' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
             ])
             ->orderByDesc('updated_at')
             ->get();

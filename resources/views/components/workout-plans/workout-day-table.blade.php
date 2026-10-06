@@ -43,7 +43,6 @@
     };
 
     $blocks = $workout->blocks->sortBy(['order_index', 'id']);
-    $directExercises = $workout->directExercises->sortBy(['order_index', 'id']);
 @endphp
 
 <div {{ $attributes->merge(['class' => 'space-y-4']) }}>
@@ -77,26 +76,6 @@
             </div>
         </section>
     @empty
-        @if ($directExercises->isEmpty())
-            <div class="rounded-2xl border border-dashed border-zinc-300 px-4 py-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">{{ __('No exercises have been added to this workout day yet.') }}</div>
-        @endif
+        <div class="rounded-2xl border border-dashed border-zinc-300 px-4 py-8 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">{{ __('No exercises have been added to this workout day yet.') }}</div>
     @endforelse
-
-    @if ($directExercises->isNotEmpty())
-        <section class="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900" aria-labelledby="individual-exercises-{{ $workout->id }}">
-            <div class="flex items-center justify-between gap-3 border-b border-zinc-100 bg-zinc-50/80 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-800/40">
-                <div>
-                    <h4 id="individual-exercises-{{ $workout->id }}" class="font-semibold text-zinc-950 dark:text-white">{{ __('Individual exercises') }}</h4>
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Outside a block') }}</p>
-                </div>
-                <span class="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-700">{{ trans_choice(':count exercise|:count exercises', $directExercises->count(), ['count' => $directExercises->count()]) }}</span>
-            </div>
-
-            <div class="divide-y divide-zinc-100 dark:divide-zinc-800">
-                @foreach ($directExercises as $plannedExercise)
-                    @include('components.workout-plans.exercise-sets', ['plannedExercise' => $plannedExercise, 'formatWeight' => $formatWeight, 'formatRest' => $formatRest, 'formatReps' => $formatReps, 'perSetCount' => $perSetCount, 'valueForSet' => $valueForSet])
-                @endforeach
-            </div>
-        </section>
-    @endif
 </div>

@@ -33,7 +33,7 @@
 
     <div class="p-5">
         @if ($showProgressionAnalysis && $progressionAnalysis)
-            <x-dashboard.progression-analysis :analysis="$progressionAnalysis" />
+            <x-dashboard.progression-analysis :analysis="$progressionAnalysis" :user-id="$client->id" />
         @else
             @switch($activeTab)
             @case('info')
