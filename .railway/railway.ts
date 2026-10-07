@@ -61,12 +61,12 @@ export default defineRailway(() => {
       // Storage
       // -------------------------
       FILESYSTEM_DISK: "s3",
-      AWS_ACCESS_KEY_ID: ref(userStorage, "ACCESS_KEY_ID"),
-      AWS_SECRET_ACCESS_KEY: ref(userStorage, "SECRET_ACCESS_KEY"),
-      AWS_DEFAULT_REGION: ref(userStorage, "REGION"),
-      AWS_BUCKET: ref(userStorage, "BUCKET"),
-      AWS_ENDPOINT: ref(userStorage, "ENDPOINT"),
-      AWS_USE_PATH_STYLE_ENDPOINT: "false",
+      AWS_ACCESS_KEY_ID: preserve(),
+      AWS_SECRET_ACCESS_KEY: preserve(),
+      AWS_DEFAULT_REGION: preserve(),
+      AWS_BUCKET: preserve(),
+      AWS_ENDPOINT: preserve(),
+      AWS_USE_PATH_STYLE_ENDPOINT: preserve(),
 
       SUPABASE_S3_KEY: preserve(),
       SUPABASE_S3_SECRET: preserve(),
