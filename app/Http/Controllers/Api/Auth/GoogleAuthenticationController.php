@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Contracts\GoogleAuthentication;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Auth\GoogleAuthenticationRequest;
+use App\Http\Requests\Api\Auth\GoogleRegistrationRequest;
 use Illuminate\Http\JsonResponse;
 
 class GoogleAuthenticationController extends Controller
@@ -28,5 +29,25 @@ class GoogleAuthenticationController extends Controller
             'token_type' => 'Bearer',
             ...($result->trialEndsAt === null ? [] : ['trial_ends_at' => $result->trialEndsAt]),
         ]);
+    }
+
+    public function register(GoogleRegistrationRequest $request): JsonResponse
+    {
+        $result = $this->googleAuthentication->register(
+            $request->string('id_token')->toString(),
+            $request->string('device_name')->toString(),
+            $request->initialData(),
+        );
+
+        return response()->json([
+            'user' => [
+                'id' => $result->user->id,
+                'name' => $result->user->name,
+                'email' => $result->user->email,
+            ],
+            'token' => $result->token,
+            'token_type' => 'Bearer',
+            'trial_ends_at' => $result->trialEndsAt,
+        ], 201);
     }
 }

@@ -40,6 +40,6 @@ test('it returns 422 when initial registration data is sent to Google login', fu
     $this->postJson('/api/auth/google', [
         'id_token' => 'google-id-token',
         'device_name' => 'Jane’s iPhone',
-        'initial_data' => [],
+        'initial_data' => ['user' => ['id' => '7c9e6679-7425-40de-944b-e07fc1f90ae7']],
     ])->assertUnprocessable()->assertJsonValidationErrors(['initial_data']);
 });

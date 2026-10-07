@@ -13,6 +13,8 @@ test('it renders the API documentation and its OpenAPI document locally', functi
         ->assertJsonPath('openapi', '3.1.0')
         ->assertJsonPath('info.title', 'Wildforce API')
         ->assertJsonPath('paths./api/auth/google.post.summary', 'Sign in with Google and issue a bearer token')
+        ->assertJsonPath('paths./api/auth/google/register.post.summary', 'Register with Google and issue a bearer token')
+        ->assertJsonPath('paths./api/auth/apple/register.post.summary', 'Register with Apple and issue a bearer token')
         ->assertJsonPath('paths./api/account/identities/google.post.summary', 'Link Google to the authenticated user')
         ->assertJsonPath('paths./api/subscription/redeem-code.post.summary', 'Redeem a demo access code')
         ->assertJsonPath('paths./api/account/coaches.get.summary', "Get the authenticated user's active coaches")

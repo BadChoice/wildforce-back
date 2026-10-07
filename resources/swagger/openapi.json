@@ -117,7 +117,7 @@
           "Authentication"
         ],
         "summary": "Sign in with Google and issue a bearer token",
-        "description": "Verifies a Google OpenID Connect ID token before signing in or creating the user.",
+        "description": "Verifies a Google OpenID Connect ID token and signs in an existing linked identity. New users must complete onboarding and use the registration endpoint.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -140,22 +140,22 @@
               }
             }
           },
-          "201": {
-            "description": "User registered and authenticated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "The verified email already belongs to an account with another sign-in method."
-          },
           "422": {
             "$ref": "#/components/responses/ValidationError"
           }
+        }
+      }
+    },
+    "/api/auth/google/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register with Google and issue a bearer token",
+        "description": "Creates the user and complete initial sync graph after Google identity verification.",
+        "security": [],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GoogleRegistrationRequest"}}}},
+        "responses": {
+          "201": {"description": "User registered and authenticated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AuthResponse"}}}},
+          "422": {"$ref": "#/components/responses/ValidationError"}
         }
       }
     },
@@ -165,7 +165,7 @@
           "Authentication"
         ],
         "summary": "Sign in with Apple and issue a bearer token",
-        "description": "Exchanges the native Apple authorization code on the server. The optional full name is only used while creating a new user, because Apple may provide it only once.",
+        "description": "Exchanges the native Apple authorization code and signs in an existing linked identity.",
         "security": [],
         "requestBody": {
           "required": true,
@@ -188,22 +188,22 @@
               }
             }
           },
-          "201": {
-            "description": "New user created from an Apple identity",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "$ref": "#/components/responses/Conflict"
-          },
           "422": {
             "$ref": "#/components/responses/ValidationError"
           }
+        }
+      }
+    },
+    "/api/auth/apple/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register with Apple and issue a bearer token",
+        "description": "Creates the user and complete initial sync graph after Apple identity verification.",
+        "security": [],
+        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AppleRegistrationRequest"}}}},
+        "responses": {
+          "201": {"description": "User registered and authenticated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AuthResponse"}}}},
+          "422": {"$ref": "#/components/responses/ValidationError"}
         }
       }
     },
@@ -1469,6 +1469,44 @@
             "maxLength": 255
           }
         }
+      },
+      "AppleRegistrationRequest": {
+        "allOf": [
+          {"$ref": "#/components/schemas/AppleAuthenticationRequest"},
+          {"type": "object", "required": ["initial_data"], "properties": {"initial_data": {"$ref": "#/components/schemas/InitialRegistrationData"}}}
+        ]
+      },
+      "GoogleRegistrationRequest": {
+        "allOf": [
+          {"$ref": "#/components/schemas/GoogleAuthenticationRequest"},
+          {"type": "object", "required": ["initial_data"], "properties": {"initial_data": {"$ref": "#/components/schemas/InitialRegistrationData"}}}
+        ]
+      },
+      "InitialRegistrationData": {
+        "type": "object",
+        "required": ["user", "training_preferences", "training_location", "app_settings"],
+        "properties": {
+          "user": {"$ref": "#/components/schemas/InitialRegistrationUser"},
+          "training_preferences": {"$ref": "#/components/schemas/InitialTrainingPreferences"},
+          "training_location": {"$ref": "#/components/schemas/InitialTrainingLocation"},
+          "app_settings": {"$ref": "#/components/schemas/InitialAppSettings"}
+        }
+      },
+      "InitialRegistrationUser": {
+        "type": "object",
+        "required": ["id", "name", "height", "weight", "birth_date", "gender", "language", "metric_system"],
+        "properties": {
+          "id": {"type": "string", "format": "uuid"}, "name": {"type": "string", "maxLength": 255}, "height": {"type": "integer", "minimum": 50, "maximum": 300}, "weight": {"type": "number", "minimum": 10, "maximum": 1000}, "birth_date": {"type": "string", "format": "date-time"}, "gender": {"type": "string", "enum": ["female", "male"]}, "language": {"type": "string", "maxLength": 255}, "metric_system": {"type": "string", "enum": ["metric", "imperial"]}
+        }
+      },
+      "InitialTrainingPreferences": {"allOf": [{"$ref": "#/components/schemas/TrainingProfile"}, {"type": "object", "required": ["id", "body_composition_phase", "skips_warmups", "skips_cooldowns", "skips_rest_periods"]}]},
+      "InitialTrainingLocation": {
+        "type": "object", "required": ["id", "name", "is_default", "sort_order", "equipment"],
+        "properties": {"id": {"type": "string", "format": "uuid"}, "name": {"type": "string", "maxLength": 255}, "is_default": {"type": "boolean", "enum": [true]}, "sort_order": {"type": "integer", "minimum": 0}, "equipment": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}}
+      },
+      "InitialAppSettings": {
+        "type": "object", "required": ["id", "is_health_kit_enabled", "is_watch_auto_tracking_enabled", "is_screen_on_during_workout_enabled", "is_notifications_enabled", "is_full_focus_mode_enabled", "has_seen_notification_request", "has_seen_body_progress_tutorial", "has_rated_app"],
+        "properties": {"id": {"type": "string", "format": "uuid"}, "is_health_kit_enabled": {"type": "boolean"}, "is_watch_auto_tracking_enabled": {"type": "boolean"}, "is_screen_on_during_workout_enabled": {"type": "boolean"}, "is_notifications_enabled": {"type": "boolean"}, "is_full_focus_mode_enabled": {"type": "boolean"}, "full_focus_selection": {"type": ["array", "null"]}, "has_seen_notification_request": {"type": "boolean"}, "has_seen_body_progress_tutorial": {"type": "boolean"}, "has_rated_app": {"type": "boolean"}}
       },
       "GoogleIdentityRequest": {
         "type": "object",

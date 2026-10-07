@@ -41,6 +41,6 @@ test('it returns 422 when initial registration data is sent to Apple login', fun
     $this->postJson('/api/auth/apple', [
         'authorization_code' => 'apple-authorization-code',
         'device_name' => 'Jane’s iPhone',
-        'initial_data' => [],
+        'initial_data' => ['user' => ['id' => '7c9e6679-7425-40de-944b-e07fc1f90ae7']],
     ])->assertUnprocessable()->assertJsonValidationErrors(['initial_data']);
 });
