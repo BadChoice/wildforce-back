@@ -139,3 +139,27 @@ test('it returns 401 when requesting a private progress photo without a bearer t
     $this->get("/api/body-progress-photo-sessions/{$sessionId}/photos/front")
         ->assertUnauthorized();
 });
+
+test('it returns a private progress photo to an administrator in the backend', function () {
+    Storage::fake(config('filesystems.default'));
+    $session = BodyProgressPhotoSession::factory()->for(User::factory())->create([
+        'front_photo_path' => 'body-progress-photos/backend-front.jpg',
+    ]);
+    Storage::put($session->front_photo_path, UploadedFile::fake()->image('front.jpg')->get());
+
+    $this->actingAs(User::factory()->admin()->create())
+        ->get(route('body-progress-photos.show', ['bodyProgressPhotoSession' => $session, 'angle' => 'front']))
+        ->assertOk();
+});
+
+test('it returns 404 when an unauthorized user requests a private progress photo in the backend', function () {
+    Storage::fake(config('filesystems.default'));
+    $session = BodyProgressPhotoSession::factory()->for(User::factory())->create([
+        'front_photo_path' => 'body-progress-photos/backend-private-front.jpg',
+    ]);
+    Storage::put($session->front_photo_path, UploadedFile::fake()->image('front.jpg')->get());
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('body-progress-photos.show', ['bodyProgressPhotoSession' => $session, 'angle' => 'front']))
+        ->assertNotFound();
+});

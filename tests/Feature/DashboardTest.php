@@ -2,6 +2,7 @@
 
 use App\Enums\CoachingEnrollmentStatus;
 use App\Models\BodyMetricEntry;
+use App\Models\BodyProgressPhotoSession;
 use App\Models\CoachingEnrollment;
 use App\Models\ExerciseProfile;
 use App\Models\NutritionPlan;
@@ -263,6 +264,45 @@ test('body metric charts are forbidden for users without access to the data', fu
     $this->actingAs(User::factory()->create());
 
     Livewire::test('dashboard.body-metrics', ['user' => $user])
+        ->assertForbidden();
+});
+
+test('progress photos show front photos with their date, newest first', function () {
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+    $olderSession = BodyProgressPhotoSession::factory()->for($user)->create([
+        'front_photo_path' => 'body-progress-photos/older-front.jpg',
+        'created_at' => '2026-08-01 09:00:00',
+    ]);
+    $newerSession = BodyProgressPhotoSession::factory()->for($user)->create([
+        'front_photo_path' => 'body-progress-photos/newer-front.jpg',
+        'created_at' => '2026-09-15 09:00:00',
+    ]);
+    BodyProgressPhotoSession::factory()->for($user)->create([
+        'profile_photo_path' => 'body-progress-photos/profile-only.jpg',
+        'created_at' => '2026-09-20 09:00:00',
+    ]);
+    $this->actingAs($admin);
+
+    Livewire::withoutLazyLoading()->test('dashboard.body-progress-photos', ['user' => $user])
+        ->assertSeeInOrder(['15/09/2026', '01/08/2026'])
+        ->assertDontSee('20/09/2026')
+        ->assertSee(route('body-progress-photos.show', ['bodyProgressPhotoSession' => $newerSession, 'angle' => 'front']))
+        ->assertSee(route('body-progress-photos.show', ['bodyProgressPhotoSession' => $olderSession, 'angle' => 'front']));
+});
+
+test('progress photos show an empty state when the user has no front photos', function () {
+    $this->actingAs(User::factory()->admin()->create());
+
+    Livewire::withoutLazyLoading()->test('dashboard.body-progress-photos', ['user' => User::factory()->create()])
+        ->assertSee('No progress photos yet');
+});
+
+test('progress photos are forbidden for users without access to the data', function () {
+    $user = User::factory()->create();
+    $this->actingAs(User::factory()->create());
+
+    Livewire::withoutLazyLoading()->test('dashboard.body-progress-photos', ['user' => $user])
         ->assertForbidden();
 });
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BodyProgressPhotoController;
 use App\Http\Controllers\Api\NutritionLogEntryImageController;
 use App\Http\Controllers\Auth\AppleLoginController;
 use App\Http\Controllers\Auth\GoogleLoginController;
@@ -25,6 +26,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('nutrition-plans', [NutritionPlansController::class, 'index'])->name('nutrition-plans.index');
     Route::get('nutrition-plans/{nutritionPlan}', [NutritionPlansController::class, 'show'])->name('nutrition-plans.show');
     Route::get('nutrition-log-entries/{nutritionLogEntry}/image', [NutritionLogEntryImageController::class, 'show'])->name('nutrition-log-entries.image');
+    Route::get('body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}', [BodyProgressPhotoController::class, 'show'])
+        ->whereIn('angle', ['profile', 'front', 'torso'])
+        ->name('body-progress-photos.show');
     Route::view('workout-templates', 'workout-templates.index')->name('workout-templates.index');
     Route::post('billing/checkout/{plan}/{interval}', StripeCheckoutController::class)
         ->whereIn('interval', ['monthly', 'yearly'])

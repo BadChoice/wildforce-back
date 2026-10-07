@@ -16,7 +16,7 @@
 
         @unless ($showProgressionAnalysis)
             <nav aria-label="{{ __('Client details') }}" role="tablist" class="mt-5 flex gap-1 overflow-x-auto border-b border-zinc-200 dark:border-zinc-700">
-                @foreach (['info' => __('Info'), 'training' => __('Training'), 'nutrition' => __('Nutrition'), 'body-metrics' => __('Body metrics'), 'app-settings' => __('App settings')] as $tab => $label)
+                @foreach (['info' => __('Info'), 'training' => __('Training'), 'nutrition' => __('Nutrition'), 'body-metrics' => __('Body metrics'), 'progress-photos' => __('Progress photos'), 'app-settings' => __('App settings')] as $tab => $label)
                     <button
                         type="button"
                         role="tab"
@@ -83,6 +83,10 @@
 
             @case('body-metrics')
                 <livewire:dashboard.body-metrics :user="$client" :key="'body-metrics-'.$client->id" />
+                @break
+
+            @case('progress-photos')
+                <livewire:dashboard.body-progress-photos :user="$client" :key="'body-progress-photos-'.$client->id" />
                 @break
 
             @case('app-settings')

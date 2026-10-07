@@ -195,7 +195,7 @@ new class extends Component
 
     public function selectTab(string $tab): void
     {
-        if (! in_array($tab, ['info', 'training', 'nutrition', 'body-metrics', 'app-settings'], true)) {
+        if (! in_array($tab, ['info', 'training', 'nutrition', 'body-metrics', 'progress-photos', 'app-settings'], true)) {
             return;
         }
 
