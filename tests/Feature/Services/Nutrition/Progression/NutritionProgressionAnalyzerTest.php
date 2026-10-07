@@ -41,3 +41,27 @@ test('calculates deterministic targets from the user and scheduled workout deman
             'fat' => 64,
         ]);
 });
+
+test('bases targets on Apple Health energy while keeping the formula guardrails', function () {
+    $this->travelTo('2026-10-05 09:00:00');
+    $user = User::factory()->create([
+        'height' => 180,
+        'weight' => 80,
+        'birth_date' => '1996-10-05',
+        'gender' => 'male',
+        'language' => 'en',
+    ]);
+    TrainingPreference::factory()->for($user)->create([
+        'goal' => 'buildMuscle',
+        'lifestyle' => 'sedentary',
+        'workout_days' => ['monday'],
+    ]);
+    NutritionProfile::factory()->for($user)->create();
+
+    $analysis = (new NutritionProgressionAnalyzer($user, appleHealthEnergyDays(21, 3000)))->analyze();
+
+    expect($analysis->energyExpenditure->source)->toBe('healthKit')
+        ->and($analysis->energyExpenditure->averageDailyCalories)->toBe(3000)
+        ->and($analysis->energyExpenditure->fallbackCalories)->toBe(2172)
+        ->and($analysis->days[1]['calories'])->toBe(2606);
+});

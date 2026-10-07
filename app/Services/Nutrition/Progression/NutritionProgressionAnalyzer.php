@@ -11,7 +11,13 @@ use RuntimeException;
 
 final class NutritionProgressionAnalyzer
 {
-    public function __construct(private readonly User $user) {}
+    /**
+     * @param  list<array{date: string, active_calories: float, basal_calories: float|null}>  $dailyEnergy  Apple Health days reported by the client, if any
+     */
+    public function __construct(
+        private readonly User $user,
+        private readonly array $dailyEnergy = [],
+    ) {}
 
     public function analyze(): NutritionProgressionAnalysis
     {
@@ -34,8 +40,8 @@ final class NutritionProgressionAnalyzer
         $goal = $this->user->trainingPreferences?->goal ?? 'generalFitness';
         $phase = $this->bodyCompositionPhase($this->user->trainingPreferences?->body_composition_phase, $goal);
         $sourceWorkoutPlan = $this->user->workoutPlans->first();
-        $maintenanceCalories = $this->maintenanceCalories();
-        $days = collect(range(0, 6))->map(function (int $offset) use ($startsOn, $sourceWorkoutPlan, $maintenanceCalories, $phase, $goal): array {
+        $energyExpenditure = (new EnergyExpenditureEstimator)->estimate($this->maintenanceCalories(), $this->dailyEnergy);
+        $days = collect(range(0, 6))->map(function (int $offset) use ($startsOn, $sourceWorkoutPlan, $energyExpenditure, $phase, $goal): array {
             $date = $startsOn->copy()->addDays($offset);
             $workoutDay = $this->workoutDayFor($date, $sourceWorkoutPlan);
             $demand = $this->workoutDemand($workoutDay);
@@ -45,7 +51,7 @@ final class NutritionProgressionAnalyzer
                 'weekday' => strtolower($date->englishDayOfWeek),
                 'workoutDay' => $workoutDay,
                 ...$demand,
-                ...$this->macros($maintenanceCalories, $phase, $goal, $demand),
+                ...$this->macros($energyExpenditure, $phase, $goal, $demand),
             ];
         })->all();
 
@@ -54,6 +60,7 @@ final class NutritionProgressionAnalyzer
             goal: $goal,
             bodyCompositionPhase: $phase,
             sourceWorkoutPlan: $sourceWorkoutPlan,
+            energyExpenditure: $energyExpenditure,
             days: $days,
             wantsMealSuggestions: $this->user->nutritionProfile->wants_meal_suggestions,
         );
@@ -82,13 +89,14 @@ final class NutritionProgressionAnalyzer
      * @param  array{energyDemand: string, dayType: string, calorieAdjustment: int}  $demand
      * @return array{calories: int, protein: int, carbs: int, fat: int}
      */
-    private function macros(int $maintenanceCalories, string $phase, string $goal, array $demand): array
+    private function macros(EnergyExpenditureEstimate $energyExpenditure, string $phase, string $goal, array $demand): array
     {
         $weight = (float) $this->user->weight;
-        $calories = $maintenanceCalories + $this->bodyCompositionAdjustment($phase, $goal) + $demand['calorieAdjustment'];
+        $calories = $energyExpenditure->averageDailyCalories + $this->bodyCompositionAdjustment($phase, $goal) + $demand['calorieAdjustment'];
         $bmr = $this->bmr();
-        $minimum = max($this->user->gender === 'male' ? 1500 : 1200, (int) round($bmr * 1.10), (int) round($maintenanceCalories * 0.75));
-        $maximum = max($minimum + 200, (int) round($maintenanceCalories * 1.20));
+        $fallbackCalories = $energyExpenditure->fallbackCalories;
+        $minimum = max($this->user->gender === 'male' ? 1500 : 1200, (int) round($bmr * 1.10), (int) round($fallbackCalories * 0.75));
+        $maximum = max($minimum + 200, (int) round($fallbackCalories * 1.20));
         $calories = min(max($calories, $minimum), $maximum);
         $protein = max(110, (int) round($weight * (($phase === 'cut' || in_array($goal, ['loseWeight', 'bodyRecomposition'], true)) ? 2.2 : ($goal === 'improveEndurance' ? 1.7 : 1.8))));
         $fat = (int) round($weight * ($this->user->nutritionProfile?->dietary_style === 'vegan' ? 0.85 : 0.80));

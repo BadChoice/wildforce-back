@@ -654,9 +654,15 @@ paths:
       tags:
         - Nutrition
       summary: 'Generate and save a seven-day nutrition plan'
-      description: "Generates and persists a nutrition plan from the authenticated user's nutrition profile, body metrics, training preferences, and upcoming workout plan. The response uses the same sync payload as the nutrition-plan sync endpoints."
+      description: "Generates and persists a nutrition plan from the authenticated user's nutrition profile, body metrics, training preferences, and upcoming workout plan. Maintenance calories default to a formula estimate (Mifflin-St Jeor BMR times the lifestyle multiplier plus 2% per training day, capped at 12%). When the client sends optional Apple Health `daily_energy`, the server uses the 21 most recent days instead: it drops days without basal energy, trims the lowest and highest tenth once seven or more days remain, and averages the rest. With at least 10 days covering 70% of the 21-day window it uses that average. With at least 5 days covering 40% it blends the average with the formula estimate, weighting Apple Health by its coverage clamped to 35-65%. Otherwise it uses the formula. Calorie guardrails always come from the formula estimate. The response uses the same sync payload as the nutrition-plan sync endpoints."
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateNutritionPlanRequest'
       responses:
         201:
           description: 'Generated and persisted nutrition plan'
@@ -670,6 +676,8 @@ paths:
           description: 'An active subscription, trial, or demo access is required.'
         409:
           description: 'The idempotency key is already in progress or was reused with a different request.'
+        422:
+          $ref: '#/components/responses/ValidationError'
         429:
           description: 'The generation rate limit of five requests per minute was exceeded.'
   /api/nutrition-macros/generate:
@@ -1816,6 +1824,37 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/NutritionPlan'
+    GenerateNutritionPlanRequest:
+      type: object
+      properties:
+        daily_energy:
+          type: array
+          maxItems: 31
+          description: 'Optional Apple Health daily energy for up to the last 21 days. Omit it when Apple Health is unavailable or not authorized; the server then uses the formula estimate.'
+          items:
+            $ref: '#/components/schemas/DailyEnergy'
+    DailyEnergy:
+      type: object
+      required:
+        - date
+        - active_calories
+      properties:
+        date:
+          type: string
+          format: date
+          description: 'Calendar day in the client time zone. Each date may appear once and must be between 22 days ago and tomorrow.'
+        active_calories:
+          type: number
+          minimum: 0
+          maximum: 10000
+          description: 'Active energy burned that day, in kilocalories.'
+        basal_calories:
+          type:
+            - number
+            - 'null'
+          minimum: 0
+          maximum: 10000
+          description: 'Resting energy burned that day, in kilocalories. Days without basal energy are ignored.'
     GenerateMacrosFromTextRequest:
       type: object
       required:

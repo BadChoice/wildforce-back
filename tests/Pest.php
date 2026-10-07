@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /*
@@ -47,4 +48,20 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * Consecutive days counting back from 2026-10-05, each totalling the given calories.
+ *
+ * @return list<array{date: string, active_calories: float, basal_calories: float}>
+ */
+function appleHealthEnergyDays(int $count, float $totalCalories, int $startOffset = 0): array
+{
+    return collect(range($startOffset, $startOffset + $count - 1))
+        ->map(fn (int $offset): array => [
+            'date' => Carbon::parse('2026-10-05')->subDays($offset)->toDateString(),
+            'active_calories' => $totalCalories - 1800,
+            'basal_calories' => 1800.0,
+        ])
+        ->all();
 }

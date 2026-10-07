@@ -29,6 +29,44 @@ test('it persists and returns a generated nutrition plan using the sync payload'
     $this->assertDatabaseCount('nutrition_meals', 7);
 });
 
+test('it bases the daily targets on reported Apple Health energy', function () {
+    $this->travelTo('2026-10-05 09:00:00');
+    $user = nutritionPlanGenerationUser();
+    NutritionPlanGeneratorAgent::fake([nutritionPlanGenerationResponse()])->preventStrayPrompts();
+
+    $response = $this->actingAs($user, 'sanctum')->postJson('/api/nutrition-plans/generate', [
+        'daily_energy' => appleHealthEnergyDays(21, 2400),
+    ], [
+        'Idempotency-Key' => 'nutrition-plan-generation-health',
+    ]);
+
+    $response->assertCreated()
+        ->assertJsonPath('data.days.0.target_calories', 2500);
+    $this->assertDatabaseHas('nutrition_days', ['date' => '2026-10-05 00:00:00', 'target_calories' => 2500]);
+    NutritionPlanGeneratorAgent::assertPrompted(fn ($prompt): bool => $prompt->contains('Maintenance energy: 2400 kcal/day (measured by Apple Health over 21 of 21 days)'));
+});
+
+test('it rejects invalid Apple Health energy days', function (array $dailyEnergy, string $field, string $message) {
+    $this->travelTo('2026-10-05 09:00:00');
+    $user = nutritionPlanGenerationUser();
+    NutritionPlanGeneratorAgent::fake()->preventStrayPrompts();
+
+    $this->actingAs($user, 'sanctum')->postJson('/api/nutrition-plans/generate', [
+        'daily_energy' => $dailyEnergy,
+    ], [
+        'Idempotency-Key' => 'nutrition-plan-generation-invalid',
+    ])->assertUnprocessable()
+        ->assertJsonValidationErrors([$field => $message]);
+
+    $this->assertDatabaseCount('nutrition_plans', 0);
+})->with([
+    'missing active calories' => [[['date' => '2026-10-05', 'basal_calories' => 1800]], 'daily_energy.0.active_calories', 'The daily_energy.0.active_calories field is required.'],
+    'negative active calories' => [[['date' => '2026-10-05', 'active_calories' => -1]], 'daily_energy.0.active_calories', 'The daily_energy.0.active_calories field must be at least 0.'],
+    'date older than the lookback window' => [[['date' => '2026-09-12', 'active_calories' => 400]], 'daily_energy.0.date', 'The daily_energy.0.date field must be a date after or equal to 2026-09-13.'],
+    'date in the future' => [[['date' => '2026-10-07', 'active_calories' => 400]], 'daily_energy.0.date', 'The daily_energy.0.date field must be a date before or equal to 2026-10-06.'],
+    'duplicate date' => [[['date' => '2026-10-05', 'active_calories' => 400], ['date' => '2026-10-05', 'active_calories' => 500]], 'daily_energy.1.date', 'The daily_energy.1.date field has a duplicate value.'],
+]);
+
 test('it returns 401 when no token is provided', function () {
     $this->postJson('/api/nutrition-plans/generate')
         ->assertUnauthorized();

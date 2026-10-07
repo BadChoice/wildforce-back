@@ -8,6 +8,7 @@ use App\Models\NutritionMeal;
 use App\Models\NutritionPlan;
 use App\Models\User;
 use App\Models\WorkoutDay;
+use App\Services\Nutrition\Progression\EnergyExpenditureEstimate;
 use App\Services\Nutrition\Progression\NutritionProgressionAnalysis;
 use App\Services\Nutrition\Progression\NutritionProgressionAnalyzer;
 use Carbon\CarbonInterface;
@@ -19,9 +20,12 @@ use RuntimeException;
 
 final class NutritionPlanAIGenerator
 {
-    public function generate(User $user): NutritionPlan
+    /**
+     * @param  list<array{date: string, active_calories: float, basal_calories: float|null}>  $dailyEnergy  Apple Health days reported by the client, if any
+     */
+    public function generate(User $user, array $dailyEnergy = []): NutritionPlan
     {
-        $analysis = $this->analysis($user);
+        $analysis = $this->analysis($user, $dailyEnergy);
         $response = $this->agent($analysis->wantsMealSuggestions)->prompt($this->prompt($user, $analysis));
 
         if (! $response instanceof StructuredAgentResponse) {
@@ -33,10 +37,12 @@ final class NutritionPlanAIGenerator
 
     /**
      * Generate and persist a nutrition plan with its days and meals.
+     *
+     * @param  list<array{date: string, active_calories: float, basal_calories: float|null}>  $dailyEnergy  Apple Health days reported by the client, if any
      */
-    public function generateAndPersist(User $user): NutritionPlan
+    public function generateAndPersist(User $user, array $dailyEnergy = []): NutritionPlan
     {
-        $plan = $this->generate($user);
+        $plan = $this->generate($user, $dailyEnergy);
 
         return DB::transaction(function () use ($plan): NutritionPlan {
             $plan->save();
@@ -75,9 +81,12 @@ final class NutritionPlanAIGenerator
         return new NutritionPlanGeneratorAgent($wantsMealSuggestions);
     }
 
-    private function analysis(User $user): NutritionProgressionAnalysis
+    /**
+     * @param  list<array{date: string, active_calories: float, basal_calories: float|null}>  $dailyEnergy
+     */
+    private function analysis(User $user, array $dailyEnergy = []): NutritionProgressionAnalysis
     {
-        return (new NutritionProgressionAnalyzer($user))->analyze();
+        return (new NutritionProgressionAnalyzer($user, $dailyEnergy))->analyze();
     }
 
     private function prompt(User $user, NutritionProgressionAnalysis $analysis): string
@@ -106,6 +115,7 @@ final class NutritionPlanAIGenerator
 - Body composition phase: {$analysis->bodyCompositionPhase}
 - Training level: {$preferences?->general_training_level}
 - Lifestyle: {$preferences?->lifestyle}
+- Maintenance energy: {$this->energyExpenditure($analysis->energyExpenditure)}
 - Age: {$user->birth_date->age}
 - Height: {$user->height} cm
 - Weight: {$user->weight} kg
@@ -207,6 +217,17 @@ PROMPT;
         $metrics = $user->bodyMetrics->sortByDesc('recorded_at')->take(12);
 
         return $metrics->isEmpty() ? '- No logged body metrics beyond the current user profile.' : $metrics->map(fn ($metric): string => '- '.$metric->type.': '.$metric->value.' on '.$metric->recorded_at->toDateString())->implode("\n");
+    }
+
+    private function energyExpenditure(EnergyExpenditureEstimate $estimate): string
+    {
+        $healthDays = $estimate->observedDays.' of '.$estimate->consideredDays.' days';
+
+        return $estimate->averageDailyCalories.' kcal/day ('.match ($estimate->source) {
+            'healthKit' => 'measured by Apple Health over '.$healthDays,
+            'blended' => 'Apple Health over '.$healthDays.' blended with the formula estimate',
+            'fallback' => 'formula estimate',
+        }.')';
     }
 
     private function workoutLabel(?WorkoutDay $workoutDay): string

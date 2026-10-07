@@ -16,6 +16,7 @@ final readonly class NutritionProgressionAnalysis
         public string $goal,
         public string $bodyCompositionPhase,
         public ?WorkoutPlan $sourceWorkoutPlan,
+        public EnergyExpenditureEstimate $energyExpenditure,
         public array $days,
         public bool $wantsMealSuggestions,
     ) {}
