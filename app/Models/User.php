@@ -68,6 +68,10 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
         ];
     }
 
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
     public function scopeForUser(Builder $query, self $user): Builder
     {
         return $query->whereKey($user);
@@ -93,6 +97,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
         ];
     }
 
+    /** @return HasOne<UserAppSettings, $this> */
     public function appSettings(): HasOne
     {
         return $this->hasOne(UserAppSettings::class);
@@ -124,51 +129,61 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
         return $this->hasMany(UserIdentity::class);
     }
 
+    /** @return HasOne<TrainingPreference, $this> */
     public function trainingPreferences(): HasOne
     {
         return $this->hasOne(TrainingPreference::class);
     }
 
+    /** @return HasMany<TrainingLocation, $this> */
     public function trainingLocations(): HasMany
     {
         return $this->hasMany(TrainingLocation::class);
     }
 
+    /** @return HasMany<BodyMetricEntry, $this> */
     public function bodyMetrics(): HasMany
     {
         return $this->hasMany(BodyMetricEntry::class);
     }
 
+    /** @return HasMany<BodyProgressPhotoSession, $this> */
     public function bodyProgressPhotoSessions(): HasMany
     {
         return $this->hasMany(BodyProgressPhotoSession::class);
     }
 
+    /** @return HasMany<ExerciseProfile, $this> */
     public function exerciseProfiles(): HasMany
     {
         return $this->hasMany(ExerciseProfile::class);
     }
 
+    /** @return HasOne<NutritionProfile, $this> */
     public function nutritionProfile(): HasOne
     {
         return $this->hasOne(NutritionProfile::class);
     }
 
+    /** @return HasMany<NutritionLogEntry, $this> */
     public function nutritionLogEntries(): HasMany
     {
         return $this->hasMany(NutritionLogEntry::class);
     }
 
+    /** @return HasMany<NutritionPlan, $this> */
     public function nutritionPlans(): HasMany
     {
         return $this->hasMany(NutritionPlan::class);
     }
 
+    /** @return HasMany<WorkoutPlan, $this> */
     public function workoutPlans(): HasMany
     {
         return $this->hasMany(WorkoutPlan::class);
     }
 
+    /** @return HasMany<WorkoutDay, $this> */
     public function workoutDays(): HasMany
     {
         return $this->hasMany(WorkoutDay::class);
@@ -239,11 +254,13 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
         return $this->clients(CoachingEnrollmentStatus::Active)->exists();
     }
 
+    /** @return HasMany<CoachExerciseMedia, $this> */
     public function coachExerciseMedia(): HasMany
     {
         return $this->hasMany(CoachExerciseMedia::class, 'coach_user_id');
     }
 
+    /** @return BelongsToMany<self, $this, CoachingEnrollment, 'enrollment'> */
     public function clients(?CoachingEnrollmentStatus $status = null): BelongsToMany
     {
         $clients = $this->belongsToMany(self::class, 'coaching_enrollments', 'coach_user_id', 'client_user_id')
@@ -259,6 +276,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
         return $clients;
     }
 
+    /** @return BelongsToMany<self, $this, CoachingEnrollment, 'enrollment'> */
     public function coaches(): BelongsToMany
     {
         return $this->belongsToMany(self::class, 'coaching_enrollments', 'client_user_id', 'coach_user_id')

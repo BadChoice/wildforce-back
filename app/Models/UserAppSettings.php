@@ -21,6 +21,7 @@ class UserAppSettings extends Model implements Syncable
         return ['is_health_kit_enabled' => 'boolean', 'is_watch_auto_tracking_enabled' => 'boolean', 'is_screen_on_during_workout_enabled' => 'boolean', 'is_notifications_enabled' => 'boolean', 'is_full_focus_mode_enabled' => 'boolean', 'full_focus_selection' => 'array', 'has_seen_notification_request' => 'boolean', 'has_seen_body_progress_tutorial' => 'boolean', 'has_rated_app' => 'boolean'];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

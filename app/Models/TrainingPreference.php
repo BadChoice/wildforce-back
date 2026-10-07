@@ -23,6 +23,7 @@ class TrainingPreference extends Model implements Syncable
         return ['workout_days' => 'array', 'custom_workout_focuses' => 'array', 'movement_restrictions' => 'array', 'skips_warmups' => 'boolean', 'skips_cooldowns' => 'boolean', 'skips_rest_periods' => 'boolean'];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

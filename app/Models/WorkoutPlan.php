@@ -22,16 +22,19 @@ class WorkoutPlan extends Model implements Syncable
         return ['starts_on' => 'datetime'];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return HasMany<WorkoutDay, $this> */
     public function workoutDays(): HasMany
     {
         return $this->hasMany(WorkoutDay::class);
     }
 
+    /** @return HasMany<NutritionPlan, $this> */
     public function nutritionPlans(): HasMany
     {
         return $this->hasMany(NutritionPlan::class, 'source_workout_plan_id');

@@ -21,6 +21,7 @@ class NutritionLogItem extends Model implements Syncable
         return ['quantity' => 'decimal:3', 'amount_grams' => 'decimal:3', 'calories' => 'decimal:2', 'protein_grams' => 'decimal:2', 'carbs_grams' => 'decimal:2', 'fat_grams' => 'decimal:2'];
     }
 
+    /** @return BelongsTo<NutritionLogEntry, $this> */
     public function entry(): BelongsTo
     {
         return $this->belongsTo(NutritionLogEntry::class, 'nutrition_log_entry_id');

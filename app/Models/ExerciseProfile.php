@@ -21,6 +21,7 @@ class ExerciseProfile extends Model implements Syncable
         return ['working_weight' => 'decimal:2', 'estimated_one_rep_max' => 'decimal:2', 'typical_distance_km' => 'decimal:3'];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

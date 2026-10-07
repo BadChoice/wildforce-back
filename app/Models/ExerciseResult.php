@@ -24,6 +24,7 @@ class ExerciseResult extends Model implements Syncable
         return ['completed_at' => 'datetime', 'completed_weight' => 'decimal:2', 'per_set_reps' => 'array', 'per_set_weights_kg' => 'array', 'completed_distance_km' => 'decimal:3', 'watch_set_summary' => 'array', 'watch_rep_summaries' => 'array'];
     }
 
+    /** @return BelongsTo<PlannedExercise, $this> */
     public function plannedExercise(): BelongsTo
     {
         return $this->belongsTo(PlannedExercise::class);

@@ -16,6 +16,7 @@ class BodyProgressPhotoSession extends Model implements Syncable
     /** @use HasFactory<BodyProgressPhotoSessionFactory> */
     use HasFactory, SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

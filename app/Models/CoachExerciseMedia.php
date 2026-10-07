@@ -24,6 +24,7 @@ class CoachExerciseMedia extends Model implements Syncable
 
     protected $table = 'coach_exercise_media';
 
+    /** @return BelongsTo<User, $this> */
     public function coach(): BelongsTo
     {
         return $this->belongsTo(User::class, 'coach_user_id');
@@ -31,6 +32,10 @@ class CoachExerciseMedia extends Model implements Syncable
 
     /**
      * Limit the media to the coaches the user is actively enrolled with.
+     */
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
      */
     public function scopeForUser(Builder $query, User $user): Builder
     {

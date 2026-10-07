@@ -21,6 +21,7 @@ class NutritionProfile extends Model implements Syncable
         return ['excluded_foods' => 'array', 'allergies_and_intolerances' => 'array', 'preferred_protein_sources' => 'array', 'dislikes' => 'array', 'wants_meal_suggestions' => 'boolean'];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

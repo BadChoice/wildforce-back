@@ -27,11 +27,13 @@ class CoachingEnrollment extends Pivot
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_user_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function coach(): BelongsTo
     {
         return $this->belongsTo(User::class, 'coach_user_id');
