@@ -101,6 +101,16 @@ export default defineRailway(() => {
       STRIPE_PREMIUM_YEARLY_PRICE_ID: "price_1UKxnAFI3Ev7T3CmpwpvtF3o",
 
       // -------------------------
+      // OPEN FOOD FACTS
+      // -------------------------
+      OPEN_FOOD_FACTS_BASE_URL: "https://world.openfoodfacts.org",
+      OPEN_FOOD_FACTS_USER_ID: "codepassion",
+      OPEN_FOOD_FACTS_PASSWORD: "wildforce-codepassion-openfoodfacts",
+      OPEN_FOOD_FACTS_USER_AGENT: "Wildforce/1.0 (https://wildforce.app)",
+      OPEN_FOOD_FACTS_APP_NAME: "Wildforce",
+      OPEN_FOOD_FACTS_APP_VERSION: "1.0",
+
+      // -------------------------
       // AI Providers
       // -------------------------
       GEMINI_API_KEY: preserve(),
