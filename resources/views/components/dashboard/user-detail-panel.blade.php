@@ -62,7 +62,7 @@
                 @break
 
             @case('body-metrics')
-                <x-dashboard.user-body-metrics :user="$user" />
+                <livewire:dashboard.body-metrics :user="$user" :key="'body-metrics-'.$user->id" />
                 @break
 
             @case('coaching')

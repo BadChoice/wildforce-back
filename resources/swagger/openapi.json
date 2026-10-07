@@ -1082,6 +1082,38 @@
         }
       }
     },
+    "/api/nutrition/open-food-facts/contributions": {
+      "post": {
+        "tags": ["Nutrition"],
+        "summary": "Contribute a product to Open Food Facts",
+        "description": "Submits a user-provided food product, nutrition information, and front and nutrition-label images to Open Food Facts. The request is authenticated, requires active app access, and is idempotent.",
+        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {"$ref": "#/components/schemas/OpenFoodFactsContributionRequest"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product contribution accepted by Open Food Facts",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/OpenFoodFactsContributionResponse"}
+              }
+            }
+          },
+          "401": {"$ref": "#/components/responses/Unauthenticated"},
+          "403": {"description": "An active subscription, trial, or demo access is required."},
+          "409": {"description": "The idempotency key is already in progress or was reused with a different request."},
+          "422": {"$ref": "#/components/responses/ValidationError"},
+          "429": {"description": "The contribution rate limit of ten requests per minute was exceeded."},
+          "502": {"description": "Open Food Facts could not accept the contribution."}
+        }
+      }
+    },
     "/api/sync/push": {
       "post": {
         "tags": [
@@ -2279,6 +2311,43 @@
           "estimatedFoods": {"type": "array", "items": {"$ref": "#/components/schemas/EstimatedFood"}},
           "estimatedMacros": {"$ref": "#/components/schemas/EstimatedMacros"},
           "analysisNotes": {"type": ["string", "null"]}
+        }
+      },
+      "OpenFoodFactsContributionRequest": {
+        "type": "object",
+        "required": ["barcode", "name", "brands", "macros_per_100g", "front_image", "nutrition_image"],
+        "properties": {
+          "barcode": {"type": "string", "pattern": "^\\d{8,14}$", "description": "The product barcode."},
+          "name": {"type": "string", "maxLength": 255},
+          "brands": {"type": "string", "maxLength": 255},
+          "macros_per_100g": {
+            "type": "object",
+            "required": ["calories", "protein", "carbs", "fat"],
+            "properties": {
+              "calories": {"type": "number", "exclusiveMinimum": 0},
+              "protein": {"type": "number", "minimum": 0},
+              "carbs": {"type": "number", "minimum": 0},
+              "fat": {"type": "number", "minimum": 0}
+            }
+          },
+          "serving_size": {"type": ["string", "null"], "maxLength": 100},
+          "nutriscore": {"type": ["string", "null"], "enum": ["a", "b", "c", "d", "e", null]},
+          "front_image": {"type": "string", "format": "binary", "description": "A JPEG, PNG, GIF, HEIC, or HEIF image of the product front, up to 10 MiB."},
+          "nutrition_image": {"type": "string", "format": "binary", "description": "A JPEG, PNG, GIF, HEIC, or HEIF image of the nutrition label, up to 10 MiB."}
+        }
+      },
+      "OpenFoodFactsContributionResponse": {
+        "type": "object",
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": ["code", "status"],
+            "properties": {
+              "code": {"type": "string"},
+              "status": {"type": "string"}
+            }
+          }
         }
       },
       "EstimatedFood": {

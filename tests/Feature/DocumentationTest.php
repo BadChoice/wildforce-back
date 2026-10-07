@@ -21,6 +21,7 @@ test('it renders the API documentation and its OpenAPI document locally', functi
         ->assertJsonPath('paths./api/workout-plans/generate.post.summary', 'Generate and save a one-week workout plan')
         ->assertJsonPath('paths./api/nutrition-plans/generate.post.summary', 'Generate and save a seven-day nutrition plan')
         ->assertJsonPath('paths./api/nutrition-macros/generate.post.summary', 'Estimate meal macros from a text description')
+        ->assertJsonPath('paths./api/nutrition/open-food-facts/contributions.post.summary', 'Contribute a product to Open Food Facts')
         ->assertJsonPath('paths./api/workout-plans/generate.post.parameters.0.$ref', '#/components/parameters/IdempotencyKey')
         ->assertJsonPath('paths./api/users/avatar.post.summary', "Upload the authenticated user's public avatar")
         ->assertJsonPath('paths./api/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}.post.parameters.1.schema.enum', ['profile', 'front', 'torso'])

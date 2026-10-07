@@ -244,6 +244,28 @@ test('dashboard displays body metric charts for a selected user', function () {
         ->assertSee('Latest: 18.400');
 });
 
+test('body metric charts show only the entries in the selected range', function () {
+    $this->travelTo('2026-10-07 12:00:00');
+    $admin = User::factory()->admin()->create();
+    $user = User::factory()->create();
+    BodyMetricEntry::factory()->for($user)->create(['type' => 'weight', 'value' => 80, 'recorded_at' => '2026-09-20 10:00:00']);
+    $this->actingAs($admin);
+
+    Livewire::test('dashboard.body-metrics', ['user' => $user])
+        ->assertSee('Range: 80–80')
+        ->set('range', '7d')
+        ->assertSee('Latest: 80.000')
+        ->assertSee('No entries in this period.');
+});
+
+test('body metric charts are forbidden for users without access to the data', function () {
+    $user = User::factory()->create();
+    $this->actingAs(User::factory()->create());
+
+    Livewire::test('dashboard.body-metrics', ['user' => $user])
+        ->assertForbidden();
+});
+
 test('dashboard displays a user coaching relationships', function () {
     $admin = User::factory()->admin()->create();
     $user = User::factory()->create(['name' => 'Alex Morgan']);

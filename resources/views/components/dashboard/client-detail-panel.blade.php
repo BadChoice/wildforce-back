@@ -82,7 +82,7 @@
                 @break
 
             @case('body-metrics')
-                <x-dashboard.user-body-metrics :user="$client" />
+                <livewire:dashboard.body-metrics :user="$client" :key="'body-metrics-'.$client->id" />
                 @break
 
             @case('app-settings')

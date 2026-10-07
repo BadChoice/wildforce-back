@@ -103,6 +103,15 @@ return [
         'recipient' => env('FEEDBACK_MAIL_TO', 'hello@codepassion.io'),
     ],
 
+    'open_food_facts' => [
+        'base_url' => env('OPEN_FOOD_FACTS_BASE_URL', 'https://world.openfoodfacts.org'),
+        'user_id' => env('OPEN_FOOD_FACTS_USER_ID'),
+        'password' => env('OPEN_FOOD_FACTS_PASSWORD'),
+        'user_agent' => env('OPEN_FOOD_FACTS_USER_AGENT', 'Wildforce/1.0 (https://wildforce.app)'),
+        'app_name' => env('OPEN_FOOD_FACTS_APP_NAME', 'Wildforce'),
+        'app_version' => env('OPEN_FOOD_FACTS_APP_VERSION', '1.0'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\WorkoutFocus;
 use App\Enums\WorkoutKind;
 use Database\Factories\WorkoutDayFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +22,18 @@ class WorkoutDay extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['kind' => WorkoutKind::class, 'did_count_toward_streak' => 'boolean', 'scheduled_for' => 'datetime', 'started_at' => 'datetime', 'completed_at' => 'datetime', 'active_calories_burned' => 'decimal:2', 'average_heart_rate' => 'decimal:2', 'maximum_heart_rate' => 'decimal:2', 'total_volume_kg' => 'decimal:3'];
+        return [
+            'kind' => WorkoutKind::class,
+            'focus' => WorkoutFocus::class,
+            'did_count_toward_streak' => 'boolean',
+            'scheduled_for' => 'datetime',
+            'started_at' => 'datetime',
+            'completed_at' => 'datetime',
+            'active_calories_burned' => 'decimal:2',
+            'average_heart_rate' => 'decimal:2',
+            'maximum_heart_rate' => 'decimal:2',
+            'total_volume_kg' => 'decimal:3',
+        ];
     }
 
     public function user(): BelongsTo
