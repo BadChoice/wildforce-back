@@ -1494,9 +1494,9 @@
       },
       "InitialRegistrationUser": {
         "type": "object",
-        "required": ["id", "name", "height", "weight", "birth_date", "gender", "language", "metric_system"],
+        "required": ["id", "name", "height", "weight", "birth_date", "gender", "language", "timezone", "metric_system"],
         "properties": {
-          "id": {"type": "string", "format": "uuid"}, "name": {"type": "string", "maxLength": 255}, "height": {"type": "integer", "minimum": 50, "maximum": 300}, "weight": {"type": "number", "minimum": 10, "maximum": 1000}, "birth_date": {"type": "string", "format": "date-time"}, "gender": {"type": "string", "enum": ["female", "male"]}, "language": {"type": "string", "maxLength": 255}, "metric_system": {"type": "string", "enum": ["metric", "imperial"]}
+          "id": {"type": "string", "format": "uuid"}, "name": {"type": "string", "maxLength": 255}, "height": {"type": "integer", "minimum": 50, "maximum": 300}, "weight": {"type": "number", "minimum": 10, "maximum": 1000}, "birth_date": {"type": "string", "format": "date-time"}, "gender": {"type": "string", "enum": ["female", "male"]}, "language": {"type": "string", "maxLength": 255}, "timezone": {"type": "string", "format": "timezone", "example": "Europe/Madrid"}, "metric_system": {"type": "string", "enum": ["metric", "imperial"]}
         }
       },
       "InitialTrainingPreferences": {"allOf": [{"$ref": "#/components/schemas/TrainingProfile"}, {"type": "object", "required": ["id", "body_composition_phase", "skips_warmups", "skips_cooldowns", "skips_rest_periods"]}]},

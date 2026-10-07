@@ -30,6 +30,7 @@ test('it registers a user and returns a bearer token for the device', function (
         ->and($user->tokens)->toHaveCount(1)
         ->and($user->tokens->sole()->name)->toBe('Jane’s iPhone')
         ->and($user->language)->toBe('ca')
+        ->and($user->timezone)->toBe('Europe/Madrid')
         ->and($user->id)->toBe('7c9e6679-7425-40de-944b-e07fc1f90ae7')
         ->and($user->trainingPreferences->only(['goal', 'gym_type', 'workout_days']))->toBe([
             'goal' => 'buildMuscle',
@@ -125,6 +126,7 @@ function initialDataPayload(array $overrides = []): array
             'birth_date' => '1995-01-01T00:00:00Z',
             'gender' => 'female',
             'language' => 'ca',
+            'timezone' => 'Europe/Madrid',
             'metric_system' => 'metric',
         ],
         'training_preferences' => [...trainingProfilePayload(), 'id' => '0b6f5c3e-2a8d-4f1b-9c7e-5d4a3b2c1e0f'],

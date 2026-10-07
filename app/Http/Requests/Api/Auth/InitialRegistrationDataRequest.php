@@ -39,6 +39,7 @@ abstract class InitialRegistrationDataRequest extends FormRequest
             'initial_data.user.birth_date' => [$nested, 'date'],
             'initial_data.user.gender' => [$nested, 'string', Rule::in(['female', 'male'])],
             'initial_data.user.language' => [$nested, 'string', 'max:255'],
+            'initial_data.user.timezone' => [$nested, 'string', 'timezone'],
             'initial_data.user.metric_system' => [$nested, 'string', Rule::in(['metric', 'imperial'])],
             'initial_data.training_preferences' => [$nested, 'array'],
             'initial_data.training_preferences.id' => [$nested, 'uuid', 'unique:training_preferences,id'],
