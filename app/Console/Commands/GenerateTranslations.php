@@ -5,19 +5,21 @@ namespace App\Console\Commands;
 use App\Services\Translations\AndroidExporter;
 use App\Services\Translations\GoogleSheetTranslations;
 use App\Services\Translations\IOSExporter;
+use App\Services\Translations\LaravelExporter;
 use Illuminate\Console\Command;
 use Throwable;
 
 class GenerateTranslations extends Command
 {
-    protected $signature = 'app:translations {--ios : Generate the iOS XCStrings file} {--android : Generate the Android string resources}';
+    protected $signature = 'app:translations {--ios : Generate the iOS XCStrings file} {--android : Generate the Android string resources} {--back : Generate the Laravel JSON translation files}';
 
-    protected $description = 'Generate mobile translation files from Google Sheets';
+    protected $description = 'Generate application translation files from Google Sheets';
 
     public function __construct(
         private GoogleSheetTranslations $googleSheetTranslations,
         private IOSExporter $iosExporter,
         private AndroidExporter $androidExporter,
+        private LaravelExporter $laravelExporter,
     ) {
         parent::__construct();
     }
@@ -27,8 +29,8 @@ class GenerateTranslations extends Command
      */
     public function handle(): int
     {
-        if (! $this->option('ios') && ! $this->option('android')) {
-            $this->components->error('Select at least one platform: --ios or --android.');
+        if (! $this->option('ios') && ! $this->option('android') && ! $this->option('back')) {
+            $this->components->error('Select at least one platform: --ios, --android, or --back.');
 
             return self::FAILURE;
         }
@@ -48,6 +50,13 @@ class GenerateTranslations extends Command
                 $this->ensurePathIsConfigured($path, 'TRANSLATIONS_ANDROID_PATH');
                 $this->androidExporter->export($translations, $path);
                 $this->components->info("Generated Android translations at {$path}.");
+            }
+
+            if ($this->option('back')) {
+                $translations = $this->googleSheetTranslations->download((string) config('translations.google_sheet_id'), ['back', 'exercise_catalog']);
+                $path = lang_path();
+                $this->laravelExporter->export($translations, $path);
+                $this->components->info("Generated Laravel translations at {$path}.");
             }
         } catch (Throwable $exception) {
             $this->components->error($exception->getMessage());

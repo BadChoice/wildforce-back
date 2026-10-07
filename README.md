@@ -37,7 +37,7 @@ pg_dump \
 pg_restore \
   "postgresql://postgres:{pswd}@{host}:{port}/{database}" \
   --no-owner \
-  backup.dump
+  --file="backup-$(date +%Y-%m-%d_%H-%M).dump"
 ```
 
 

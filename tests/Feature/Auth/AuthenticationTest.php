@@ -32,6 +32,14 @@ test('users can authenticate using the login screen', function () {
     $this->assertAuthenticated();
 });
 
+test('uses the authenticated user language as the web locale', function () {
+    $user = User::factory()->create(['language' => 'ca']);
+
+    $this->actingAs($user)->get(route('dashboard'))->assertRedirect(route('workout-plans.index'));
+
+    expect(app()->getLocale())->toBe('ca');
+});
+
 test('users can not authenticate with invalid password', function () {
     $user = User::factory()->create();
 

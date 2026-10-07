@@ -87,6 +87,8 @@ export default defineRailway(() => {
       GOOGLE_CLIENT_ID: preserve(),
       GOOGLE_WEB_CLIENT_ID: preserve(),
       GOOGLE_WEB_SECRET: preserve(),
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: preserve(),
+      GOOGLE_PLAY_PACKAGE_NAME: "io.codepassion.wildforce.android",
 
       // -------------------------
       // Stripe
