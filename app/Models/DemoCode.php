@@ -7,7 +7,13 @@ use App\Enums\DemoCodeStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property DemoCodeStatus $status
+ * @property int|null $access_duration_days
+ * @property Carbon|null $expires_at
+ */
 #[Fillable(['code', 'status', 'access_duration_days', 'expires_at'])]
 class DemoCode extends Model
 {
@@ -22,6 +28,7 @@ class DemoCode extends Model
         ];
     }
 
+    /** @return HasMany<Subscription, $this> */
     public function subscriptions(): HasMany
     {
         return $this->hasMany(Subscription::class);

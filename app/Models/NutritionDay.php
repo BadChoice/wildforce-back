@@ -22,11 +22,13 @@ class NutritionDay extends Model implements Syncable
         return ['date' => 'date', 'target_calories' => 'decimal:2', 'target_protein_grams' => 'decimal:2', 'target_carbs_grams' => 'decimal:2', 'target_fat_grams' => 'decimal:2'];
     }
 
+    /** @return BelongsTo<NutritionPlan, $this> */
     public function plan(): BelongsTo
     {
         return $this->belongsTo(NutritionPlan::class, 'nutrition_plan_id');
     }
 
+    /** @return HasMany<NutritionMeal, $this> */
     public function meals(): HasMany
     {
         return $this->hasMany(NutritionMeal::class);

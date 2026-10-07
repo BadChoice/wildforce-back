@@ -3,7 +3,9 @@
 namespace App\Concerns;
 
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
 trait SyncsWithUser
@@ -14,7 +16,7 @@ trait SyncsWithUser
     public static function syncAttributes(): array
     {
         return array_values(array_diff(
-            Schema::getColumnListing((new static)->getTable()),
+            Schema::getColumnListing(static::query()->getModel()->getTable()),
             static::syncExcludedAttributes(),
         ));
     }
@@ -27,6 +29,10 @@ trait SyncsWithUser
         return ['id', 'created_at', 'updated_at', 'deleted_at'];
     }
 
+    /**
+     * @param  Builder<Model>  $query
+     * @return Builder<Model>
+     */
     public function scopeForUser(Builder $query, User $user): Builder
     {
         return $query->whereHas(
@@ -46,6 +52,7 @@ trait SyncsWithUser
     public function syncPayload(): array
     {
         $attributes = $this->only(static::syncAttributes());
+        $deletedAt = $this->getAttribute('deleted_at');
 
         foreach ($attributes as $attribute => $value) {
             $cast = $this->getCasts()[$attribute] ?? null;
@@ -60,7 +67,7 @@ trait SyncsWithUser
             'id' => $this->getKey(),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
-            'deleted_at' => $this->deleted_at?->toISOString(),
+            'deleted_at' => $deletedAt instanceof CarbonInterface ? $deletedAt->toISOString() : null,
         ];
     }
 }

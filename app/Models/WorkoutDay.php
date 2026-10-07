@@ -15,6 +15,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property WorkoutFocus $focus
+ * @property WorkoutKind $kind
+ */
 class WorkoutDay extends Model implements Syncable
 {
     /** @use HasFactory<WorkoutDayFactory> */
@@ -36,26 +40,31 @@ class WorkoutDay extends Model implements Syncable
         ];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<WorkoutPlan, $this> */
     public function plan(): BelongsTo
     {
         return $this->belongsTo(WorkoutPlan::class, 'workout_plan_id');
     }
 
+    /** @return BelongsTo<self, $this> */
     public function sourceWorkoutDay(): BelongsTo
     {
         return $this->belongsTo(self::class, 'source_workout_day_id');
     }
 
+    /** @return HasMany<WorkoutBlock, $this> */
     public function blocks(): HasMany
     {
         return $this->hasMany(WorkoutBlock::class);
     }
 
+    /** @return HasMany<PlannedExercise, $this> */
     public function exercises(): HasMany
     {
         return $this->hasMany(PlannedExercise::class);

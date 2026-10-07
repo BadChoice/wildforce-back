@@ -17,11 +17,13 @@ class WorkoutBlock extends Model implements Syncable
     /** @use HasFactory<WorkoutBlockFactory> */
     use HasFactory, SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
 
+    /** @return BelongsTo<WorkoutDay, $this> */
     public function workoutDay(): BelongsTo
     {
         return $this->belongsTo(WorkoutDay::class);
     }
 
+    /** @return HasMany<PlannedExercise, $this> */
     public function exercises(): HasMany
     {
         return $this->hasMany(PlannedExercise::class);

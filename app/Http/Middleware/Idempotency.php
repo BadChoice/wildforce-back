@@ -91,7 +91,7 @@ class Idempotency
             ], Response::HTTP_CONFLICT);
         }
 
-        if ($record['status'] === 'completed') {
+        if (($record['status'] ?? null) === 'completed') {
             return response(
                 $record['response_body'] ?? '',
                 $record['response_status'] ?? Response::HTTP_OK,

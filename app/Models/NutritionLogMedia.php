@@ -16,6 +16,7 @@ class NutritionLogMedia extends Model implements Syncable
     /** @use HasFactory<NutritionLogMediaFactory> */
     use HasFactory, SoftDeletes, SyncsWithUser, UsesUuidPrimaryKey;
 
+    /** @return HasMany<NutritionLogEntry, $this> */
     public function entries(): HasMany
     {
         return $this->hasMany(NutritionLogEntry::class);

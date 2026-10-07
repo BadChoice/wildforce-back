@@ -12,6 +12,9 @@ enum Goal: string
     case BodyRecomposition = 'bodyRecomposition';
     case GeneralFitness = 'generalFitness';
 
+    /**
+     * @return list<string>
+     */
     public static function allCasesArray(): array
     {
         return array_column(self::cases(), 'value');

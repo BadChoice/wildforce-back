@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/** @property Carbon|null $skipped_at */
 class PlannedExercise extends Model implements Syncable
 {
     /** @use HasFactory<PlannedExerciseFactory> */
@@ -24,16 +26,19 @@ class PlannedExercise extends Model implements Syncable
         return ['target_reps' => 'array', 'target_weight_kg' => 'decimal:2', 'target_weights_kg' => 'array', 'target_distance_km' => 'decimal:3', 'set_style_configuration' => SetStyleConfiguration::class, 'skipped_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<WorkoutDay, $this> */
     public function workoutDay(): BelongsTo
     {
         return $this->belongsTo(WorkoutDay::class);
     }
 
+    /** @return BelongsTo<WorkoutBlock, $this> */
     public function block(): BelongsTo
     {
         return $this->belongsTo(WorkoutBlock::class, 'workout_block_id');
     }
 
+    /** @return HasMany<ExerciseResult, $this> */
     public function exerciseResults(): HasMany
     {
         return $this->hasMany(ExerciseResult::class);

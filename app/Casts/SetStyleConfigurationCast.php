@@ -7,6 +7,9 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
+/**
+ * @implements CastsAttributes<SetStyleConfiguration|null, mixed>
+ */
 class SetStyleConfigurationCast implements CastsAttributes
 {
     /**

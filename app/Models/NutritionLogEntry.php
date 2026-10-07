@@ -22,21 +22,25 @@ class NutritionLogEntry extends Model implements Syncable
         return ['logged_at' => 'datetime', 'is_favorite' => 'boolean'];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<NutritionLogMedia, $this> */
     public function media(): BelongsTo
     {
         return $this->belongsTo(NutritionLogMedia::class, 'nutrition_log_media_id');
     }
 
+    /** @return BelongsTo<NutritionMeal, $this> */
     public function meal(): BelongsTo
     {
         return $this->belongsTo(NutritionMeal::class, 'nutrition_meal_id');
     }
 
+    /** @return HasMany<NutritionLogItem, $this> */
     public function items(): HasMany
     {
         return $this->hasMany(NutritionLogItem::class);

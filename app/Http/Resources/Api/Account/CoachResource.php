@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\Account;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,9 +15,12 @@ class CoachResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        /** @var User $coach */
+        $coach = $this->resource;
+
         return [
-            'id' => $this->id,
-            'name' => $this->name,
+            'id' => $coach->id,
+            'name' => $coach->name,
         ];
     }
 }

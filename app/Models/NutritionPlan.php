@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/** @property CarbonInterface $starts_on */
 class NutritionPlan extends Model implements Syncable
 {
     /** @use HasFactory<NutritionPlanFactory> */
@@ -25,16 +26,19 @@ class NutritionPlan extends Model implements Syncable
         return ['starts_on' => 'datetime', 'daily_calorie_average' => 'decimal:2'];
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<WorkoutPlan, $this> */
     public function sourceWorkoutPlan(): BelongsTo
     {
         return $this->belongsTo(WorkoutPlan::class, 'source_workout_plan_id');
     }
 
+    /** @return HasMany<NutritionDay, $this> */
     public function days(): HasMany
     {
         return $this->hasMany(NutritionDay::class);
