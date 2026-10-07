@@ -1,4 +1,4 @@
-import { defineRailway, github, postgres, preserve, project, service, volume, bucket } from "railway/iac";
+import { defineRailway, github, postgres, preserve, project, service, volume, bucket, ref } from "railway/iac";
 
 export default defineRailway(() => {
   const Postgres = postgres("Postgres", { region: "europe-west4-drams3a" });
@@ -61,11 +61,11 @@ export default defineRailway(() => {
       // Storage
       // -------------------------
       FILESYSTEM_DISK: "s3",
-      AWS_ACCESS_KEY_ID: "${{user-storage.ACCESS_KEY_ID}}",
-      AWS_SECRET_ACCESS_KEY: "${{user-storage.SECRET_ACCESS_KEY}}",
-      AWS_DEFAULT_REGION: "${{user-storage.REGION}}",
-      AWS_BUCKET: "${{user-storage.BUCKET}}",
-      AWS_ENDPOINT: "${{user-storage.ENDPOINT}}",
+      AWS_ACCESS_KEY_ID: ref(userStorage, "ACCESS_KEY_ID"),
+      AWS_SECRET_ACCESS_KEY: ref(userStorage, "SECRET_ACCESS_KEY"),
+      AWS_DEFAULT_REGION: ref(userStorage, "REGION"),
+      AWS_BUCKET: ref(userStorage, "BUCKET"),
+      AWS_ENDPOINT: ref(userStorage, "ENDPOINT"),
       AWS_USE_PATH_STYLE_ENDPOINT: "false",
 
       SUPABASE_S3_KEY: preserve(),
