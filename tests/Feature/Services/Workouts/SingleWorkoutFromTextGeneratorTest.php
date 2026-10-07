@@ -8,7 +8,7 @@ test('converts free-form workout text into an unsaved workout day', function () 
     $user = User::factory()->create();
     SingleWorkoutFromTextAgent::fake([[
         'title' => 'Back and biceps',
-        'focus' => 'back',
+        'focus' => 'pull',
         'dayType' => 'hypertrophy',
         'estimatedDurationMinutes' => 55,
         'blocks' => [[

@@ -91,7 +91,7 @@ final class NutritionPlanAIGenerator
 
             return $workoutDay === null
                 ? '- '.$day['weekday'].' ('.$day['date']->toDateString().'): no planned workout'
-                : '- '.$day['weekday'].' ('.$day['date']->toDateString().'): '.$workoutDay->title.', focus '.$workoutDay->focus.', estimated duration '.($workoutDay->estimated_duration_minutes ?? 45).' min';
+                : '- '.$day['weekday'].' ('.$day['date']->toDateString().'): '.$workoutDay->title.', focus '.$workoutDay->focus->value.', estimated duration '.($workoutDay->estimated_duration_minutes ?? 45).' min';
         })->implode("\n");
         $targets = collect($analysis->days)->map(fn (array $day): string => '- '.$day['weekday'].' | '.$day['date']->toDateString().' | '.$this->workoutLabel($day['workoutDay']).' | dayType: '.$day['dayType'].' | demand: '.$day['energyDemand'].' | calories: '.$day['calories'].' | protein: '.$day['protein'].'g | carbs: '.$day['carbs'].'g | fat: '.$day['fat'].'g')->implode("\n");
 
@@ -172,7 +172,7 @@ PROMPT;
         $day->forceFill([
             'date' => $context['date'], 'weekday' => $context['weekday'], 'day_type' => $context['dayType'],
             'target_calories' => $context['calories'], 'target_protein_grams' => $context['protein'], 'target_carbs_grams' => $context['carbs'], 'target_fat_grams' => $context['fat'],
-            'planned_workout_title' => $context['workoutDay']?->title, 'planned_workout_focus' => $context['workoutDay']?->focus, 'energy_demand' => $context['energyDemand'],
+            'planned_workout_title' => $context['workoutDay']?->title, 'planned_workout_focus' => $context['workoutDay']?->focus?->value, 'energy_demand' => $context['energyDemand'],
             'notes' => $response['notes'] ?? null, 'pre_workout_guidance' => $response['preWorkoutGuidance'] ?? null, 'post_workout_guidance' => $response['postWorkoutGuidance'] ?? null,
         ]);
         $day->setRelation('plan', $plan);

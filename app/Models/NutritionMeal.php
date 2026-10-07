@@ -9,6 +9,7 @@ use Database\Factories\NutritionMealFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class NutritionMeal extends Model implements Syncable
@@ -18,12 +19,17 @@ class NutritionMeal extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['target_calories' => 'decimal:2', 'target_protein_grams' => 'decimal:2', 'target_carbs_grams' => 'decimal:2', 'target_fat_grams' => 'decimal:2', 'example_foods' => 'array'];
+        return ['target_calories' => 'decimal:2', 'target_protein_grams' => 'decimal:2', 'target_carbs_grams' => 'decimal:2', 'target_fat_grams' => 'decimal:2', 'example_foods' => 'array', 'discarded_at' => 'datetime'];
     }
 
     public function day(): BelongsTo
     {
         return $this->belongsTo(NutritionDay::class, 'nutrition_day_id');
+    }
+
+    public function logEntries(): HasMany
+    {
+        return $this->hasMany(NutritionLogEntry::class);
     }
 
     protected static function syncOwnerRelationship(): string

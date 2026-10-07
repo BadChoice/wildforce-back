@@ -1,5 +1,9 @@
 <?php
 
+use App\Models\NutritionDay;
+use App\Models\NutritionLogEntry;
+use App\Models\NutritionMeal;
+use App\Models\NutritionPlan;
 use App\Models\PlannedExercise;
 use App\Models\TrainingLocation;
 use App\Models\User;
@@ -196,6 +200,50 @@ test('it synchronizes a skipped planned exercise', function () {
 
     expect($plannedExercise->fresh()->skipped_at?->toISOString())
         ->toBe('2026-10-06T09:30:00.000000Z');
+});
+
+test('it synchronizes a discarded nutrition meal', function () {
+    $user = User::factory()->create();
+    $meal = NutritionMeal::factory()
+        ->for(NutritionDay::factory()->for(NutritionPlan::factory()->for($user), 'plan'), 'day')
+        ->create();
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/sync/push', [
+        'resource' => 'nutrition-meals',
+        'records' => [[
+            ...$meal->syncPayload(),
+            'updated_at' => '2030-10-07T09:45:00Z',
+            'discarded_at' => '2026-10-07T09:30:00Z',
+        ]],
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.0.discarded_at', '2026-10-07T09:30:00.000000Z');
+
+    expect($meal->fresh()->discarded_at?->toISOString())
+        ->toBe('2026-10-07T09:30:00.000000Z');
+});
+
+test('it links a nutrition log entry to the suggested meal it was logged from', function () {
+    $user = User::factory()->create();
+    $meal = NutritionMeal::factory()
+        ->for(NutritionDay::factory()->for(NutritionPlan::factory()->for($user), 'plan'), 'day')
+        ->create();
+    $entry = NutritionLogEntry::factory()->for($user)->create();
+    Sanctum::actingAs($user);
+
+    $this->postJson('/api/sync/push', [
+        'resource' => 'nutrition-log-entries',
+        'records' => [[
+            ...$entry->syncPayload(),
+            'updated_at' => '2030-10-07T09:45:00Z',
+            'nutrition_meal_id' => Str::upper($meal->id),
+        ]],
+    ])
+        ->assertOk()
+        ->assertJsonPath('data.0.nutrition_meal_id', $meal->id);
+
+    expect($entry->fresh()->meal->is($meal))->toBeTrue();
 });
 
 test('it returns 401 when no token is provided', function () {

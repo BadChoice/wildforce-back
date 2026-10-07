@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\CoachingEnrollmentStatus;
+use App\Enums\WorkoutFocus;
 use App\Models\BodyMetricEntry;
 use App\Models\CoachingEnrollment;
 use App\Models\NutritionDay;
@@ -277,7 +278,7 @@ test('it saves a complete workout day for a selected client plan', function () {
 
     expect($workoutDay->user_id)->toBe($client->id)
         ->and($workoutDay->workout_plan_id)->toBe($workoutPlan->id)
-        ->and($workoutDay->focus)->toBe('lowerBody')
+        ->and($workoutDay->focus)->toBe(WorkoutFocus::LowerBody)
         ->and($workoutBlock->order_index)->toBe(0)
         ->and($plannedExercise->workout_block_id)->toBe($workoutBlock->id)
         ->and($plannedExercise->exercise)->toBe('barbellBackSquat')

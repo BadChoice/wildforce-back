@@ -32,6 +32,11 @@ class NutritionLogEntry extends Model implements Syncable
         return $this->belongsTo(NutritionLogMedia::class, 'nutrition_log_media_id');
     }
 
+    public function meal(): BelongsTo
+    {
+        return $this->belongsTo(NutritionMeal::class, 'nutrition_meal_id');
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(NutritionLogItem::class);

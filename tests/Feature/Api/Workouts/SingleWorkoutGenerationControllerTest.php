@@ -4,12 +4,19 @@ use App\Ai\Agents\Workouts\SingleWorkoutAgent;
 use App\Enums\SubscriptionStatus;
 use App\Models\TrainingPreference;
 use App\Models\User;
+use App\Models\WorkoutDay;
+use App\Models\WorkoutPlan;
 
 test('it returns a generated single workout without persisting it', function () {
     $user = User::factory()->create();
     TrainingPreference::factory()->for($user)->create([
         'goal' => 'buildMuscle',
         'general_training_level' => 'intermediate',
+    ]);
+    $workoutPlan = WorkoutPlan::factory()->for($user)->create();
+    WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+        'title' => 'Full body history',
+        'focus' => 'fullBody',
     ]);
     SingleWorkoutAgent::fake([singleWorkoutGenerationResponse()])->preventStrayPrompts();
 
@@ -23,18 +30,20 @@ test('it returns a generated single workout without persisting it', function () 
         ->assertJsonMissingPath('data.blocks.0.id')
         ->assertJsonMissingPath('data.blocks.0.exercises.0.id')
         ->assertJsonPath('data.title', 'Full body express')
+        ->assertJsonPath('data.focus', 'fullBody')
         ->assertJsonPath('data.blocks.0.exercises.0.exercise', 'pushUp')
         ->assertJsonPath('data.blocks.0.exercises.0.skipped_at', null)
         ->assertJsonPath('data.blocks.0.exercises.0.set_style_configuration.target_rir', 2);
 
-    $this->assertDatabaseCount('workout_days', 0);
+    $this->assertDatabaseCount('workout_days', 1);
     $this->assertDatabaseCount('workout_blocks', 0);
     $this->assertDatabaseCount('planned_exercises', 0);
 
     SingleWorkoutAgent::assertPrompted(fn ($prompt): bool => $prompt
         ->contains('## Single workout request')
         && $prompt->contains('Target duration: 45 minutes total')
-        && $prompt->contains('Available equipment for this session: bodyweight'));
+        && $prompt->contains('Available equipment for this session: bodyweight')
+        && $prompt->contains('Full body history (fullBody)'));
 });
 
 test('it returns 422 when the single workout request is invalid', function () {

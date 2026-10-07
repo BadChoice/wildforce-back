@@ -1642,7 +1642,7 @@ components:
               type: string
     SyncRecord:
       type: object
-      description: "A synced record. Besides the listed fields it carries the model's synced columns, including its relationship foreign keys (e.g. `user_id`, `workout_plan_id`, `workout_day_id`, `workout_block_id`, `planned_exercise_id`, `nutrition_plan_id`, `nutrition_day_id`)."
+      description: "A synced record. Besides the listed fields it carries the model's synced columns, including its relationship foreign keys (e.g. `user_id`, `workout_plan_id`, `workout_day_id`, `workout_block_id`, `planned_exercise_id`, `nutrition_plan_id`, `nutrition_day_id`, `nutrition_meal_id`)."
       required:
         - id
         - created_at

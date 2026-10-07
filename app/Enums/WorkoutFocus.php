@@ -15,9 +15,20 @@ enum WorkoutFocus: string
     case Mobility = 'mobility';
     case Recovery = 'recovery';
 
-    public function display(): string
+    public function label(): string
     {
-        return __($this->value);
+        return match ($this) {
+            self::FullBody => __('Full body'),
+            self::UpperBody => __('Upper body'),
+            self::LowerBody => __('Lower body'),
+            self::Push => __('Push'),
+            self::Pull => __('Pull'),
+            self::Legs => __('Legs'),
+            self::Core => __('Core'),
+            self::Cardio => __('Cardio'),
+            self::Mobility => __('Mobility'),
+            self::Recovery => __('Recovery'),
+        };
     }
 
     public static function allCasesArray(): array

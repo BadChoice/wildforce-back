@@ -55,16 +55,9 @@
                 <flux:field>
                     <flux:label>{{ __('Focus') }}</flux:label>
                     <flux:select wire:model="workoutDayFocus">
-                        <option value="fullBody">{{ __('Full body') }}</option>
-                        <option value="upperBody">{{ __('Upper body') }}</option>
-                        <option value="lowerBody">{{ __('Lower body') }}</option>
-                        <option value="chest">{{ __('Chest') }}</option>
-                        <option value="back">{{ __('Back') }}</option>
-                        <option value="shoulders">{{ __('Shoulders') }}</option>
-                        <option value="arms">{{ __('Arms') }}</option>
-                        <option value="core">{{ __('Core') }}</option>
-                        <option value="cardio">{{ __('Cardio') }}</option>
-                        <option value="mobility">{{ __('Mobility') }}</option>
+                        @foreach (\App\Enums\WorkoutFocus::cases() as $workoutFocus)
+                            <option value="{{ $workoutFocus->value }}">{{ $workoutFocus->label() }}</option>
+                        @endforeach
                     </flux:select>
                 </flux:field>
             </div>

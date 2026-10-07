@@ -3,6 +3,7 @@
 use App\Enums\CoachingEnrollmentStatus;
 use App\Enums\Generated\MajorMuscleGroup;
 use App\Enums\Generated\MuscleGroup;
+use App\Enums\WorkoutFocus;
 use App\Models\PlannedExercise;
 use App\Models\User;
 use App\Models\WorkoutBlock;
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -322,7 +324,7 @@ new class extends Component
         $this->selectedWorkoutDayId = $workoutDay->id;
         $this->workoutDayTitle = $workoutDay->title;
         $this->workoutDayNotes = $workoutDay->notes ?? '';
-        $this->workoutDayFocus = $workoutDay->focus;
+        $this->workoutDayFocus = $workoutDay->focus->value;
         $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
         $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => [
             'id' => $block->id,
@@ -470,7 +472,7 @@ new class extends Component
         $validated = $this->validate([
             'workoutDayTitle' => ['required', 'string', 'max:255'],
             'workoutDayNotes' => ['nullable', 'string'],
-            'workoutDayFocus' => ['required', 'string', 'max:255'],
+            'workoutDayFocus' => ['required', 'string', Rule::in(WorkoutFocus::allCasesArray())],
             'workoutDayEstimatedDurationMinutes' => ['nullable', 'integer', 'min:1', 'max:1440'],
             'workoutDayBlocks' => ['required', 'array'],
             'workoutDayBlocks.*.id' => ['required', 'uuid'],

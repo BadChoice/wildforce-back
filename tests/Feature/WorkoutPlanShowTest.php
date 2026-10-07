@@ -91,7 +91,7 @@ test('it opens completed workout day view popup when pressing a completed workou
     $workoutDay = WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
         'title' => 'Completed Powerlifting',
         'status' => WorkoutDayStatus::Completed->value,
-        'focus' => 'gainStrength',
+        'focus' => 'fullBody',
         'estimated_duration_minutes' => 60,
         'active_calories_burned' => 450,
         'total_volume_kg' => 2500,
@@ -379,7 +379,7 @@ test('it fills a new scheduled workout editor from free-form text', function () 
 function workoutFromTextResponse(): array
 {
     return [
-        'title' => 'Back day', 'focus' => 'back', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
+        'title' => 'Back day', 'focus' => 'pull', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
         'blocks' => [
             ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
             ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'benchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],

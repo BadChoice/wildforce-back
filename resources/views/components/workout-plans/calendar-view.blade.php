@@ -56,7 +56,7 @@
                                         </flux:badge>
                                     @endif
                                 </div>
-                                <p class="mt-1 text-zinc-500 dark:text-zinc-400">{{ str($workoutDay->focus->display())->headline() }}</p>
+                                <p class="mt-1 text-zinc-500 dark:text-zinc-400">{{ str($workoutDay->focus->label())->headline() }}</p>
                                 @if ($workoutDay->estimated_duration_minutes)
                                     <p class="mt-1 text-zinc-500 dark:text-zinc-400">{{ trans_choice(':count min', $workoutDay->estimated_duration_minutes, ['count' => $workoutDay->estimated_duration_minutes]) }}</p>
                                 @endif

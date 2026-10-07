@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\CoachingEnrollmentStatus;
+use App\Enums\WorkoutFocus;
 use App\Enums\WorkoutDayStatus;
 use App\Enums\WorkoutKind;
 use App\Enums\Generated\MajorMuscleGroup;
@@ -246,7 +247,7 @@ new class extends Component {
         $search = Str::lower($this->templateSearch);
 
         return $this->templateWorkouts
-            ->filter(fn (WorkoutDay $workoutDay): bool => $search === '' || Str::contains(Str::lower($workoutDay->title.' '.$workoutDay->focus), $search))
+            ->filter(fn (WorkoutDay $workoutDay): bool => $search === '' || Str::contains(Str::lower($workoutDay->title.' '.$workoutDay->focus->value), $search))
             ->values();
     }
 
@@ -417,7 +418,7 @@ new class extends Component {
         $validated = $this->validate([
             'workoutDayTitle' => ['required', 'string', 'max:255'],
             'workoutDayNotes' => ['nullable', 'string'],
-            'workoutDayFocus' => ['required', 'string', 'max:255'],
+            'workoutDayFocus' => ['required', 'string', Rule::in(WorkoutFocus::allCasesArray())],
             'workoutDayEstimatedDurationMinutes' => ['nullable', 'integer', 'min:1', 'max:1440'],
             'workoutDayBlocks' => ['required', 'array'],
             'workoutDayBlocks.*.id' => ['required', 'uuid'],
@@ -567,7 +568,7 @@ new class extends Component {
         $names = collect(Arr::get($this->exerciseCatalog->all(), 'exercises', []))->keyBy('id');
         $this->workoutDayTitle = $workoutDay->title;
         $this->workoutDayNotes = $workoutDay->notes ?? '';
-        $this->workoutDayFocus = $workoutDay->focus;
+        $this->workoutDayFocus = $workoutDay->focus->value;
         $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
         $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => ['id' => filled($block->id) ? $block->id : (string) Str::uuid(), 'type' => $block->type, 'notes' => $block->notes ?? '', 'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => ['id' => filled($exercise->id) ? $exercise->id : (string) Str::uuid(), 'exercise' => $exercise->exercise, 'name' => (string) data_get($names->get($exercise->exercise), 'name', $exercise->exercise), 'notes' => $exercise->notes ?? '', 'sets' => $exercise->sets ?? 3, 'reps_min' => $exercise->reps_min ?? 8, 'reps_max' => $exercise->reps_max ?? 12, 'target_weight_kg' => $exercise->target_weight_kg ?? '', 'rest_seconds' => $exercise->rest_seconds ?? 90])->all()])->all();
         $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
@@ -664,7 +665,7 @@ new class extends Component {
 
     <flux:modal wire:model="showTemplatePicker" class="w-full max-w-xl">
         <div class="space-y-4"><div><flux:heading size="lg">{{ __('Add workout from template') }}</flux:heading><flux:text variant="subtle">{{ __('Choose a template to schedule on this day.') }}</flux:text></div><flux:input wire:model.live.debounce.300ms="templateSearch" icon="magnifying-glass" placeholder="{{ __('Search templates') }}" />
-            <div class="max-h-96 space-y-2 overflow-y-auto">@forelse ($this->filteredTemplateWorkouts as $templateWorkout)<button type="button" wire:key="picker-template-{{ $templateWorkout->id }}" wire:click="copyTemplateWorkout('{{ $templateWorkout->id }}')" class="flex w-full items-center justify-between rounded-lg border border-zinc-200 p-3 text-left hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"><span><span class="block font-medium">{{ $templateWorkout->title }}</span><span class="text-sm text-zinc-500">{{ str($templateWorkout->focus)->headline() }}</span></span><flux:icon name="plus" class="size-5" /></button>@empty <p class="py-8 text-center text-sm text-zinc-500">{{ __('No templates match the search.') }}</p>@endforelse</div>
+            <div class="max-h-96 space-y-2 overflow-y-auto">@forelse ($this->filteredTemplateWorkouts as $templateWorkout)<button type="button" wire:key="picker-template-{{ $templateWorkout->id }}" wire:click="copyTemplateWorkout('{{ $templateWorkout->id }}')" class="flex w-full items-center justify-between rounded-lg border border-zinc-200 p-3 text-left hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"><span><span class="block font-medium">{{ $templateWorkout->title }}</span><span class="text-sm text-zinc-500">{{ str($templateWorkout->focus->value)->headline() }}</span></span><flux:icon name="plus" class="size-5" /></button>@empty <p class="py-8 text-center text-sm text-zinc-500">{{ __('No templates match the search.') }}</p>@endforelse</div>
         </div>
     </flux:modal>
 

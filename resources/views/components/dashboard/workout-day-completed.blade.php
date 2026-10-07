@@ -16,7 +16,7 @@
                 </flux:badge>
             </div>
             <div class="flex flex-wrap items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
-                <span>{{ __('Focus') }}: {{ str($workoutDay->focus->display())->headline() }}</span>
+                <span>{{ __('Focus') }}: {{ str($workoutDay->focus->label())->headline() }}</span>
                 @if ($workoutDay->scheduled_for)
                     <span>•</span>
                     <span>{{ __('Scheduled: :date', ['date' => $workoutDay->scheduled_for->toFormattedDateString()]) }}</span>

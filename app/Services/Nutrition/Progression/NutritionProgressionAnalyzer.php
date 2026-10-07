@@ -2,6 +2,7 @@
 
 namespace App\Services\Nutrition\Progression;
 
+use App\Enums\WorkoutFocus;
 use App\Models\User;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
@@ -68,11 +69,11 @@ final class NutritionProgressionAnalyzer
         $duration = $workoutDay->active_duration_seconds === null ? ($workoutDay->estimated_duration_minutes ?? 45) : max(1, (int) round($workoutDay->active_duration_seconds / 60));
 
         return match ($workoutDay->focus) {
-            'mobility', 'recovery' => ['energyDemand' => 'low', 'dayType' => 'recovery', 'calorieAdjustment' => -100],
-            'core' => ['energyDemand' => 'low', 'dayType' => 'training', 'calorieAdjustment' => -50],
-            'legs', 'fullBody' => ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 250],
-            'lowerBody' => $duration >= 50 ? ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 250] : ['energyDemand' => 'medium', 'dayType' => 'training', 'calorieAdjustment' => 75],
-            'cardio' => $duration >= 45 ? ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 225] : ['energyDemand' => 'medium', 'dayType' => 'training', 'calorieAdjustment' => 100],
+            WorkoutFocus::Mobility, WorkoutFocus::Recovery => ['energyDemand' => 'low', 'dayType' => 'recovery', 'calorieAdjustment' => -100],
+            WorkoutFocus::Core => ['energyDemand' => 'low', 'dayType' => 'training', 'calorieAdjustment' => -50],
+            WorkoutFocus::Legs, WorkoutFocus::FullBody => ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 250],
+            WorkoutFocus::LowerBody => $duration >= 50 ? ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 250] : ['energyDemand' => 'medium', 'dayType' => 'training', 'calorieAdjustment' => 75],
+            WorkoutFocus::Cardio => $duration >= 45 ? ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 225] : ['energyDemand' => 'medium', 'dayType' => 'training', 'calorieAdjustment' => 100],
             default => $duration >= 75 ? ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 175] : ['energyDemand' => 'medium', 'dayType' => 'training', 'calorieAdjustment' => 75],
         };
     }

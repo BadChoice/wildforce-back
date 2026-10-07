@@ -3,6 +3,7 @@
 use App\Enums\CoachingEnrollmentStatus;
 use App\Enums\Generated\MajorMuscleGroup;
 use App\Enums\Generated\MuscleGroup;
+use App\Enums\WorkoutFocus;
 use App\Enums\WorkoutKind;
 use App\Models\PlannedExercise;
 use App\Models\WorkoutBlock;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -252,7 +254,7 @@ new class extends Component
             ->keyBy('id');
         $this->workoutDayTitle = $workoutDay->title;
         $this->workoutDayNotes = $workoutDay->notes ?? '';
-        $this->workoutDayFocus = $workoutDay->focus;
+        $this->workoutDayFocus = $workoutDay->focus->value;
         $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
         $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => [
             'id' => filled($block->id) ? $block->id : (string) Str::uuid(),
@@ -365,7 +367,7 @@ new class extends Component
         $validated = $this->validate([
             'workoutDayTitle' => ['required', 'string', 'max:255'],
             'workoutDayNotes' => ['nullable', 'string'],
-            'workoutDayFocus' => ['required', 'string', 'max:255'],
+            'workoutDayFocus' => ['required', 'string', Rule::in(WorkoutFocus::allCasesArray())],
             'workoutDayEstimatedDurationMinutes' => ['nullable', 'integer', 'min:1', 'max:1440'],
             'workoutDayBlocks' => ['required', 'array'],
             'workoutDayBlocks.*.id' => ['required', 'uuid'],
@@ -500,7 +502,7 @@ new class extends Component
                     <div>
                         <flux:heading size="sm">{{ $template->title }}</flux:heading>
                         <div class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
-                            <span>{{ str($template->focus)->headline() }}</span>
+                            <span>{{ str($template->focus->value)->headline() }}</span>
 
                             <flux:separator vertical="true" />
 

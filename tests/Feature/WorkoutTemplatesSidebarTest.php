@@ -103,11 +103,32 @@ test('it fills a new template editor from free-form text', function () {
     expect($template->blocks()->count())->toBe(2);
 });
 
+test('it rejects a template focus that is not a WorkoutFocus case', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create([
+        'client_user_id' => $client->id,
+        'coach_user_id' => $coach->id,
+        'status' => CoachingEnrollmentStatus::Active,
+        'starts_at' => now(),
+    ]);
+    $this->actingAs($coach);
+
+    Livewire::test('workout-templates.index')
+        ->call('openWorkoutDayEditor')
+        ->set('workoutDayTitle', 'Invalid focus template')
+        ->set('workoutDayFocus', 'back')
+        ->call('saveWorkoutDay')
+        ->assertHasErrors(['workoutDayFocus']);
+
+    $this->assertDatabaseMissing('workout_days', ['title' => 'Invalid focus template']);
+});
+
 /** @return array<string, mixed> */
 function templateWorkoutFromTextResponse(): array
 {
     return [
-        'title' => 'Back template', 'focus' => 'back', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
+        'title' => 'Back template', 'focus' => 'pull', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
         'blocks' => [
             ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
             ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'benchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],

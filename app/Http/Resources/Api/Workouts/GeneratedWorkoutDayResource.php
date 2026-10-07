@@ -22,7 +22,7 @@ class GeneratedWorkoutDayResource extends JsonResource
 
         return [
             'title' => $workoutDay->title,
-            'focus' => $workoutDay->focus,
+            'focus' => $workoutDay->focus->value,
             'status' => $workoutDay->status,
             'order_index' => $workoutDay->order_index,
             'intended_weekday' => $workoutDay->intended_weekday,

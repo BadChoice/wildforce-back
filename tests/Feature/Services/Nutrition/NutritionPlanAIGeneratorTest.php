@@ -29,6 +29,7 @@ test('returns an unsaved nutrition plan while preserving deterministic daily tar
         ->and($plan->days->first()->target_carbs_grams)->toBe('364.00')
         ->and($plan->days->first()->target_fat_grams)->toBe('64.00')
         ->and($plan->days->first()->planned_workout_title)->toBe('Full body')
+        ->and($plan->days->first()->planned_workout_focus)->toBe('fullBody')
         ->and($plan->days->first()->meals)->toHaveCount(1);
 
     $this->assertDatabaseCount('nutrition_plans', 0);
@@ -38,6 +39,7 @@ test('returns an unsaved nutrition plan while preserving deterministic daily tar
     NutritionPlanGeneratorAgent::assertPrompted(fn ($prompt): bool => $prompt
         ->contains('## Client context')
         && $prompt->contains('Goal: buildMuscle')
+        && $prompt->contains('focus fullBody')
         && $prompt->contains('## Deterministic daily targets')
         && $prompt->contains('calories: 2606'));
 });

@@ -132,7 +132,7 @@ PROMPT;
 
         return $plan === null
             ? '- No previous workout plans are available.'
-            : ($plan->workoutDays->map(fn (WorkoutDay $day): string => '- '.$day->title.' ('.$day->focus.'): '.$day->exercises->map(fn (PlannedExercise $exercise): string => $exercise->exercise)->implode(', '))->implode("\n") ?: '- No previous workout days are available.');
+            : ($plan->workoutDays->map(fn (WorkoutDay $day): string => '- '.$day->title.' ('.$day->focus->value.'): '.$day->exercises->map(fn (PlannedExercise $exercise): string => $exercise->exercise)->implode(', '))->implode("\n") ?: '- No previous workout days are available.');
     }
 
     /** @param list<string> $values */
