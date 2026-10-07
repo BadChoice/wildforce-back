@@ -6,7 +6,6 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\JsonSchema\Types\Type;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Provider;
-use Laravel\Ai\Attributes\Temperature;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\HasProviderOptions;
 use Laravel\Ai\Contracts\HasStructuredOutput;
@@ -16,7 +15,7 @@ use Laravel\Ai\Promptable;
 #[Provider('openai')]
 #[Model('gpt-5.6-luna')]
 
-final class WorkoutPlanGeneratorAgent implements Agent, HasStructuredOutput, HasProviderOptions
+final class WorkoutPlanGeneratorAgent implements Agent, HasProviderOptions, HasStructuredOutput
 {
     use Promptable;
 

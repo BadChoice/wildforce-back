@@ -15,7 +15,7 @@ use Laravel\Ai\Promptable;
 
 #[Provider('openai')]
 #[Model('gpt-5.6-luna')]
-final class NutritionPlanGeneratorAgent implements Agent, HasStructuredOutput, HasProviderOptions
+final class NutritionPlanGeneratorAgent implements Agent, HasProviderOptions, HasStructuredOutput
 {
     use Promptable;
 

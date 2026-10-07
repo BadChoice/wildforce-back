@@ -13,7 +13,7 @@ use Laravel\Ai\Promptable;
 
 #[Provider('openai')]
 #[Model('gpt-5.6-luna')]
-final class SingleWorkoutFromTextAgent implements Agent, HasStructuredOutput, HasProviderOptions
+final class SingleWorkoutFromTextAgent implements Agent, HasProviderOptions, HasStructuredOutput
 {
     use Promptable;
 
