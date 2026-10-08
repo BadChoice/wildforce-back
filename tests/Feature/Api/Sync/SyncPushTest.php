@@ -206,6 +206,51 @@ test('it lowercases UUID foreign keys so pushed records attach to their parent',
         ->toBe([$exerciseResultId]);
 });
 
+test('it synchronizes nutrition log media before an entry references it', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+    $mediaId = (string) Str::uuid();
+    $entryId = (string) Str::uuid();
+
+    $this->postJson('/api/sync/push', [
+        'resource' => 'nutrition-log-media',
+        'records' => [[
+            'id' => $mediaId,
+            'created_at' => '2026-10-08T12:00:00Z',
+            'updated_at' => '2026-10-08T12:00:00Z',
+            'source' => 'localPhoto',
+            'local_relative_path' => 'nutrition-log-entries/local.jpg',
+            'remote_url' => null,
+        ]],
+    ])->assertOk();
+
+    $this->postJson('/api/sync/push', [
+        'resource' => 'nutrition-log-entries',
+        'records' => [[
+            'id' => $entryId,
+            'created_at' => '2026-10-08T12:00:00Z',
+            'updated_at' => '2026-10-08T12:00:00Z',
+            'nutrition_log_media_id' => strtoupper($mediaId),
+            'title' => 'Lunch',
+            'logged_at' => '2026-10-08T12:00:00Z',
+            'meal_type' => 'lunch',
+            'notes' => null,
+            'is_favorite' => false,
+        ]],
+    ])->assertOk()
+        ->assertJsonPath('data.0.nutrition_log_media_id', $mediaId);
+
+    $this->assertDatabaseHas('nutrition_log_media', [
+        'id' => $mediaId,
+        'user_id' => $user->id,
+    ]);
+    $this->assertDatabaseHas('nutrition_log_entries', [
+        'id' => $entryId,
+        'nutrition_log_media_id' => $mediaId,
+        'user_id' => $user->id,
+    ]);
+});
+
 test('it synchronizes a skipped planned exercise', function () {
     $user = User::factory()->create();
     $plannedExercise = PlannedExercise::factory()

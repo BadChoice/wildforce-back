@@ -25,6 +25,7 @@ test('it stores an image on a nutrition log entry and links it through local med
 
     Storage::disk(config('filesystems.default'))->assertExists($path);
     $this->assertDatabaseHas('nutrition_log_media', [
+        'user_id' => $user->id,
         'source' => 'localPhoto',
         'local_relative_path' => $path,
         'remote_url' => null,
@@ -36,7 +37,7 @@ test('it stores an image on a nutrition log entry and links it through local med
 test('it updates an existing local nutrition log media record', function () {
     Storage::fake(config('filesystems.default'));
     $user = User::factory()->create();
-    $media = NutritionLogMedia::factory()->create([
+    $media = NutritionLogMedia::factory()->for($user)->create([
         'local_relative_path' => 'nutrition-log-entries/previous.jpg',
     ]);
     $entry = NutritionLogEntry::factory()->for($user)->create(['nutrition_log_media_id' => $media->id]);
@@ -49,10 +50,27 @@ test('it updates an existing local nutrition log media record', function () {
         ->and($media->fresh()->local_relative_path)->toBe("nutrition-log-entries/{$entry->id}.jpg");
 });
 
+test('it does not update local nutrition log media owned by another user', function () {
+    Storage::fake(config('filesystems.default'));
+    $user = User::factory()->create();
+    $media = NutritionLogMedia::factory()->create([
+        'local_relative_path' => 'nutrition-log-entries/other-user.jpg',
+    ]);
+    $entry = NutritionLogEntry::factory()->for($user)->create(['nutrition_log_media_id' => $media->id]);
+
+    $this->actingAs($user, 'sanctum')->post("/api/nutrition-log-entries/{$entry->id}/image", [
+        'image' => UploadedFile::fake()->image('food.jpg'),
+    ])->assertOk();
+
+    expect($entry->fresh()->nutrition_log_media_id)->not->toBe($media->id)
+        ->and($media->fresh()->local_relative_path)->toBe('nutrition-log-entries/other-user.jpg')
+        ->and($entry->fresh()->media->user_id)->toBe($user->id);
+});
+
 test('it preserves existing remote media when uploading a local nutrition log image', function () {
     Storage::fake(config('filesystems.default'));
     $user = User::factory()->create();
-    $remoteMedia = NutritionLogMedia::factory()->create([
+    $remoteMedia = NutritionLogMedia::factory()->for($user)->create([
         'source' => 'remoteUrl',
         'remote_url' => 'https://example.com/food.jpg',
     ]);

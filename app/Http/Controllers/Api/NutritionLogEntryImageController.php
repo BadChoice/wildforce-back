@@ -41,11 +41,12 @@ class NutritionLogEntryImageController extends Controller
 
         $media = $nutritionLogEntry->media;
 
-        if ($media?->source !== 'localPhoto') {
+        if ($media?->source !== 'localPhoto' || ! $media?->user?->is($user)) {
             $media = new NutritionLogMedia;
         }
 
         $media->forceFill([
+            'user_id' => $user->id,
             'source' => 'localPhoto',
             'local_relative_path' => $relativePath,
             'remote_url' => null,

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\NutritionLogMedia;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,6 +19,7 @@ class NutritionLogMediaFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => User::factory(),
             'source' => 'localPhoto',
             'local_relative_path' => null,
             'remote_url' => null,
