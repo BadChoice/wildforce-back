@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\EnergyDemandLevel;
+use App\Enums\NutritionDayType;
 use App\Models\NutritionDay;
 use App\Models\NutritionMeal;
 use App\Models\NutritionPlan;
@@ -24,12 +26,12 @@ class NutritionDayFactory extends Factory
             'nutrition_plan_id' => NutritionPlan::factory(),
             'date' => today(),
             'weekday' => strtolower(today()->englishDayOfWeek),
-            'day_type' => 'rest',
+            'day_type' => NutritionDayType::Rest,
             'target_calories' => 2300,
             'target_protein_grams' => 165,
             'target_carbs_grams' => 240,
             'target_fat_grams' => 75,
-            'energy_demand' => 'low',
+            'energy_demand' => EnergyDemandLevel::Low,
         ];
     }
 

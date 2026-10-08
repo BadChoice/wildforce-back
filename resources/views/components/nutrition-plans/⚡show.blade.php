@@ -148,7 +148,7 @@ new class extends Component {
                         <flux:text variant="subtle" class="text-xs">{{ $planDay->date->translatedFormat('j M') }}</flux:text>
                     </div>
                     <div class="flex flex-wrap justify-end gap-1">
-                        <flux:badge size="sm">{{ str($planDay->day_type)->headline() }}</flux:badge>
+                        <flux:badge size="sm">{{ $planDay->day_type->label() }}</flux:badge>
                         @if ($adherence)
                             <flux:badge size="sm" :color="$adherence->status->color()">{{ $adherence->status->label() }}</flux:badge>
                         @endif

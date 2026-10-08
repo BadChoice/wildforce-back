@@ -1,4 +1,4 @@
-gs<?php
+<?php
 
 namespace App\Services\ExerciseCatalog;
 

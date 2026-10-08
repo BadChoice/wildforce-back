@@ -2,6 +2,9 @@
 
 namespace App\Services\Nutrition\Progression;
 
+use App\Enums\DietaryStyle;
+use App\Enums\EnergyDemandLevel;
+use App\Enums\NutritionDayType;
 use App\Enums\WorkoutFocus;
 use App\Models\User;
 use App\Models\WorkoutDay;
@@ -66,27 +69,27 @@ final class NutritionProgressionAnalyzer
         );
     }
 
-    /** @return array{energyDemand: string, dayType: string, calorieAdjustment: int} */
+    /** @return array{energyDemand: EnergyDemandLevel, dayType: NutritionDayType, calorieAdjustment: int} */
     private function workoutDemand(?WorkoutDay $workoutDay): array
     {
         if ($workoutDay === null) {
-            return ['energyDemand' => 'low', 'dayType' => 'rest', 'calorieAdjustment' => -150];
+            return ['energyDemand' => EnergyDemandLevel::Low, 'dayType' => NutritionDayType::Rest, 'calorieAdjustment' => -150];
         }
 
         $duration = $workoutDay->active_duration_seconds === null ? ($workoutDay->estimated_duration_minutes ?? 45) : max(1, (int) round($workoutDay->active_duration_seconds / 60));
 
         return match ($workoutDay->focus) {
-            WorkoutFocus::Mobility, WorkoutFocus::Recovery => ['energyDemand' => 'low', 'dayType' => 'recovery', 'calorieAdjustment' => -100],
-            WorkoutFocus::Core => ['energyDemand' => 'low', 'dayType' => 'training', 'calorieAdjustment' => -50],
-            WorkoutFocus::Legs, WorkoutFocus::FullBody => ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 250],
-            WorkoutFocus::LowerBody => $duration >= 50 ? ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 250] : ['energyDemand' => 'medium', 'dayType' => 'training', 'calorieAdjustment' => 75],
-            WorkoutFocus::Cardio => $duration >= 45 ? ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 225] : ['energyDemand' => 'medium', 'dayType' => 'training', 'calorieAdjustment' => 100],
-            default => $duration >= 75 ? ['energyDemand' => 'high', 'dayType' => 'training', 'calorieAdjustment' => 175] : ['energyDemand' => 'medium', 'dayType' => 'training', 'calorieAdjustment' => 75],
+            WorkoutFocus::Mobility, WorkoutFocus::Recovery => ['energyDemand' => EnergyDemandLevel::Low, 'dayType' => NutritionDayType::Recovery, 'calorieAdjustment' => -100],
+            WorkoutFocus::Core => ['energyDemand' => EnergyDemandLevel::Low, 'dayType' => NutritionDayType::Training, 'calorieAdjustment' => -50],
+            WorkoutFocus::Legs, WorkoutFocus::FullBody => ['energyDemand' => EnergyDemandLevel::High, 'dayType' => NutritionDayType::Training, 'calorieAdjustment' => 250],
+            WorkoutFocus::LowerBody => $duration >= 50 ? ['energyDemand' => EnergyDemandLevel::High, 'dayType' => NutritionDayType::Training, 'calorieAdjustment' => 250] : ['energyDemand' => EnergyDemandLevel::Medium, 'dayType' => NutritionDayType::Training, 'calorieAdjustment' => 75],
+            WorkoutFocus::Cardio => $duration >= 45 ? ['energyDemand' => EnergyDemandLevel::High, 'dayType' => NutritionDayType::Training, 'calorieAdjustment' => 225] : ['energyDemand' => EnergyDemandLevel::Medium, 'dayType' => NutritionDayType::Training, 'calorieAdjustment' => 100],
+            default => $duration >= 75 ? ['energyDemand' => EnergyDemandLevel::High, 'dayType' => NutritionDayType::Training, 'calorieAdjustment' => 175] : ['energyDemand' => EnergyDemandLevel::Medium, 'dayType' => NutritionDayType::Training, 'calorieAdjustment' => 75],
         };
     }
 
     /**
-     * @param  array{energyDemand: string, dayType: string, calorieAdjustment: int}  $demand
+     * @param  array{energyDemand: EnergyDemandLevel, dayType: NutritionDayType, calorieAdjustment: int}  $demand
      * @return array{calories: int, protein: int, carbs: int, fat: int}
      */
     private function macros(EnergyExpenditureEstimate $energyExpenditure, string $phase, string $goal, array $demand): array
@@ -99,7 +102,7 @@ final class NutritionProgressionAnalyzer
         $maximum = max($minimum + 200, (int) round($fallbackCalories * 1.20));
         $calories = min(max($calories, $minimum), $maximum);
         $protein = max(110, (int) round($weight * (($phase === 'cut' || in_array($goal, ['loseWeight', 'bodyRecomposition'], true)) ? 2.2 : ($goal === 'improveEndurance' ? 1.7 : 1.8))));
-        $fat = (int) round($weight * ($this->user->nutritionProfile?->dietary_style === 'vegan' ? 0.85 : 0.80));
+        $fat = (int) round($weight * ($this->user->nutritionProfile?->dietary_style === DietaryStyle::Vegan ? 0.85 : 0.80));
         $floor = (int) round($weight * $this->carbFloorMultiplier($demand['energyDemand'], $phase));
         $calories = max($calories, ($protein * 4) + ($fat * 9) + ($floor * 4));
         $carbs = (int) round(max($calories - ($protein * 4) - ($fat * 9), $floor * 4) / 4);
@@ -147,11 +150,11 @@ final class NutritionProgressionAnalyzer
         };
     }
 
-    private function carbFloorMultiplier(string $demand, string $phase): float
+    private function carbFloorMultiplier(EnergyDemandLevel $demand, string $phase): float
     {
         $base = match ($demand) {
-            'medium' => 2.25,
-            'high' => 3.25,
+            EnergyDemandLevel::Medium => 2.25,
+            EnergyDemandLevel::High => 3.25,
             default => 1.5,
         };
 

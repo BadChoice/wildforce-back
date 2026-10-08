@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\EnergyDemandLevel;
+use App\Enums\NutritionDayType;
 use App\Models\NutritionProfile;
 use App\Models\TrainingPreference;
 use App\Models\User;
@@ -33,8 +35,8 @@ test('calculates deterministic targets from the user and scheduled workout deman
         ->and($analysis->days)->toHaveCount(7)
         ->and($analysis->days[0])->toMatchArray([
             'weekday' => 'monday',
-            'dayType' => 'training',
-            'energyDemand' => 'high',
+            'dayType' => NutritionDayType::Training,
+            'energyDemand' => EnergyDemandLevel::High,
             'calories' => 2606,
             'protein' => 144,
             'carbs' => 364,

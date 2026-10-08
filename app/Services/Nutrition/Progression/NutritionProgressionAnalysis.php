@@ -2,6 +2,8 @@
 
 namespace App\Services\Nutrition\Progression;
 
+use App\Enums\EnergyDemandLevel;
+use App\Enums\NutritionDayType;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use Carbon\CarbonInterface;
@@ -9,7 +11,7 @@ use Carbon\CarbonInterface;
 final readonly class NutritionProgressionAnalysis
 {
     /**
-     * @param  list<array{date: CarbonInterface, weekday: string, workoutDay: WorkoutDay|null, energyDemand: string, dayType: string, calorieAdjustment: int, calories: int, protein: int, carbs: int, fat: int}>  $days
+     * @param  list<array{date: CarbonInterface, weekday: string, workoutDay: WorkoutDay|null, energyDemand: EnergyDemandLevel, dayType: NutritionDayType, calorieAdjustment: int, calories: int, protein: int, carbs: int, fat: int}>  $days
      */
     public function __construct(
         public CarbonInterface $startsOn,

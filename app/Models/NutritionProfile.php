@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\BudgetSensitivity;
+use App\Enums\CookingEffort;
+use App\Enums\DietaryStyle;
 use Database\Factories\NutritionProfileFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +21,7 @@ class NutritionProfile extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['excluded_foods' => 'array', 'allergies_and_intolerances' => 'array', 'preferred_protein_sources' => 'array', 'dislikes' => 'array', 'wants_meal_suggestions' => 'boolean'];
+        return ['dietary_style' => DietaryStyle::class, 'excluded_foods' => 'array', 'allergies_and_intolerances' => 'array', 'cooking_effort' => CookingEffort::class, 'budget_sensitivity' => BudgetSensitivity::class, 'preferred_protein_sources' => 'array', 'dislikes' => 'array', 'wants_meal_suggestions' => 'boolean'];
     }
 
     /** @return BelongsTo<User, $this> */

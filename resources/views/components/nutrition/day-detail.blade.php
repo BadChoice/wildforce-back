@@ -1,5 +1,7 @@
 @props(['day', 'meals', 'entries'])
 
+@use('App\Enums\MealType')
+
 @php
     $planDay = $day->planDay;
     $macros = [
@@ -8,7 +10,7 @@
         ['label' => __('Carbs'), 'unit' => 'g', 'logged' => $day->carbsGrams, 'target' => (float) $planDay?->target_carbs_grams],
         ['label' => __('Fat'), 'unit' => 'g', 'logged' => $day->fatGrams, 'target' => (float) $planDay?->target_fat_grams],
     ];
-    $mealTypeOrder = array_map(fn (\App\Enums\MealType $mealType): string => $mealType->value, \App\Enums\MealType::cases());
+    $mealTypeOrder = array_map(fn (MealType $mealType): string => $mealType->value, MealType::cases());
     $entriesByMealType = $entries
         ->groupBy(fn ($entry): string => $entry->meal_type?->value ?? 'other')
         ->sortBy(fn ($group, string $mealType): int => ($position = array_search($mealType, $mealTypeOrder, true)) === false ? count($mealTypeOrder) : $position);
@@ -29,8 +31,8 @@
         </div>
         <div class="flex flex-wrap gap-1.5">
             @if ($planDay)
-                <flux:badge size="sm">{{ str($planDay->day_type)->headline() }}</flux:badge>
-                <flux:badge size="sm">{{ __(':demand demand', ['demand' => str($planDay->energy_demand)->headline()]) }}</flux:badge>
+                <flux:badge size="sm">{{ $planDay->day_type->label() }}</flux:badge>
+                <flux:badge size="sm">{{ __(':demand demand', ['demand' => $planDay->energy_demand->label()]) }}</flux:badge>
             @endif
             <flux:badge size="sm" :color="$day->status->color()">{{ $day->status->label() }}</flux:badge>
         </div>
@@ -118,7 +120,7 @@
 
             @forelse ($entriesByMealType as $mealType => $mealEntries)
                 <div wire:key="logged-meal-type-{{ $mealType }}" class="space-y-2">
-                    <flux:text variant="subtle" class="text-xs font-medium uppercase tracking-wide">{{ \App\Enums\MealType::tryFrom($mealType)?->label() ?? str($mealType)->headline() }}</flux:text>
+                    <flux:text variant="subtle" class="text-xs font-medium uppercase tracking-wide">{{ MealType::tryFrom($mealType)?->label() ?? str($mealType)->headline() }}</flux:text>
 
                     @foreach ($mealEntries as $entry)
                         @php

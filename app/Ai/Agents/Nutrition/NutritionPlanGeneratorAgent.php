@@ -2,8 +2,10 @@
 
 namespace App\Ai\Agents\Nutrition;
 
+use App\Enums\EnergyDemandLevel;
 use App\Enums\Goal;
 use App\Enums\MealType;
+use App\Enums\NutritionDayType;
 use App\Enums\WorkoutFocus;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Attributes\Model;
@@ -70,11 +72,11 @@ INSTRUCTIONS;
             'days' => $schema->array()->min(7)->max(7)->items($schema->object(fn (JsonSchema $schema): array => [
                 'date' => $schema->string()->format('date')->required(),
                 'weekday' => $schema->string()->enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])->required(),
-                'dayType' => $schema->string()->enum(['training', 'rest', 'recovery'])->required(),
+                'dayType' => $schema->string()->enum(NutritionDayType::allCasesArray())->required(),
                 'targetMacros' => $schema->object($macros)->required(),
                 'plannedWorkoutTitle' => $schema->string(),
                 'plannedWorkoutFocus' => $schema->string()->enum(WorkoutFocus::allCasesArray()),
-                'energyDemand' => $schema->string()->enum(['low', 'medium', 'high'])->required(),
+                'energyDemand' => $schema->string()->enum(EnergyDemandLevel::allCasesArray())->required(),
                 'notes' => $schema->string(),
                 'preWorkoutGuidance' => $schema->string(),
                 'postWorkoutGuidance' => $schema->string(),

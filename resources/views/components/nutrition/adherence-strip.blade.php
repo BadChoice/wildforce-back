@@ -1,6 +1,7 @@
 @props(['days', 'selectedDate' => null])
 
 @use('App\Enums\NutritionAdherenceStatus')
+@use('App\Enums\NutritionDayType')
 
 @php
     $cellClasses = fn (NutritionAdherenceStatus $status): string => match ($status) {
@@ -44,9 +45,9 @@
                 <span class="text-[0.65rem] font-medium uppercase tracking-wide">{{ $day->date->translatedFormat('D') }}</span>
                 <span class="text-sm font-semibold">{{ $day->date->format('j') }}</span>
                 <span class="flex h-4 items-center">
-                    @if ($dayType === 'training')
+                    @if ($dayType === NutritionDayType::Training)
                         <flux:icon.bolt variant="micro" />
-                    @elseif ($dayType === 'recovery')
+                    @elseif ($dayType === NutritionDayType::Recovery)
                         <flux:icon.heart variant="micro" />
                     @elseif ($dayType)
                         <flux:icon.moon variant="micro" />

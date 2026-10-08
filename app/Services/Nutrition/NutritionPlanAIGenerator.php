@@ -103,7 +103,7 @@ final class NutritionPlanAIGenerator
                 ? '- '.$day['weekday'].' ('.$day['date']->toDateString().'): no planned workout'
                 : '- '.$day['weekday'].' ('.$day['date']->toDateString().'): '.$workoutDay->title.', focus '.$workoutDay->focus->value.', estimated duration '.($workoutDay->estimated_duration_minutes ?? 45).' min';
         })->implode("\n");
-        $targets = collect($analysis->days)->map(fn (array $day): string => '- '.$day['weekday'].' | '.$day['date']->toDateString().' | '.$this->workoutLabel($day['workoutDay']).' | dayType: '.$day['dayType'].' | demand: '.$day['energyDemand'].' | calories: '.$day['calories'].' | protein: '.$day['protein'].'g | carbs: '.$day['carbs'].'g | fat: '.$day['fat'].'g')->implode("\n");
+        $targets = collect($analysis->days)->map(fn (array $day): string => '- '.$day['weekday'].' | '.$day['date']->toDateString().' | '.$this->workoutLabel($day['workoutDay']).' | dayType: '.$day['dayType']->value.' | demand: '.$day['energyDemand']->value.' | calories: '.$day['calories'].' | protein: '.$day['protein'].'g | carbs: '.$day['carbs'].'g | fat: '.$day['fat'].'g')->implode("\n");
 
         return <<<PROMPT
 ## Planning objective
@@ -124,11 +124,11 @@ final class NutritionPlanAIGenerator
 - Preferred language: {$user->language}
 
 ## Nutrition preferences
-- Dietary style: {$profile->dietary_style}
+- Dietary style: {$profile->dietary_style->value}
 - Meals per day preference: {$profile->meals_per_day_preference}
 - Preferred eating window: {$this->eatingWindow($profile->preferred_eating_window_start_hour, $profile->preferred_eating_window_end_hour)}
-- Cooking effort: {$profile->cooking_effort}
-- Budget sensitivity: {$profile->budget_sensitivity}
+- Cooking effort: {$profile->cooking_effort->value}
+- Budget sensitivity: {$profile->budget_sensitivity->value}
 - Preferred protein sources: {$this->list($profile->preferred_protein_sources)}
 - Dislikes: {$this->list($profile->dislikes)}
 - Excluded foods: {$this->list($profile->excluded_foods)}

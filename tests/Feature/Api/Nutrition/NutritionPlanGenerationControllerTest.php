@@ -21,6 +21,8 @@ test('it persists and returns a generated nutrition plan using the sync payload'
         ->assertJsonPath('data.starts_on', '2026-10-05T00:00:00.000000Z')
         ->assertJsonPath('data.goal', 'buildMuscle')
         ->assertJsonPath('data.days.0.target_calories', 2272)
+        ->assertJsonPath('data.days.0.day_type', 'rest')
+        ->assertJsonPath('data.days.0.energy_demand', 'low')
         ->assertJsonPath('data.days.0.meals.0.title', 'Breakfast')
         ->assertJsonPath('data.days.0.meals.0.meal_type', 'breakfast')
         ->assertJsonPath('data.days.0.meals.0.example_foods.0.amountGrams', 60);

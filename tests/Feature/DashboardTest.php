@@ -187,7 +187,7 @@ test('dashboard displays the nutrition profile for a selected user', function ()
     $admin = User::factory()->admin()->create();
     $user = User::factory()->create();
     NutritionProfile::factory()->for($user)->create([
-        'dietary_style' => 'mediterranean',
+        'dietary_style' => 'vegetarian',
         'preferred_eating_window_start_hour' => 8,
         'preferred_eating_window_end_hour' => 21,
         'preferred_protein_sources' => ['chicken', 'greekYogurt'],
@@ -199,7 +199,7 @@ test('dashboard displays the nutrition profile for a selected user', function ()
         ->call('selectUser', $user->id)
         ->call('selectTab', 'nutrition')
         ->assertSee('Nutrition profile')
-        ->assertSee('Mediterranean')
+        ->assertSee('Vegetarian')
         ->assertSee('08:00 – 21:00')
         ->assertSee('Chicken, Greek Yogurt');
 });

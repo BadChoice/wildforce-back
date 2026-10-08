@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\NutritionDayType;
 use App\Models\NutritionDay;
 use App\Models\NutritionPlan;
 use App\Models\User;
@@ -39,7 +40,7 @@ class NutritionPlanFactory extends Factory
                 ->sequence(fn (Sequence $sequence) => [
                     'date' => $nutritionPlan->starts_on->copy()->addDays($sequence->index),
                     'weekday' => strtolower($nutritionPlan->starts_on->copy()->addDays($sequence->index)->englishDayOfWeek),
-                    'day_type' => in_array($sequence->index, [0, 1, 3, 5], true) ? 'training' : 'rest',
+                    'day_type' => in_array($sequence->index, [0, 1, 3, 5], true) ? NutritionDayType::Training : NutritionDayType::Rest,
                 ])
                 ->for($nutritionPlan, 'plan')
                 ->withMeals($mealCount)

@@ -14,7 +14,7 @@
 
         @if ($profile)
             <dl class="grid gap-3 sm:grid-cols-2">
-                <x-dashboard.detail-item :label="__('Dietary style')" :value="str($profile->dietary_style)->headline()" />
+                <x-dashboard.detail-item :label="__('Dietary style')" :value="$profile->dietary_style->label()" />
                 <x-dashboard.detail-item :label="__('Meals per day')" :value="$profile->meals_per_day_preference" />
                 <x-dashboard.detail-item
                     :label="__('Eating window')"
@@ -23,8 +23,8 @@
                         : __('Not set')"
                 />
                 <x-dashboard.detail-item :label="__('Meal suggestions')" :value="$profile->wants_meal_suggestions ? __('Yes') : __('No')" />
-                <x-dashboard.detail-item :label="__('Cooking effort')" :value="str($profile->cooking_effort)->headline()" />
-                <x-dashboard.detail-item :label="__('Budget sensitivity')" :value="str($profile->budget_sensitivity)->headline()" />
+                <x-dashboard.detail-item :label="__('Cooking effort')" :value="$profile->cooking_effort->label()" />
+                <x-dashboard.detail-item :label="__('Budget sensitivity')" :value="$profile->budget_sensitivity->label()" />
                 <x-dashboard.detail-item :label="__('Preferred protein sources')" :value="$headlineList($profile->preferred_protein_sources)" class="sm:col-span-2" />
                 <x-dashboard.detail-item :label="__('Allergies & intolerances')" :value="$headlineList($profile->allergies_and_intolerances)" class="sm:col-span-2" />
                 <x-dashboard.detail-item :label="__('Excluded foods')" :value="$headlineList($profile->excluded_foods)" class="sm:col-span-2" />
