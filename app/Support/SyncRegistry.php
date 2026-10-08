@@ -5,7 +5,7 @@ namespace App\Support;
 use App\Contracts\Syncable;
 use App\Models\BodyMetricEntry;
 use App\Models\BodyProgressPhotoSession;
-use App\Models\CoachExerciseMedia;
+use App\Models\CoachExerciseContent;
 use App\Models\ExerciseProfile;
 use App\Models\ExerciseResult;
 use App\Models\NutritionDay;
@@ -52,7 +52,7 @@ class SyncRegistry
         'planned-exercises' => PlannedExercise::class,
         'exercise-results' => ExerciseResult::class,
         'subscriptions' => Subscription::class,
-        'coach-exercise-media' => CoachExerciseMedia::class,
+        'coach-exercise-content' => CoachExerciseContent::class,
     ];
 
     /**

@@ -49,7 +49,9 @@
           "Authentication"
         ],
         "summary": "Register a user and issue a bearer token",
-        "security": [],
+        "security": [
+
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -83,7 +85,9 @@
           "Authentication"
         ],
         "summary": "Log in and issue a bearer token",
-        "security": [],
+        "security": [
+
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -118,7 +122,9 @@
         ],
         "summary": "Sign in with Google and issue a bearer token",
         "description": "Verifies a Google OpenID Connect ID token and signs in an existing linked identity. New users must complete onboarding and use the registration endpoint.",
-        "security": [],
+        "security": [
+
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -148,14 +154,38 @@
     },
     "/api/auth/google/register": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Register with Google and issue a bearer token",
         "description": "Creates the user and complete initial sync graph after Google identity verification.",
-        "security": [],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/GoogleRegistrationRequest"}}}},
+        "security": [
+
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleRegistrationRequest"
+              }
+            }
+          }
+        },
         "responses": {
-          "201": {"description": "User registered and authenticated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AuthResponse"}}}},
-          "422": {"$ref": "#/components/responses/ValidationError"}
+          "201": {
+            "description": "User registered and authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
         }
       }
     },
@@ -166,7 +196,9 @@
         ],
         "summary": "Sign in with Apple and issue a bearer token",
         "description": "Exchanges the native Apple authorization code and signs in an existing linked identity.",
-        "security": [],
+        "security": [
+
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -196,14 +228,38 @@
     },
     "/api/auth/apple/register": {
       "post": {
-        "tags": ["Authentication"],
+        "tags": [
+          "Authentication"
+        ],
         "summary": "Register with Apple and issue a bearer token",
         "description": "Creates the user and complete initial sync graph after Apple identity verification.",
-        "security": [],
-        "requestBody": {"required": true, "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AppleRegistrationRequest"}}}},
+        "security": [
+
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleRegistrationRequest"
+              }
+            }
+          }
+        },
         "responses": {
-          "201": {"description": "User registered and authenticated", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/AuthResponse"}}}},
-          "422": {"$ref": "#/components/responses/ValidationError"}
+          "201": {
+            "description": "User registered and authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
         }
       }
     },
@@ -927,10 +983,16 @@
     },
     "/api/workout-plans/generate": {
       "post": {
-        "tags": ["Workouts"],
+        "tags": [
+          "Workouts"
+        ],
         "summary": "Generate and save a one-week workout plan",
         "description": "Generates and persists a workout plan from the authenticated user's training profile and recent history. The response uses the sync payload, including IDs and timestamps.",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
         "responses": {
           "201": {
             "description": "Generated and persisted workout plan",
@@ -959,10 +1021,16 @@
     },
     "/api/workout-days/generate": {
       "post": {
-        "tags": ["Workouts"],
+        "tags": [
+          "Workouts"
+        ],
         "summary": "Generate a single workout day draft",
         "description": "Generates one workout day from the request and the authenticated user's profile. The draft is not persisted, so the response has no IDs or timestamps; save it through the workout-day sync flow.",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1004,10 +1072,16 @@
     },
     "/api/nutrition-plans/generate": {
       "post": {
-        "tags": ["Nutrition"],
+        "tags": [
+          "Nutrition"
+        ],
         "summary": "Generate and save a seven-day nutrition plan",
         "description": "Generates and persists a nutrition plan from the authenticated user's nutrition profile, body metrics, training preferences, and upcoming workout plan. Maintenance calories default to a formula estimate (Mifflin-St Jeor BMR times the lifestyle multiplier plus 2% per training day, capped at 12%). When the client sends optional Apple Health `daily_energy`, the server uses the 21 most recent days instead: it drops days without basal energy, trims the lowest and highest tenth once seven or more days remain, and averages the rest. With at least 10 days covering 70% of the 21-day window it uses that average. With at least 5 days covering 40% it blends the average with the formula estimate, weighting Apple Health by its coverage clamped to 35-65%. Otherwise it uses the formula. Calorie guardrails always come from the formula estimate. The response uses the same sync payload as the nutrition-plan sync endpoints.",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
         "requestBody": {
           "required": false,
           "content": {
@@ -1049,10 +1123,16 @@
     },
     "/api/nutrition-macros/generate": {
       "post": {
-        "tags": ["Nutrition"],
+        "tags": [
+          "Nutrition"
+        ],
         "summary": "Estimate meal macros from a text description",
         "description": "Estimates the foods, gram amounts, and macronutrients of a meal from a free-text description. Text fields are written in the authenticated user's preferred language. Nothing is persisted; store the estimate through the nutrition-log sync flow.",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1097,15 +1177,23 @@
     },
     "/api/nutrition/open-food-facts/contributions": {
       "post": {
-        "tags": ["Nutrition"],
+        "tags": [
+          "Nutrition"
+        ],
         "summary": "Contribute a product to Open Food Facts",
         "description": "Submits a user-provided food product, nutrition information, and front and nutrition-label images to Open Food Facts. The request is authenticated, requires active app access, and is idempotent.",
-        "parameters": [{"$ref": "#/components/parameters/IdempotencyKey"}],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "multipart/form-data": {
-              "schema": {"$ref": "#/components/schemas/OpenFoodFactsContributionRequest"}
+              "schema": {
+                "$ref": "#/components/schemas/OpenFoodFactsContributionRequest"
+              }
             }
           }
         },
@@ -1114,16 +1202,30 @@
             "description": "Product contribution accepted by Open Food Facts",
             "content": {
               "application/json": {
-                "schema": {"$ref": "#/components/schemas/OpenFoodFactsContributionResponse"}
+                "schema": {
+                  "$ref": "#/components/schemas/OpenFoodFactsContributionResponse"
+                }
               }
             }
           },
-          "401": {"$ref": "#/components/responses/Unauthenticated"},
-          "403": {"description": "An active subscription, trial, or demo access is required."},
-          "409": {"description": "The idempotency key is already in progress or was reused with a different request."},
-          "422": {"$ref": "#/components/responses/ValidationError"},
-          "429": {"description": "The contribution rate limit of ten requests per minute was exceeded."},
-          "502": {"description": "Open Food Facts could not accept the contribution."}
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "description": "An active subscription, trial, or demo access is required."
+          },
+          "409": {
+            "description": "The idempotency key is already in progress or was reused with a different request."
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "429": {
+            "description": "The contribution rate limit of ten requests per minute was exceeded."
+          },
+          "502": {
+            "description": "Open Food Facts could not accept the contribution."
+          }
         }
       }
     },
@@ -1169,7 +1271,7 @@
           "Sync"
         ],
         "summary": "Pull changed records for a registered resource",
-        "description": "Returns the records changed after `updated_after`, including soft-deleted tombstones.\n\n`coach-exercise-media` is read-only: it returns the custom exercise images and\nYouTube videos uploaded by the coaches the user is actively enrolled with, shaped as\n`CoachExerciseMediaSync`. A coach removing both the image and the video produces a\ntombstone. Media from coaches whose enrollment is no longer active is not returned.\n",
+        "description": "Returns the records changed after `updated_after`, including soft-deleted tombstones.\n\n`coach-exercise-content` is read-only: it returns the custom exercise content and\nYouTube videos uploaded by the coaches the user is actively enrolled with, shaped as\n`CoachExerciseContentSync`. A coach removing both the image and the video produces a\ntombstone. Content from coaches whose enrollment is no longer active is not returned.\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/SyncResource"
@@ -1282,7 +1384,7 @@
             "planned-exercises",
             "exercise-results",
             "subscriptions",
-            "coach-exercise-media"
+            "coach-exercise-content"
           ]
         }
       },
@@ -1411,7 +1513,7 @@
           "language": {
             "type": "string",
             "maxLength": 255,
-            "description": "Preferred language used to generate the user's first workout plan."
+            "description": "Preferred language used to generate the user’s first workout plan."
           },
           "password": {
             "type": "string",
@@ -1434,22 +1536,165 @@
       },
       "TrainingProfile": {
         "type": "object",
-        "required": ["goal", "lifestyle", "gym_type", "general_training_level", "training_split_preference", "preferred_workout_duration_minutes", "workout_days"],
+        "required": [
+          "goal",
+          "lifestyle",
+          "gym_type",
+          "general_training_level",
+          "training_split_preference",
+          "preferred_workout_duration_minutes",
+          "workout_days"
+        ],
         "properties": {
-          "id": {"type": "string", "format": "uuid", "description": "Optional client-generated training preferences id, so syncing the locally created preferences doesn't duplicate the row. Stored lowercased and must not already exist."},
-          "goal": {"type": "string", "enum": ["generalFitness", "loseWeight", "buildMuscle", "gainStrength", "improveEndurance", "improveMobility", "bodyRecomposition"]},
-          "lifestyle": {"type": "string", "enum": ["sedentary", "lightlyActive", "moderatelyActive", "veryActive"]},
-          "gym_type": {"type": "string", "enum": ["bigGym", "smallGym", "homeGym", "someAccessories", "bodyweightOnly"]},
-          "general_training_level": {"type": "string", "enum": ["completeBeginner", "beginner", "novice", "intermediate", "advanced", "elite"]},
-          "training_split_preference": {"type": "string", "enum": ["automatic", "fullBody", "upperLower", "pushPullLegs", "bodyPartSplit", "custom"]},
-          "preferred_workout_duration_minutes": {"type": "integer", "minimum": 10, "maximum": 300},
-          "workout_days": {"type": "array", "minItems": 1, "maxItems": 7, "uniqueItems": true, "items": {"type": "string", "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]}},
-          "custom_workout_focuses": {"type": ["array", "null"], "items": {"type": "string", "enum": ["fullBody", "upperBody", "lowerBody", "push", "pull", "legs", "core", "cardio", "mobility", "recovery"]}},
-          "movement_restrictions": {"type": ["array", "null"], "items": {"type": "string", "enum": ["lowerBackPain", "shoulderPain", "kneePain", "hipPain", "anklePain", "wristPain", "elbowPain", "neckPain", "limitedShoulderMobility", "limitedHipMobility", "limitedAnkleMobility", "limitedKneeFlexion", "overheadMovementLimitation", "impactSensitivity"]}},
-          "body_composition_phase": {"type": ["string", "null"], "enum": ["automatic", "bulk", "cut", "maintain", null]},
-          "skips_warmups": {"type": "boolean"},
-          "skips_cooldowns": {"type": "boolean"},
-          "skips_rest_periods": {"type": "boolean"}
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Optional client-generated training preferences id, so syncing the locally created preferences doesn't duplicate the row. Stored lowercased and must not already exist."
+          },
+          "goal": {
+            "type": "string",
+            "enum": [
+              "generalFitness",
+              "loseWeight",
+              "buildMuscle",
+              "gainStrength",
+              "improveEndurance",
+              "improveMobility",
+              "bodyRecomposition"
+            ]
+          },
+          "lifestyle": {
+            "type": "string",
+            "enum": [
+              "sedentary",
+              "lightlyActive",
+              "moderatelyActive",
+              "veryActive"
+            ]
+          },
+          "gym_type": {
+            "type": "string",
+            "enum": [
+              "bigGym",
+              "smallGym",
+              "homeGym",
+              "someAccessories",
+              "bodyweightOnly"
+            ]
+          },
+          "general_training_level": {
+            "type": "string",
+            "enum": [
+              "completeBeginner",
+              "beginner",
+              "novice",
+              "intermediate",
+              "advanced",
+              "elite"
+            ]
+          },
+          "training_split_preference": {
+            "type": "string",
+            "enum": [
+              "automatic",
+              "fullBody",
+              "upperLower",
+              "pushPullLegs",
+              "bodyPartSplit",
+              "custom"
+            ]
+          },
+          "preferred_workout_duration_minutes": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 300
+          },
+          "workout_days": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 7,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "enum": [
+                "monday",
+                "tuesday",
+                "wednesday",
+                "thursday",
+                "friday",
+                "saturday",
+                "sunday"
+              ]
+            }
+          },
+          "custom_workout_focuses": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "enum": [
+                "fullBody",
+                "upperBody",
+                "lowerBody",
+                "push",
+                "pull",
+                "legs",
+                "core",
+                "cardio",
+                "mobility",
+                "recovery"
+              ]
+            }
+          },
+          "movement_restrictions": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "enum": [
+                "lowerBackPain",
+                "shoulderPain",
+                "kneePain",
+                "hipPain",
+                "anklePain",
+                "wristPain",
+                "elbowPain",
+                "neckPain",
+                "limitedShoulderMobility",
+                "limitedHipMobility",
+                "limitedAnkleMobility",
+                "limitedKneeFlexion",
+                "overheadMovementLimitation",
+                "impactSensitivity"
+              ]
+            }
+          },
+          "body_composition_phase": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "automatic",
+              "bulk",
+              "cut",
+              "maintain",
+              null
+            ]
+          },
+          "skips_warmups": {
+            "type": "boolean"
+          },
+          "skips_cooldowns": {
+            "type": "boolean"
+          },
+          "skips_rest_periods": {
+            "type": "boolean"
+          }
         }
       },
       "LoginRequest": {
@@ -1517,41 +1762,228 @@
       },
       "AppleRegistrationRequest": {
         "allOf": [
-          {"$ref": "#/components/schemas/AppleAuthenticationRequest"},
-          {"type": "object", "required": ["initial_data"], "properties": {"initial_data": {"$ref": "#/components/schemas/InitialRegistrationData"}}}
+          {
+            "$ref": "#/components/schemas/AppleAuthenticationRequest"
+          },
+          {
+            "type": "object",
+            "required": [
+              "initial_data"
+            ],
+            "properties": {
+              "initial_data": {
+                "$ref": "#/components/schemas/InitialRegistrationData"
+              }
+            }
+          }
         ]
       },
       "GoogleRegistrationRequest": {
         "allOf": [
-          {"$ref": "#/components/schemas/GoogleAuthenticationRequest"},
-          {"type": "object", "required": ["initial_data"], "properties": {"initial_data": {"$ref": "#/components/schemas/InitialRegistrationData"}}}
+          {
+            "$ref": "#/components/schemas/GoogleAuthenticationRequest"
+          },
+          {
+            "type": "object",
+            "required": [
+              "initial_data"
+            ],
+            "properties": {
+              "initial_data": {
+                "$ref": "#/components/schemas/InitialRegistrationData"
+              }
+            }
+          }
         ]
       },
       "InitialRegistrationData": {
         "type": "object",
-        "required": ["user", "training_preferences", "training_location", "app_settings"],
+        "required": [
+          "user",
+          "training_preferences",
+          "training_location",
+          "app_settings"
+        ],
         "properties": {
-          "user": {"$ref": "#/components/schemas/InitialRegistrationUser"},
-          "training_preferences": {"$ref": "#/components/schemas/InitialTrainingPreferences"},
-          "training_location": {"$ref": "#/components/schemas/InitialTrainingLocation"},
-          "app_settings": {"$ref": "#/components/schemas/InitialAppSettings"}
+          "user": {
+            "$ref": "#/components/schemas/InitialRegistrationUser"
+          },
+          "training_preferences": {
+            "$ref": "#/components/schemas/InitialTrainingPreferences"
+          },
+          "training_location": {
+            "$ref": "#/components/schemas/InitialTrainingLocation"
+          },
+          "app_settings": {
+            "$ref": "#/components/schemas/InitialAppSettings"
+          }
         }
       },
       "InitialRegistrationUser": {
         "type": "object",
-        "required": ["id", "name", "height", "weight", "birth_date", "gender", "language", "timezone", "metric_system"],
+        "required": [
+          "id",
+          "name",
+          "height",
+          "weight",
+          "birth_date",
+          "gender",
+          "language",
+          "timezone",
+          "metric_system"
+        ],
         "properties": {
-          "id": {"type": "string", "format": "uuid"}, "name": {"type": "string", "maxLength": 255}, "height": {"type": "integer", "minimum": 50, "maximum": 300}, "weight": {"type": "number", "minimum": 10, "maximum": 1000}, "birth_date": {"type": "string", "format": "date-time"}, "gender": {"type": "string", "enum": ["female", "male"]}, "language": {"type": "string", "maxLength": 255}, "timezone": {"type": "string", "format": "timezone", "example": "Europe/Madrid"}, "metric_system": {"type": "string", "enum": ["metric", "imperial"]}
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 50,
+            "maximum": 300
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 10,
+            "maximum": 1000
+          },
+          "birth_date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "female",
+              "male"
+            ]
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "timezone": {
+            "type": "string",
+            "format": "timezone",
+            "example": "Europe/Madrid"
+          },
+          "metric_system": {
+            "type": "string",
+            "enum": [
+              "metric",
+              "imperial"
+            ]
+          }
         }
       },
-      "InitialTrainingPreferences": {"allOf": [{"$ref": "#/components/schemas/TrainingProfile"}, {"type": "object", "required": ["id", "body_composition_phase", "skips_warmups", "skips_cooldowns", "skips_rest_periods"]}]},
+      "InitialTrainingPreferences": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/TrainingProfile"
+          },
+          {
+            "type": "object",
+            "required": [
+              "id",
+              "body_composition_phase",
+              "skips_warmups",
+              "skips_cooldowns",
+              "skips_rest_periods"
+            ]
+          }
+        ]
+      },
       "InitialTrainingLocation": {
-        "type": "object", "required": ["id", "name", "is_default", "sort_order", "equipment"],
-        "properties": {"id": {"type": "string", "format": "uuid"}, "name": {"type": "string", "maxLength": 255}, "is_default": {"type": "boolean", "enum": [true]}, "sort_order": {"type": "integer", "minimum": 0}, "equipment": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}}}
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "is_default",
+          "sort_order",
+          "equipment"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "is_default": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "sort_order": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "equipment": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
       },
       "InitialAppSettings": {
-        "type": "object", "required": ["id", "is_health_kit_enabled", "is_watch_auto_tracking_enabled", "is_screen_on_during_workout_enabled", "is_notifications_enabled", "is_full_focus_mode_enabled", "has_seen_notification_request", "has_seen_body_progress_tutorial", "has_rated_app"],
-        "properties": {"id": {"type": "string", "format": "uuid"}, "is_health_kit_enabled": {"type": "boolean"}, "is_watch_auto_tracking_enabled": {"type": "boolean"}, "is_screen_on_during_workout_enabled": {"type": "boolean"}, "is_notifications_enabled": {"type": "boolean"}, "is_full_focus_mode_enabled": {"type": "boolean"}, "full_focus_selection": {"type": ["array", "null"]}, "has_seen_notification_request": {"type": "boolean"}, "has_seen_body_progress_tutorial": {"type": "boolean"}, "has_rated_app": {"type": "boolean"}}
+        "type": "object",
+        "required": [
+          "id",
+          "is_health_kit_enabled",
+          "is_watch_auto_tracking_enabled",
+          "is_screen_on_during_workout_enabled",
+          "is_notifications_enabled",
+          "is_full_focus_mode_enabled",
+          "has_seen_notification_request",
+          "has_seen_body_progress_tutorial",
+          "has_rated_app"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "is_health_kit_enabled": {
+            "type": "boolean"
+          },
+          "is_watch_auto_tracking_enabled": {
+            "type": "boolean"
+          },
+          "is_screen_on_during_workout_enabled": {
+            "type": "boolean"
+          },
+          "is_notifications_enabled": {
+            "type": "boolean"
+          },
+          "is_full_focus_mode_enabled": {
+            "type": "boolean"
+          },
+          "full_focus_selection": {
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "has_seen_notification_request": {
+            "type": "boolean"
+          },
+          "has_seen_body_progress_tutorial": {
+            "type": "boolean"
+          },
+          "has_rated_app": {
+            "type": "boolean"
+          }
+        }
       },
       "GoogleIdentityRequest": {
         "type": "object",
@@ -2060,7 +2492,7 @@
                         "nutrition-log-items",
                         "workout-plans",
                         "subscriptions",
-                        "coach-exercise-media"
+                        "coach-exercise-content"
                       ]
                     },
                     "updated_after": {
@@ -2192,8 +2624,40 @@
         },
         "additionalProperties": true
       },
-      "CoachExerciseMediaSync": {
-        "description": "A coach's custom media for a catalog exercise. Use it instead of the default catalog image and video when present; a null field falls back to the default.",
+      "ExerciseProfileSync": {
+        "description": "A user-owned profile for one catalog exercise. The optional `notes` field is private to that user and synced with `exercise-profiles`.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SyncRecord"
+          },
+          {
+            "type": "object",
+            "required": [
+              "user_id",
+              "exercise"
+            ],
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "exercise": {
+                "type": "string",
+                "description": "Exercise catalog identifier, e.g. `barbellBackSquat`."
+              },
+              "notes": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "User-private free-form notes for this exercise."
+              }
+            }
+          }
+        ]
+      },
+      "CoachExerciseContentSync": {
+        "description": "A coach's custom content for a catalog exercise. Use its image, video, and notes alongside the default catalog media when present; a null field falls back to the default.",
         "allOf": [
           {
             "$ref": "#/components/schemas/SyncRecord"
@@ -2205,7 +2669,8 @@
               "exercise",
               "image_url",
               "youtube_video_id",
-              "youtube_url"
+              "youtube_url",
+              "notes"
             ],
             "properties": {
               "coach_user_id": {
@@ -2237,6 +2702,13 @@
                   "null"
                 ],
                 "format": "uri"
+              },
+              "notes": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Coach-authored general guidance for this exercise, shared with the coach's active clients."
               }
             }
           }
@@ -2244,235 +2716,805 @@
       },
       "WorkoutPlanSyncResponse": {
         "type": "object",
-        "required": ["data"],
+        "required": [
+          "data"
+        ],
         "properties": {
-          "data": {"$ref": "#/components/schemas/WorkoutPlanSync"}
+          "data": {
+            "$ref": "#/components/schemas/WorkoutPlanSync"
+          }
         }
       },
       "WorkoutPlanSync": {
         "allOf": [
-          {"$ref": "#/components/schemas/SyncRecord"},
+          {
+            "$ref": "#/components/schemas/SyncRecord"
+          },
           {
             "type": "object",
-            "required": ["name", "goal", "status", "workout_days"],
+            "required": [
+              "name",
+              "goal",
+              "status",
+              "workout_days"
+            ],
             "properties": {
-              "name": {"type": "string"},
-              "goal": {"type": "string"},
-              "status": {"type": "string", "enum": ["draft"]},
-              "notes": {"type": ["string", "null"]},
-              "mesocycle_number": {"type": ["integer", "null"]},
-              "phase": {"type": ["string", "null"]},
-              "phase_week": {"type": ["integer", "null"]},
-              "cycle_length": {"type": ["integer", "null"]},
-              "body_composition_phase": {"type": ["string", "null"]},
-              "starts_on": {"type": ["string", "null"], "format": "date-time"},
-              "workout_days": {"type": "array", "items": {"$ref": "#/components/schemas/WorkoutDaySync"}}
+              "name": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft"
+                ]
+              },
+              "notes": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "mesocycle_number": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "phase": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "phase_week": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "cycle_length": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "body_composition_phase": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "starts_on": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "workout_days": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/WorkoutDaySync"
+                }
+              }
             }
           }
         ]
       },
       "WorkoutDaySync": {
         "allOf": [
-          {"$ref": "#/components/schemas/SyncRecord"},
+          {
+            "$ref": "#/components/schemas/SyncRecord"
+          },
           {
             "type": "object",
-            "required": ["title", "focus", "status", "order_index", "blocks", "exercises"],
+            "required": [
+              "title",
+              "focus",
+              "status",
+              "order_index",
+              "blocks",
+              "exercises"
+            ],
             "properties": {
-              "user_id": {"type": "string", "format": "uuid"},
-              "workout_plan_id": {"type": ["string", "null"], "format": "uuid"},
-              "source_workout_day_id": {"type": ["string", "null"], "format": "uuid", "description": "The template this workout day was created from, if any."},
-              "title": {"type": "string"},
-              "focus": {"type": "string"},
-              "status": {"type": "string"},
-              "order_index": {"type": "integer"},
-              "intended_weekday": {"type": ["string", "null"]},
-              "day_type": {"type": ["string", "null"]},
-              "estimated_duration_minutes": {"type": ["integer", "null"]},
-              "blocks": {"type": "array", "items": {"$ref": "#/components/schemas/SyncRecord"}},
-              "exercises": {"type": "array", "items": {"$ref": "#/components/schemas/SyncRecord"}}
+              "user_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "workout_plan_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "source_workout_day_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "The template this workout day was created from, if any."
+              },
+              "title": {
+                "type": "string"
+              },
+              "focus": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "order_index": {
+                "type": "integer"
+              },
+              "intended_weekday": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "day_type": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "estimated_duration_minutes": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "blocks": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SyncRecord"
+                }
+              },
+              "exercises": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SyncRecord"
+                }
+              }
             }
           }
         ]
       },
       "NutritionPlanSyncResponse": {
         "type": "object",
-        "required": ["data"],
+        "required": [
+          "data"
+        ],
         "properties": {
-          "data": {"$ref": "#/components/schemas/NutritionPlan"}
+          "data": {
+            "$ref": "#/components/schemas/NutritionPlan"
+          }
         }
       },
       "GenerateNutritionPlanRequest": {
         "type": "object",
         "properties": {
-          "daily_energy": {"type": "array", "maxItems": 31, "description": "Optional Apple Health daily energy for up to the last 21 days. Omit it when Apple Health is unavailable or not authorized; the server then uses the formula estimate.", "items": {"$ref": "#/components/schemas/DailyEnergy"}}
+          "daily_energy": {
+            "type": "array",
+            "maxItems": 31,
+            "description": "Optional Apple Health daily energy for up to the last 21 days. Omit it when Apple Health is unavailable or not authorized; the server then uses the formula estimate.",
+            "items": {
+              "$ref": "#/components/schemas/DailyEnergy"
+            }
+          }
         }
       },
       "DailyEnergy": {
         "type": "object",
-        "required": ["date", "active_calories"],
+        "required": [
+          "date",
+          "active_calories"
+        ],
         "properties": {
-          "date": {"type": "string", "format": "date", "description": "Calendar day in the client time zone. Each date may appear once and must be between 22 days ago and tomorrow."},
-          "active_calories": {"type": "number", "minimum": 0, "maximum": 10000, "description": "Active energy burned that day, in kilocalories."},
-          "basal_calories": {"type": ["number", "null"], "minimum": 0, "maximum": 10000, "description": "Resting energy burned that day, in kilocalories. Days without basal energy are ignored."}
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Calendar day in the client time zone. Each date may appear once and must be between 22 days ago and tomorrow."
+          },
+          "active_calories": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10000,
+            "description": "Active energy burned that day, in kilocalories."
+          },
+          "basal_calories": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 10000,
+            "description": "Resting energy burned that day, in kilocalories. Days without basal energy are ignored."
+          }
         }
       },
       "GenerateMacrosFromTextRequest": {
         "type": "object",
-        "required": ["text"],
+        "required": [
+          "text"
+        ],
         "properties": {
-          "text": {"type": "string", "maxLength": 2000, "description": "Free-text description of what the user ate."},
-          "meal_title": {"type": ["string", "null"], "maxLength": 255, "description": "Optional meal context, for example Breakfast."}
+          "text": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "Free-text description of what the user ate."
+          },
+          "meal_title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255,
+            "description": "Optional meal context, for example Breakfast."
+          }
         }
       },
       "MacrosFromTextResponse": {
         "type": "object",
-        "required": ["data"],
+        "required": [
+          "data"
+        ],
         "properties": {
-          "data": {"$ref": "#/components/schemas/MacrosFromText"}
+          "data": {
+            "$ref": "#/components/schemas/MacrosFromText"
+          }
         }
       },
       "MacrosFromText": {
         "type": "object",
-        "required": ["title", "estimatedFoods", "estimatedMacros"],
+        "required": [
+          "title",
+          "estimatedFoods",
+          "estimatedMacros"
+        ],
         "properties": {
-          "title": {"type": "string"},
-          "estimatedFoods": {"type": "array", "items": {"$ref": "#/components/schemas/EstimatedFood"}},
-          "estimatedMacros": {"$ref": "#/components/schemas/EstimatedMacros"},
-          "analysisNotes": {"type": ["string", "null"]}
+          "title": {
+            "type": "string"
+          },
+          "estimatedFoods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EstimatedFood"
+            }
+          },
+          "estimatedMacros": {
+            "$ref": "#/components/schemas/EstimatedMacros"
+          },
+          "analysisNotes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         }
       },
       "OpenFoodFactsContributionRequest": {
         "type": "object",
-        "required": ["barcode", "name", "brands", "macros_per_100g", "front_image", "nutrition_image"],
+        "required": [
+          "barcode",
+          "name",
+          "brands",
+          "macros_per_100g",
+          "front_image",
+          "nutrition_image"
+        ],
         "properties": {
-          "barcode": {"type": "string", "pattern": "^\\d{8,14}$", "description": "The product barcode."},
-          "name": {"type": "string", "maxLength": 255},
-          "brands": {"type": "string", "maxLength": 255},
+          "barcode": {
+            "type": "string",
+            "pattern": "^\\\\d{8,14}$",
+            "description": "The product barcode."
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "brands": {
+            "type": "string",
+            "maxLength": 255
+          },
           "macros_per_100g": {
             "type": "object",
-            "required": ["calories", "protein", "carbs", "fat"],
+            "required": [
+              "calories",
+              "protein",
+              "carbs",
+              "fat"
+            ],
             "properties": {
-              "calories": {"type": "number", "exclusiveMinimum": 0},
-              "protein": {"type": "number", "minimum": 0},
-              "carbs": {"type": "number", "minimum": 0},
-              "fat": {"type": "number", "minimum": 0}
+              "calories": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "protein": {
+                "type": "number",
+                "minimum": 0
+              },
+              "carbs": {
+                "type": "number",
+                "minimum": 0
+              },
+              "fat": {
+                "type": "number",
+                "minimum": 0
+              }
             }
           },
-          "serving_size": {"type": ["string", "null"], "maxLength": 100},
-          "nutriscore": {"type": ["string", "null"], "enum": ["a", "b", "c", "d", "e", null]},
-          "front_image": {"type": "string", "format": "binary", "description": "A JPEG, PNG, GIF, HEIC, or HEIF image of the product front, up to 10 MiB."},
-          "nutrition_image": {"type": "string", "format": "binary", "description": "A JPEG, PNG, GIF, HEIC, or HEIF image of the nutrition label, up to 10 MiB."}
+          "serving_size": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "nutriscore": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e",
+              null
+            ]
+          },
+          "front_image": {
+            "type": "string",
+            "format": "binary",
+            "description": "A JPEG, PNG, GIF, HEIC, or HEIF image of the product front, up to 10 MiB."
+          },
+          "nutrition_image": {
+            "type": "string",
+            "format": "binary",
+            "description": "A JPEG, PNG, GIF, HEIC, or HEIF image of the nutrition label, up to 10 MiB."
+          }
         }
       },
       "OpenFoodFactsContributionResponse": {
         "type": "object",
-        "required": ["data"],
+        "required": [
+          "data"
+        ],
         "properties": {
           "data": {
             "type": "object",
-            "required": ["code", "status"],
+            "required": [
+              "code",
+              "status"
+            ],
             "properties": {
-              "code": {"type": "string"},
-              "status": {"type": "string"}
+              "code": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
             }
           }
         }
       },
       "EstimatedFood": {
         "type": "object",
-        "required": ["name", "canonicalFoodName", "amountGrams", "estimatedMacros"],
+        "required": [
+          "name",
+          "canonicalFoodName",
+          "amountGrams",
+          "estimatedMacros"
+        ],
         "properties": {
-          "name": {"type": "string"},
-          "canonicalFoodName": {"type": "string", "description": "English canonical lookup name for the food."},
-          "amountGrams": {"type": "integer"},
-          "estimatedMacros": {"$ref": "#/components/schemas/EstimatedMacros"}
+          "name": {
+            "type": "string"
+          },
+          "canonicalFoodName": {
+            "type": "string",
+            "description": "English canonical lookup name for the food."
+          },
+          "amountGrams": {
+            "type": "integer"
+          },
+          "estimatedMacros": {
+            "$ref": "#/components/schemas/EstimatedMacros"
+          }
         }
       },
       "EstimatedMacros": {
         "type": "object",
-        "required": ["calories", "protein", "carbs", "fat"],
+        "required": [
+          "calories",
+          "protein",
+          "carbs",
+          "fat"
+        ],
         "properties": {
-          "calories": {"type": "number", "minimum": 0, "description": "Kilocalories."},
-          "protein": {"type": "number", "minimum": 0, "description": "Grams."},
-          "carbs": {"type": "number", "minimum": 0, "description": "Grams."},
-          "fat": {"type": "number", "minimum": 0, "description": "Grams."}
+          "calories": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Kilocalories."
+          },
+          "protein": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Grams."
+          },
+          "carbs": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Grams."
+          },
+          "fat": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Grams."
+          }
         }
       },
       "GenerateSingleWorkoutRequest": {
         "type": "object",
-        "required": ["focuses", "muscleGroups", "equipment", "includeWarmup", "includeCooldown", "durationMinutes"],
+        "required": [
+          "focuses",
+          "muscleGroups",
+          "equipment",
+          "includeWarmup",
+          "includeCooldown",
+          "durationMinutes"
+        ],
         "properties": {
-          "goal": {"type": ["string", "null"], "enum": ["generalFitness", "loseWeight", "buildMuscle", "gainStrength", "improveEndurance", "improveMobility", "bodyRecomposition", null]},
-          "focuses": {"type": "array", "maxItems": 10, "items": {"type": "string", "enum": ["fullBody", "upperBody", "lowerBody", "chest", "back", "shoulders", "arms", "core", "cardio", "mobility"]}},
-          "muscleGroups": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 100}},
-          "equipment": {"type": "array", "minItems": 1, "maxItems": 50, "items": {"type": "string", "maxLength": 100}},
-          "includeWarmup": {"type": "boolean"},
-          "includeCooldown": {"type": "boolean"},
-          "durationMinutes": {"type": "integer", "minimum": 10, "maximum": 180}
+          "goal": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "generalFitness",
+              "loseWeight",
+              "buildMuscle",
+              "gainStrength",
+              "improveEndurance",
+              "improveMobility",
+              "bodyRecomposition",
+              null
+            ]
+          },
+          "focuses": {
+            "type": "array",
+            "maxItems": 10,
+            "items": {
+              "type": "string",
+              "enum": [
+                "fullBody",
+                "upperBody",
+                "lowerBody",
+                "chest",
+                "back",
+                "shoulders",
+                "arms",
+                "core",
+                "cardio",
+                "mobility"
+              ]
+            }
+          },
+          "muscleGroups": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          "equipment": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          "includeWarmup": {
+            "type": "boolean"
+          },
+          "includeCooldown": {
+            "type": "boolean"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "minimum": 10,
+            "maximum": 180
+          }
         }
       },
       "GeneratedWorkoutDayResponse": {
         "type": "object",
-        "required": ["data"],
+        "required": [
+          "data"
+        ],
         "properties": {
-          "data": {"$ref": "#/components/schemas/GeneratedWorkoutDay"}
+          "data": {
+            "$ref": "#/components/schemas/GeneratedWorkoutDay"
+          }
         }
       },
       "GeneratedWorkoutDay": {
         "type": "object",
-        "required": ["title", "focus", "status", "order_index", "blocks"],
+        "required": [
+          "title",
+          "focus",
+          "status",
+          "order_index",
+          "blocks"
+        ],
         "properties": {
-          "title": {"type": "string"},
-          "focus": {"type": "string"},
-          "status": {"type": "string"},
-          "order_index": {"type": "integer"},
-          "intended_weekday": {"type": ["string", "null"]},
-          "day_type": {"type": ["string", "null"]},
-          "estimated_duration_minutes": {"type": ["integer", "null"]},
-          "creation_source": {"type": ["string", "null"]},
-          "notes": {"type": ["string", "null"]},
-          "blocks": {"type": "array", "items": {"$ref": "#/components/schemas/GeneratedWorkoutBlock"}}
+          "title": {
+            "type": "string"
+          },
+          "focus": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "order_index": {
+            "type": "integer"
+          },
+          "intended_weekday": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "day_type": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "estimated_duration_minutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "creation_source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "blocks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratedWorkoutBlock"
+            }
+          }
         }
       },
       "GeneratedWorkoutBlock": {
         "type": "object",
-        "required": ["type", "order_index", "exercises"],
+        "required": [
+          "type",
+          "order_index",
+          "exercises"
+        ],
         "properties": {
-          "type": {"type": "string", "enum": ["warmup", "standard", "superset", "cooldown"]},
-          "order_index": {"type": "integer"},
-          "rounds": {"type": ["integer", "null"]},
-          "rest_after_block_seconds": {"type": ["integer", "null"]},
-          "notes": {"type": ["string", "null"]},
-          "exercises": {"type": "array", "items": {"$ref": "#/components/schemas/GeneratedPlannedExercise"}}
+          "type": {
+            "type": "string",
+            "enum": [
+              "warmup",
+              "standard",
+              "superset",
+              "cooldown"
+            ]
+          },
+          "order_index": {
+            "type": "integer"
+          },
+          "rounds": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "rest_after_block_seconds": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratedPlannedExercise"
+            }
+          }
         }
       },
       "GeneratedPlannedExercise": {
         "type": "object",
-        "required": ["exercise", "order_index"],
+        "required": [
+          "exercise",
+          "order_index"
+        ],
         "properties": {
-          "exercise": {"type": "string"},
-          "order_index": {"type": "integer"},
-          "sets": {"type": ["integer", "null"]},
-          "reps_min": {"type": ["integer", "null"]},
-          "reps_max": {"type": ["integer", "null"]},
-          "target_reps": {"type": ["array", "null"], "items": {"type": "integer"}},
-          "target_weight_kg": {"type": ["number", "null"]},
-          "target_weights_kg": {"type": ["array", "null"], "items": {"type": "number"}},
-          "target_duration_minutes": {"type": ["integer", "null"]},
-          "target_duration_seconds": {"type": ["integer", "null"]},
-          "target_distance_km": {"type": ["number", "null"]},
-          "target_pace_seconds_per_km": {"type": ["integer", "null"]},
-          "rest_seconds": {"type": ["integer", "null"]},
-          "skipped_at": {"type": ["string", "null"], "format": "date-time"},
-          "set_style_configuration": {"anyOf": [{"$ref": "#/components/schemas/SetStyleConfiguration"}, {"type": "null"}]},
-          "notes": {"type": ["string", "null"]}
+          "exercise": {
+            "type": "string"
+          },
+          "order_index": {
+            "type": "integer"
+          },
+          "sets": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "reps_min": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "reps_max": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "target_reps": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "integer"
+            }
+          },
+          "target_weight_kg": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "target_weights_kg": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number"
+            }
+          },
+          "target_duration_minutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "target_duration_seconds": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "target_distance_km": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "target_pace_seconds_per_km": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "rest_seconds": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "skipped_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "set_style_configuration": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SetStyleConfiguration"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
         }
       },
       "SetStyleConfiguration": {
         "type": "object",
-        "required": ["style"],
+        "required": [
+          "style"
+        ],
         "properties": {
-          "style": {"type": "string", "enum": ["warmup", "straight", "topSetBackoff", "ascendingPyramid", "dropSet", "restPause", "intervals", "tempo"]}, "applies_to_final_set_only": {"type": "boolean"}, "drop_count": {"type": "integer", "minimum": 1}, "drop_weight_percent": {"type": "number", "minimum": 1, "maximum": 100}, "backoff_set_count": {"type": "integer", "minimum": 1}, "backoff_weight_percent": {"type": "number", "minimum": 1, "maximum": 100}, "intra_set_rest_seconds": {"type": "integer", "minimum": 1}, "tempo": {"type": "string"}, "target_rir": {"type": "integer", "minimum": 0, "maximum": 10}
+          "style": {
+            "type": "string",
+            "enum": [
+              "warmup",
+              "straight",
+              "topSetBackoff",
+              "ascendingPyramid",
+              "dropSet",
+              "restPause",
+              "intervals",
+              "tempo"
+            ]
+          },
+          "applies_to_final_set_only": {
+            "type": "boolean"
+          },
+          "drop_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "drop_weight_percent": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "backoff_set_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "backoff_weight_percent": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "intra_set_rest_seconds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "tempo": {
+            "type": "string"
+          },
+          "target_rir": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          }
         }
       },
       "WorkoutDay": {
@@ -2576,7 +3618,9 @@
   },
   "security": [
     {
-      "bearerAuth": []
+      "bearerAuth": [
+
+      ]
     }
   ]
 }

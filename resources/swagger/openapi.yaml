@@ -776,10 +776,10 @@ paths:
       description: |
         Returns the records changed after `updated_after`, including soft-deleted tombstones.
 
-        `coach-exercise-media` is read-only: it returns the custom exercise images and
+        `coach-exercise-content` is read-only: it returns the custom exercise content and
         YouTube videos uploaded by the coaches the user is actively enrolled with, shaped as
-        `CoachExerciseMediaSync`. A coach removing both the image and the video produces a
-        tombstone. Media from coaches whose enrollment is no longer active is not returned.
+        `CoachExerciseContentSync`. A coach removing both the image and the video produces a
+        tombstone. Content from coaches whose enrollment is no longer active is not returned.
       parameters:
         - $ref: '#/components/parameters/SyncResource'
         - $ref: '#/components/parameters/UpdatedAfter'
@@ -862,7 +862,7 @@ components:
           - planned-exercises
           - exercise-results
           - subscriptions
-          - coach-exercise-media
+          - coach-exercise-content
     UpdatedAfter:
       name: updated_after
       in: query
@@ -1587,7 +1587,7 @@ components:
                       - nutrition-log-items
                       - workout-plans
                       - subscriptions
-                      - coach-exercise-media
+                      - coach-exercise-content
                   updated_after:
                     type:
                       - string
@@ -1671,8 +1671,28 @@ components:
             - 'null'
           format: date-time
       additionalProperties: true
-    CoachExerciseMediaSync:
-      description: "A coach's custom media for a catalog exercise. Use it instead of the default catalog image and video when present; a null field falls back to the default."
+    ExerciseProfileSync:
+      description: 'A user-owned profile for one catalog exercise. The optional `notes` field is private to that user and synced with `exercise-profiles`.'
+      allOf:
+        - $ref: '#/components/schemas/SyncRecord'
+        - type: object
+          required:
+            - user_id
+            - exercise
+          properties:
+            user_id:
+              type: string
+              format: uuid
+            exercise:
+              type: string
+              description: 'Exercise catalog identifier, e.g. `barbellBackSquat`.'
+            notes:
+              type:
+                - string
+                - 'null'
+              description: 'User-private free-form notes for this exercise.'
+    CoachExerciseContentSync:
+      description: "A coach's custom content for a catalog exercise. Use its image, video, and notes alongside the default catalog media when present; a null field falls back to the default."
       allOf:
         - $ref: '#/components/schemas/SyncRecord'
         - type: object
@@ -1682,6 +1702,7 @@ components:
             - image_url
             - youtube_video_id
             - youtube_url
+            - notes
           properties:
             coach_user_id:
               type: string
@@ -1705,6 +1726,11 @@ components:
                 - string
                 - 'null'
               format: uri
+            notes:
+              type:
+                - string
+                - 'null'
+              description: 'Coach-authored general guidance for this exercise, shared with the coach''s active clients.'
     WorkoutPlanSyncResponse:
       type: object
       required:

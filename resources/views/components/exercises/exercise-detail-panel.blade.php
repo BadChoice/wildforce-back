@@ -1,4 +1,4 @@
-@props(['exercise', 'imageUrls', 'activeTab' => 'details', 'user' => null, 'exerciseProfile' => null, 'isCoach' => false, 'coachExerciseMedia' => null])
+@props(['exercise', 'imageUrls', 'activeTab' => 'details', 'user' => null, 'exerciseProfile' => null, 'isCoach' => false, 'coachExerciseContent' => null])
 
 <div class="flex min-h-dvh flex-col bg-white dark:bg-zinc-900">
     <header class="border-zinc-200 p-5 dark:border-zinc-700">
@@ -67,7 +67,7 @@
                     aria-selected="{{ $activeTab === 'coach' ? 'true' : 'false' }}"
                     class="shrink-0 border-b-2 px-3 py-2 text-sm font-medium transition {{ $activeTab === 'coach' ? 'border-zinc-950 text-zinc-950 dark:border-white dark:text-white' : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100' }}"
                 >
-                    {{ __('Coach media') }}
+                    {{ __('Coach content') }}
                 </button>
             @endif
         </nav>
@@ -171,6 +171,12 @@
                         <x-dashboard.detail-item :label="__('Typical distance')" :value="$exerciseProfile->typical_distance_km ? __(':distance km', ['distance' => $exerciseProfile->typical_distance_km]) : __('Not set')" />
                         <x-dashboard.detail-item :label="__('Typical pace')" :value="$exerciseProfile->typical_pace_seconds_per_km ? gmdate('i:s', $exerciseProfile->typical_pace_seconds_per_km).' / km' : __('Not set')" />
                     </dl>
+                    @if ($exerciseProfile->notes)
+                        <section class="mt-5 space-y-2">
+                            <flux:heading size="sm">{{ __('Notes') }}</flux:heading>
+                            <flux:text class="whitespace-pre-line">{{ $exerciseProfile->notes }}</flux:text>
+                        </section>
+                    @endif
                 @else
                     <div class="rounded-lg border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
                         {{ __('This user has not created a profile for this exercise yet.') }}
@@ -179,8 +185,8 @@
                 @break
 
             @case('coach')
-                <form wire:submit="saveCoachExerciseMedia" class="space-y-7">
-                    <flux:text variant="subtle">{{ __('Your clients will see this image and video instead of the default ones.') }}</flux:text>
+                <form wire:submit="saveCoachExerciseContent" class="space-y-7">
+                    <flux:text variant="subtle">{{ __('Your clients will see this image, video, and notes for this exercise.') }}</flux:text>
 
                     <section
                         class="space-y-3"
@@ -231,8 +237,8 @@
                         <div class="flex items-start gap-4">
                             <div class="aspect-[4/5] w-28 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
                                 <img x-show="hasPendingImage" x-bind:src="previewUrl" alt="" class="h-full w-full object-cover" />
-                                @if ($coachExerciseMedia?->imageUrl())
-                                    <img x-show="! hasPendingImage" src="{{ $coachExerciseMedia->imageUrl() }}" alt="{{ $exercise['name'] }}" class="h-96 w-80 object-cover" />
+                                @if ($coachExerciseContent?->imageUrl())
+                                    <img x-show="! hasPendingImage" src="{{ $coachExerciseContent->imageUrl() }}" alt="{{ $exercise['name'] }}" class="h-96 w-80 object-cover" />
                                 @else
                                     <div x-show="! hasPendingImage" class="flex h-full items-center justify-center p-2 text-center text-xs text-zinc-500 dark:text-zinc-400">{{ __('Default image') }}</div>
                                 @endif
@@ -246,7 +252,7 @@
                                 <flux:text size="sm" variant="subtle" x-show="uploading">{{ __('Uploading…') }}</flux:text>
                                 <flux:text size="sm" variant="subtle" x-show="hasPendingImage">{{ __('Press save to apply the new image.') }}</flux:text>
 
-                                @if ($coachExerciseMedia?->image_path)
+                                @if ($coachExerciseContent?->image_path)
                                     <flux:button type="button" size="sm" variant="ghost" icon="trash" wire:click="removeCoachExerciseImage" wire:confirm="{{ __('Remove your image for this exercise?') }}">
                                         {{ __('Use default image') }}
                                     </flux:button>
@@ -261,11 +267,16 @@
                         <flux:heading size="sm">{{ __('Video') }}</flux:heading>
                         <flux:input wire:model="coachExerciseYoutubeUrl" :label="__('YouTube link')" placeholder="https://www.youtube.com/watch?v=…" />
 
-                        @if ($coachExerciseMedia?->youtube_video_id)
+                        @if ($coachExerciseContent?->youtube_video_id)
                             <div class="aspect-video w-full overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
-                                <iframe src="https://www.youtube-nocookie.com/embed/{{ $coachExerciseMedia->youtube_video_id }}" title="{{ $exercise['name'] }}" class="h-full w-full" allowfullscreen loading="lazy"></iframe>
+                                <iframe src="https://www.youtube-nocookie.com/embed/{{ $coachExerciseContent->youtube_video_id }}" title="{{ $exercise['name'] }}" class="h-full w-full" allowfullscreen loading="lazy"></iframe>
                             </div>
                         @endif
+                    </section>
+
+                    <section class="space-y-3">
+                        <flux:textarea wire:model="coachExerciseNotes" :label="__('Notes')" rows="4" :placeholder="__('Technique cues or general guidance for your clients.')" />
+                        <flux:error name="coachExerciseNotes" />
                     </section>
 
                     <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>

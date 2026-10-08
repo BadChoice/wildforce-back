@@ -27,6 +27,7 @@ class ExerciseProfileFactory extends Factory
             'max_reps' => 12,
             'preferred_rep_range_min' => 8,
             'preferred_rep_range_max' => 12,
+            'notes' => null,
         ];
     }
 }

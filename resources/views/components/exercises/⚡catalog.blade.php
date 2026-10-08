@@ -1,10 +1,10 @@
 <?php
 
-use App\Models\CoachExerciseMedia;
-use App\Models\ExerciseProfile;
-use App\Models\User;
 use App\Enums\Generated\MajorMuscleGroup;
 use App\Enums\Generated\MuscleGroup;
+use App\Models\CoachExerciseContent;
+use App\Models\ExerciseProfile;
+use App\Models\User;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
 use App\Support\YouTubeVideoId;
 use Flux\Flux;
@@ -40,6 +40,8 @@ new class extends Component
     public ?TemporaryUploadedFile $coachExerciseImage = null;
 
     public string $coachExerciseYoutubeUrl = '';
+
+    public string $coachExerciseNotes = '';
 
     protected ExerciseCatalog $exerciseCatalog;
 
@@ -177,28 +179,28 @@ new class extends Component
     }
 
     /**
-     * @return Collection<string, CoachExerciseMedia>
+     * @return Collection<string, CoachExerciseContent>
      */
     #[Computed]
-    public function coachExerciseMediaByExercise(): Collection
+    public function coachExerciseContentByExercise(): Collection
     {
         if (! $this->isCoach) {
             return collect();
         }
 
-        return auth()->user()->coachExerciseMedia()
+        return auth()->user()->coachExerciseContent()
             ->get(['exercise', 'image_path', 'youtube_video_id'])
             ->keyBy('exercise');
     }
 
     #[Computed]
-    public function selectedCoachExerciseMedia(): ?CoachExerciseMedia
+    public function selectedCoachExerciseContent(): ?CoachExerciseContent
     {
         if (! $this->isCoach || $this->selectedExerciseId === null) {
             return null;
         }
 
-        return auth()->user()->coachExerciseMedia()
+        return auth()->user()->coachExerciseContent()
             ->where('exercise', $this->selectedExerciseId)
             ->first();
     }
@@ -218,7 +220,7 @@ new class extends Component
                 $this->selectedExerciseId = $exerciseId;
                 $this->selectedExerciseTab = 'details';
                 $this->showExerciseDetail = true;
-                $this->resetCoachExerciseMediaForm();
+                $this->resetCoachExerciseContentForm();
 
                 return;
             }
@@ -249,7 +251,7 @@ new class extends Component
         $this->selectedExerciseTab = $tab;
     }
 
-    public function saveCoachExerciseMedia(): void
+    public function saveCoachExerciseContent(): void
     {
         abort_unless($this->isCoach && $this->selectedExercise !== null, 403);
 
@@ -260,11 +262,12 @@ new class extends Component
                     $fail(__('Enter a valid YouTube video URL.'));
                 }
             }],
+            'coachExerciseNotes' => ['nullable', 'string', 'max:5000'],
         ]);
 
         /** @var User $coach */
         $coach = auth()->user();
-        $media = CoachExerciseMedia::withTrashed()->firstOrNew([
+        $media = CoachExerciseContent::withTrashed()->firstOrNew([
             'coach_user_id' => $coach->id,
             'exercise' => $this->selectedExerciseId,
         ]);
@@ -285,15 +288,16 @@ new class extends Component
         $media->youtube_video_id = $this->coachExerciseYoutubeUrl === ''
             ? null
             : YouTubeVideoId::fromUrl($this->coachExerciseYoutubeUrl);
+        $media->notes = $this->coachExerciseNotes === '' ? null : $this->coachExerciseNotes;
 
-        $this->persistCoachExerciseMedia($media);
+        $this->persistCoachExerciseContent($media);
     }
 
     public function removeCoachExerciseImage(): void
     {
         abort_unless($this->isCoach, 403);
 
-        $media = $this->selectedCoachExerciseMedia;
+        $media = $this->selectedCoachExerciseContent;
 
         if ($media?->image_path === null) {
             return;
@@ -302,15 +306,15 @@ new class extends Component
         Storage::disk((string) config('filesystems.public_storage_disc'))->delete($media->image_path);
         $media->image_path = null;
 
-        $this->persistCoachExerciseMedia($media);
+        $this->persistCoachExerciseContent($media);
     }
 
     /**
-     * Save the media, soft deleting it once it no longer overrides anything so clients sync the removal.
+     * Save the content, soft deleting it once it no longer overrides anything so clients sync the removal.
      */
-    private function persistCoachExerciseMedia(CoachExerciseMedia $media): void
+    private function persistCoachExerciseContent(CoachExerciseContent $media): void
     {
-        if ($media->image_path === null && $media->youtube_video_id === null) {
+        if ($media->image_path === null && $media->youtube_video_id === null && $media->notes === null) {
             if ($media->exists && ! $media->trashed()) {
                 $media->delete();
             }
@@ -319,17 +323,18 @@ new class extends Component
             $media->save();
         }
 
-        unset($this->selectedCoachExerciseMedia, $this->coachExerciseMediaByExercise);
-        $this->resetCoachExerciseMediaForm();
+        unset($this->selectedCoachExerciseContent, $this->coachExerciseContentByExercise);
+        $this->resetCoachExerciseContentForm();
 
-        Flux::toast(variant: 'success', text: __('Exercise media saved.'));
+        Flux::toast(variant: 'success', text: __('Exercise content saved.'));
     }
 
-    private function resetCoachExerciseMediaForm(): void
+    private function resetCoachExerciseContentForm(): void
     {
         $this->reset('coachExerciseImage');
         $this->resetValidation();
-        $this->coachExerciseYoutubeUrl = $this->selectedCoachExerciseMedia?->youtubeUrl() ?? '';
+        $this->coachExerciseYoutubeUrl = $this->selectedCoachExerciseContent?->youtubeUrl() ?? '';
+        $this->coachExerciseNotes = $this->selectedCoachExerciseContent?->notes ?? '';
     }
 
     public function resetFilters(): void
@@ -403,8 +408,8 @@ new class extends Component
                                     </flux:button>
                                     <span class="font-mono text-xs ml-1 font-normal text-zinc-500 dark:text-zinc-400">{{ $exercise['id'] }}</span>
                                 </div>
-                                @if ($coachMedia = $this->coachExerciseMediaByExercise->get($exercise['id']))
-                                    <flux:badge size="sm" color="lime" :title="__('You uploaded your own media for this exercise')">
+                                @if ($coachMedia = $this->coachExerciseContentByExercise->get($exercise['id']))
+                                    <flux:badge size="sm" color="lime" :title="__('You uploaded custom content for this exercise')">
                                         @if ($coachMedia->image_path)
                                             <flux:icon.photo variant="micro" />
                                         @endif
@@ -467,7 +472,7 @@ new class extends Component
                 :user="$this->user"
                 :exercise-profile="$this->selectedExerciseProfile"
                 :is-coach="$this->isCoach"
-                :coach-exercise-media="$this->selectedCoachExerciseMedia"
+                :coach-exercise-content="$this->selectedCoachExerciseContent"
             />
         </flux:modal>
     @endif

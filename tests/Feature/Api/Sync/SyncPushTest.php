@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ExerciseProfile;
 use App\Models\NutritionDay;
 use App\Models\NutritionLogEntry;
 use App\Models\NutritionMeal;
@@ -41,6 +42,32 @@ test('it creates a user-owned record and returns its synchronized state', functi
         'name' => 'Home gym',
         'is_default' => true,
     ]);
+});
+
+test('it synchronizes private notes on an exercise profile', function () {
+    $user = User::factory()->create();
+    Sanctum::actingAs($user);
+    $exerciseProfileId = (string) Str::uuid();
+
+    $this->postJson('/api/sync/push', [
+        'resource' => 'exercise-profiles',
+        'records' => [[
+            'id' => $exerciseProfileId,
+            'created_at' => '2026-10-08T12:00:00Z',
+            'updated_at' => '2026-10-08T12:00:00Z',
+            'exercise' => 'barbellBackSquat',
+            'level' => 'intermediate',
+            'notes' => 'Use a heel wedge; avoid depth if the knee hurts.',
+        ]],
+    ])
+        ->assertOk()
+        ->assertJsonPath('meta.resource', 'exercise-profiles')
+        ->assertJsonPath('data.0.id', $exerciseProfileId)
+        ->assertJsonPath('data.0.notes', 'Use a heel wedge; avoid depth if the knee hurts.');
+
+    expect(ExerciseProfile::findOrFail($exerciseProfileId))
+        ->user_id->toBe($user->id)
+        ->notes->toBe('Use a heel wedge; avoid depth if the knee hurts.');
 });
 
 test('it synchronizes a body metric entry for the authenticated user', function () {
