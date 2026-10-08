@@ -328,7 +328,7 @@ new class extends Component
         $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
         $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => [
             'id' => $block->id,
-            'type' => $block->type,
+            'type' => $block->type->value,
             'notes' => $block->notes ?? '',
             'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => [
                 'id' => $exercise->id,

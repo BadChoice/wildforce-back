@@ -9,6 +9,14 @@ enum WorkoutBlockType: string
     case Superset = 'superset';
     case Cooldown = 'cooldown';
 
+    /**
+     * @return list<string>
+     */
+    public static function allCasesArray(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
     public function label(): string
     {
         return match ($this) {

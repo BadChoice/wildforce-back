@@ -3,6 +3,7 @@
 namespace App\ValueObjects\Workouts;
 
 use App\Casts\SetStyleConfigurationCast;
+use App\Enums\ExerciseSetStyle;
 use Illuminate\Contracts\Database\Eloquent\Castable;
 use Illuminate\Contracts\Support\Arrayable;
 use InvalidArgumentException;
@@ -11,7 +12,7 @@ use JsonSerializable;
 final readonly class SetStyleConfiguration implements Arrayable, Castable, JsonSerializable
 {
     public function __construct(
-        public string $style,
+        public ExerciseSetStyle $style,
         public ?bool $appliesToFinalSetOnly = null,
         public ?int $dropCount = null,
         public ?float $dropWeightPercent = null,
@@ -29,7 +30,7 @@ final readonly class SetStyleConfiguration implements Arrayable, Castable, JsonS
     {
         $style = $attributes['style'] ?? null;
 
-        if (! is_string($style) || $style === '') {
+        if (! is_string($style) || ($style = ExerciseSetStyle::tryFrom($style)) === null) {
             throw new InvalidArgumentException('A set style configuration requires a style.');
         }
 
@@ -52,7 +53,7 @@ final readonly class SetStyleConfiguration implements Arrayable, Castable, JsonS
     public function toArray(): array
     {
         return array_filter([
-            'style' => $this->style,
+            'style' => $this->style->value,
             'applies_to_final_set_only' => $this->appliesToFinalSetOnly,
             'drop_count' => $this->dropCount,
             'drop_weight_percent' => $this->dropWeightPercent,

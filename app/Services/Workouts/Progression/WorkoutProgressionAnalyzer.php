@@ -2,6 +2,7 @@
 
 namespace App\Services\Workouts\Progression;
 
+use App\Enums\MesocyclePhase;
 use App\Models\ExerciseResult;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
@@ -19,7 +20,7 @@ final class WorkoutProgressionAnalyzer
     public function analyze(): ProgressionAnalysis
     {
         $recentPlans = $this->trainingHistory->recentPlans();
-        $recentActivePlans = $recentPlans->reject(fn (WorkoutPlan $plan) => $plan->phase === 'deload')->values();
+        $recentActivePlans = $recentPlans->reject(fn (WorkoutPlan $plan) => $plan->phase === MesocyclePhase::Deload)->values();
         $feedbackBreakdown = $this->recentFeedback($recentPlans);
         $completionRate = $this->completionRate($recentPlans);
         $muscleGroupBalance = $this->muscleGroupBalance($recentPlans);
@@ -61,7 +62,7 @@ final class WorkoutProgressionAnalyzer
             ->values()
             ->map(fn (WorkoutPlan $plan, int $index): array => [
                 'number' => $plan->mesocycle_number ?? $index + 1,
-                'phase' => $plan->phase,
+                'phase' => $plan->phase?->value,
                 'completionRate' => $this->completionRate(collect([$plan])),
                 'completedWorkouts' => $plan->workoutDays->where('status', 'completed')->count(),
             ])
@@ -243,7 +244,7 @@ final class WorkoutProgressionAnalyzer
             ->flatMap(fn (WorkoutPlan $plan) => $plan->workoutDays)
             ->flatMap(fn ($workoutDay) => $workoutDay->exercises)
             ->flatMap(fn ($plannedExercise) => $plannedExercise->exerciseResults)
-            ->countBy('feedback')
+            ->countBy(fn (ExerciseResult $result): string => $result->feedback->value)
             ->map(fn (int $count) => $count)
             ->all();
     }

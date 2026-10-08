@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\WorkoutBlockType;
 use App\Models\PlannedExercise;
 use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
@@ -22,7 +23,7 @@ class WorkoutBlockFactory extends Factory
     {
         return [
             'workout_day_id' => WorkoutDay::factory(),
-            'type' => 'standard',
+            'type' => WorkoutBlockType::Standard,
             'order_index' => 0,
             'rounds' => 1,
         ];

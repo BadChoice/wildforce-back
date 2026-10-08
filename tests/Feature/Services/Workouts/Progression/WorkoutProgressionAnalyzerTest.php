@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MesocyclePhase;
 use App\Models\ExerciseProfile;
 use App\Models\ExerciseResult;
 use App\Models\PlannedExercise;
@@ -113,19 +114,19 @@ test('uses complete non-deload exercise history while limiting plan-level analys
 
 test('resolves mesocycle phases by training level and cycle position', function () {
     expect(MesocyclePhaseRules::phaseInfo(4, 'beginner'))->toBe([
-        'phase' => 'deload',
+        'phase' => MesocyclePhase::Deload,
         'weekInPhase' => 1,
         'cycleLength' => 4,
         'positionInCycle' => 4,
     ])
         ->and(MesocyclePhaseRules::phaseInfo(4, 'intermediate'))->toBe([
-            'phase' => 'intensification',
+            'phase' => MesocyclePhase::Intensification,
             'weekInPhase' => 1,
             'cycleLength' => 6,
             'positionInCycle' => 4,
         ])
         ->and(MesocyclePhaseRules::phaseInfo(6, 'intermediate'))->toBe([
-            'phase' => 'deload',
+            'phase' => MesocyclePhase::Deload,
             'weekInPhase' => 1,
             'cycleLength' => 6,
             'positionInCycle' => 6,

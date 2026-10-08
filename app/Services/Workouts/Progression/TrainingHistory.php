@@ -2,6 +2,7 @@
 
 namespace App\Services\Workouts\Progression;
 
+use App\Enums\MesocyclePhase;
 use App\Models\ExerciseProfile;
 use App\Models\ExerciseResult;
 use App\Models\User;
@@ -95,7 +96,7 @@ final class TrainingHistory
                                 $query->whereBelongsTo($this->user)
                                     ->where(function (Builder $query): void {
                                         $query->whereNull('phase')
-                                            ->orWhere('phase', '!=', 'deload');
+                                            ->orWhere('phase', '!=', MesocyclePhase::Deload->value);
                                     });
                             });
                         });

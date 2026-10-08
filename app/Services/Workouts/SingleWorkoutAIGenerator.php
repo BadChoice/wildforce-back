@@ -3,6 +3,7 @@
 namespace App\Services\Workouts;
 
 use App\Ai\Agents\Workouts\SingleWorkoutAgent;
+use App\Enums\WorkoutBlockType;
 use App\Models\User;
 use App\Models\WorkoutDay;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
@@ -117,7 +118,7 @@ PROMPT;
         foreach ($workout->blocks as $block) {
             foreach ($block->exercises as $plannedExercise) {
                 $exercise = $exercisesById->get($plannedExercise->exercise);
-                $requiresConfiguration = in_array($block->type, ['standard', 'superset'], true) && $plannedExercise->sets !== null && ($exercise['trackingMode'] ?? null) === 'reps' && ! in_array($exercise['category'] ?? null, ['cardio', 'mobility'], true);
+                $requiresConfiguration = in_array($block->type, [WorkoutBlockType::Standard, WorkoutBlockType::Superset], true) && $plannedExercise->sets !== null && ($exercise['trackingMode'] ?? null) === 'reps' && ! in_array($exercise['category'] ?? null, ['cardio', 'mobility'], true);
 
                 if ($requiresConfiguration && ($plannedExercise->set_style_configuration === null || $plannedExercise->set_style_configuration->targetRir === null)) {
                     throw new RuntimeException("Single workout response requires a set-style configuration with target RIR for {$plannedExercise->exercise}.");

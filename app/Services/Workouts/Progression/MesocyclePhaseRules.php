@@ -2,10 +2,12 @@
 
 namespace App\Services\Workouts\Progression;
 
+use App\Enums\MesocyclePhase;
+
 final class MesocyclePhaseRules
 {
     /**
-     * @return array{phase: string, weekInPhase: int, cycleLength: int, positionInCycle: int}|null
+     * @return array{phase: MesocyclePhase, weekInPhase: int, cycleLength: int, positionInCycle: int}|null
      */
     public static function phaseInfo(int $mesocycleNumber, string $trainingLevel): ?array
     {
@@ -29,7 +31,7 @@ final class MesocyclePhaseRules
     }
 
     /**
-     * @return array{phase: string, weekInPhase: int, cycleLength: int, positionInCycle: int}|null
+     * @return array{phase: MesocyclePhase, weekInPhase: int, cycleLength: int, positionInCycle: int}|null
      */
     public static function phaseInfoForCycleLength(int $mesocycleNumber, int $cycleLength): ?array
     {
@@ -43,7 +45,7 @@ final class MesocyclePhaseRules
 
         if ($positionInCycle <= $accumulationLength) {
             return [
-                'phase' => 'accumulation',
+                'phase' => MesocyclePhase::Accumulation,
                 'weekInPhase' => $positionInCycle,
                 'cycleLength' => $cycleLength,
                 'positionInCycle' => $positionInCycle,
@@ -52,7 +54,7 @@ final class MesocyclePhaseRules
 
         if ($intensificationLength > 0 && $positionInCycle <= $accumulationLength + $intensificationLength) {
             return [
-                'phase' => 'intensification',
+                'phase' => MesocyclePhase::Intensification,
                 'weekInPhase' => $positionInCycle - $accumulationLength,
                 'cycleLength' => $cycleLength,
                 'positionInCycle' => $positionInCycle,
@@ -60,7 +62,7 @@ final class MesocyclePhaseRules
         }
 
         return [
-            'phase' => 'deload',
+            'phase' => MesocyclePhase::Deload,
             'weekInPhase' => 1,
             'cycleLength' => $cycleLength,
             'positionInCycle' => $positionInCycle,

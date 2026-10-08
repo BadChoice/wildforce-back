@@ -124,7 +124,7 @@ new class extends Component {
         $this->workoutPlanStatus = $this->workoutPlan->status;
         $this->workoutPlanBodyCompositionPhase = $this->workoutPlan->body_composition_phase ?? '';
         $this->workoutPlanMesocycleNumber = $this->workoutPlan->mesocycle_number === null ? '' : (string) $this->workoutPlan->mesocycle_number;
-        $this->workoutPlanPhase = $this->workoutPlan->phase ?? '';
+        $this->workoutPlanPhase = $this->workoutPlan->phase?->value ?? '';
         $this->workoutPlanPhaseWeek = $this->workoutPlan->phase_week === null ? '' : (string) $this->workoutPlan->phase_week;
         $this->workoutPlanCycleLength = $this->workoutPlan->cycle_length === null ? '' : (string) $this->workoutPlan->cycle_length;
         $this->showWorkoutPlanEditor = true;
@@ -570,7 +570,7 @@ new class extends Component {
         $this->workoutDayNotes = $workoutDay->notes ?? '';
         $this->workoutDayFocus = $workoutDay->focus->value;
         $this->workoutDayEstimatedDurationMinutes = $workoutDay->estimated_duration_minutes === null ? '' : (string) $workoutDay->estimated_duration_minutes;
-        $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => ['id' => filled($block->id) ? $block->id : (string) Str::uuid(), 'type' => $block->type, 'notes' => $block->notes ?? '', 'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => ['id' => filled($exercise->id) ? $exercise->id : (string) Str::uuid(), 'exercise' => $exercise->exercise, 'name' => (string) data_get($names->get($exercise->exercise), 'name', $exercise->exercise), 'notes' => $exercise->notes ?? '', 'sets' => $exercise->sets ?? 3, 'reps_min' => $exercise->reps_min ?? 8, 'reps_max' => $exercise->reps_max ?? 12, 'target_weight_kg' => $exercise->target_weight_kg ?? '', 'rest_seconds' => $exercise->rest_seconds ?? 90])->all()])->all();
+        $this->workoutDayBlocks = $workoutDay->blocks->map(fn (WorkoutBlock $block): array => ['id' => filled($block->id) ? $block->id : (string) Str::uuid(), 'type' => $block->type->value, 'notes' => $block->notes ?? '', 'exercises' => $block->exercises->map(fn (PlannedExercise $exercise): array => ['id' => filled($exercise->id) ? $exercise->id : (string) Str::uuid(), 'exercise' => $exercise->exercise, 'name' => (string) data_get($names->get($exercise->exercise), 'name', $exercise->exercise), 'notes' => $exercise->notes ?? '', 'sets' => $exercise->sets ?? 3, 'reps_min' => $exercise->reps_min ?? 8, 'reps_max' => $exercise->reps_max ?? 12, 'target_weight_kg' => $exercise->target_weight_kg ?? '', 'rest_seconds' => $exercise->rest_seconds ?? 90])->all()])->all();
         $this->selectedWorkoutBlockId = $this->workoutDayBlocks[0]['id'] ?? null;
     }
 
@@ -620,7 +620,7 @@ new class extends Component {
         <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
             <x-workout-plans.mesocycle-details
                 :mesocycle-number="$this->workoutPlan->mesocycle_number"
-                :phase="$this->workoutPlan->phase"
+                :phase="$this->workoutPlan->phase?->value"
                 :phase-week="$this->workoutPlan->phase_week"
                 :cycle-length="$this->workoutPlan->cycle_length"
             />

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\MesocyclePhase;
 use Database\Factories\WorkoutPlanFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/** @property MesocyclePhase|null $phase */
 class WorkoutPlan extends Model implements Syncable
 {
     /** @use HasFactory<WorkoutPlanFactory> */
@@ -19,7 +21,7 @@ class WorkoutPlan extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['starts_on' => 'datetime'];
+        return ['starts_on' => 'datetime', 'phase' => MesocyclePhase::class];
     }
 
     /** @return BelongsTo<User, $this> */

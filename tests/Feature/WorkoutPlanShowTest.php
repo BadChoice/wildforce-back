@@ -2,6 +2,7 @@
 
 use App\Ai\Agents\Workouts\SingleWorkoutFromTextAgent;
 use App\Enums\CoachingEnrollmentStatus;
+use App\Enums\MesocyclePhase;
 use App\Enums\WorkoutDayStatus;
 use App\Enums\WorkoutKind;
 use App\Models\CoachingEnrollment;
@@ -275,7 +276,7 @@ test('it displays and updates workout plan details', function () {
         ->and($workoutPlan->goal)->toBe('gainStrength')
         ->and($workoutPlan->body_composition_phase)->toBe('maintain')
         ->and($workoutPlan->mesocycle_number)->toBe(3)
-        ->and($workoutPlan->phase)->toBe('intensification')
+        ->and($workoutPlan->phase)->toBe(MesocyclePhase::Intensification)
         ->and($workoutPlan->phase_week)->toBe(1)
         ->and($workoutPlan->cycle_length)->toBe(8);
 });

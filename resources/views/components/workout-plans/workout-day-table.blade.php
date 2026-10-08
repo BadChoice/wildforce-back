@@ -54,7 +54,7 @@
                 <div class="flex min-w-0 items-center gap-3">
                     <div class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-sm font-semibold text-white dark:bg-white dark:text-zinc-900">{{ $loop->iteration }}</div>
                     <div class="min-w-0">
-                        <h4 id="block-{{ $block->id }}" class="font-semibold text-zinc-950 dark:text-white">{{ str($block->type)->headline() }}</h4>
+                        <h4 id="block-{{ $block->id }}" class="font-semibold text-zinc-950 dark:text-white">{{ str($block->type->value)->headline() }}</h4>
                         <p class="text-sm text-zinc-500 dark:text-zinc-400">
                             {{ trans_choice(':count round|:count rounds', $block->rounds, ['count' => $block->rounds]) }}
                             @if ($blockRest)

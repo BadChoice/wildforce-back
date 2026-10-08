@@ -4,6 +4,7 @@ namespace App\Services\Workouts;
 
 use App\Ai\Agents\Workouts\WorkoutPlanGeneratorAgent;
 use App\Enums\Equipment;
+use App\Enums\MesocyclePhase;
 use App\Models\TrainingLocation;
 use App\Models\User;
 use App\Models\WorkoutDay;
@@ -155,7 +156,7 @@ final class WorkoutPlanAIGenerator
         );
         $phaseDescription = $phase === null
             ? 'Not periodized'
-            : $phase['phase'].' (week '.$phase['weekInPhase'].' of '.$phase['cycleLength'].')';
+            : $phase['phase']->value.' (week '.$phase['weekInPhase'].' of '.$phase['cycleLength'].')';
         $profiles = $this->markdownList($user->exerciseProfiles
             ->map(fn ($profile): string => implode(' | ', array_filter([
                 $profile->exercise,
@@ -382,14 +383,14 @@ PROMPT;
         return $value === [] || $value === null ? 'None' : (string) json_encode($value);
     }
 
-    private function phaseGuidance(?string $phase, ?string $goal): string
+    private function phaseGuidance(?MesocyclePhase $phase, ?string $goal): string
     {
         return match ($phase) {
-            'deload' => 'Reduce working volume by roughly 40% and use conservative loads.',
-            'intensification' => $goal === 'gainStrength'
+            MesocyclePhase::Deload => 'Reduce working volume by roughly 40% and use conservative loads.',
+            MesocyclePhase::Intensification => $goal === 'gainStrength'
                 ? 'Main lifts: 2-5 reps, 82-92% of 1RM, 3-5 minutes rest.'
                 : 'Reduce volume, use challenging but controlled loads, and rest 2-3 minutes on main lifts.',
-            'accumulation' => $goal === 'gainStrength'
+            MesocyclePhase::Accumulation => $goal === 'gainStrength'
                 ? 'Main lifts: 5-8 reps, 75-80% of 1RM, 2-3 minutes rest.'
                 : 'Prioritise productive volume with moderate loads, usually 8-15 reps and 60-90 seconds rest.',
             default => 'Build sustainable technique and consistency before increasing load or volume.',
@@ -399,7 +400,7 @@ PROMPT;
     private function recentWorkoutHistory(TrainingHistory $trainingHistory, bool $deloadOnly = false): string
     {
         return $trainingHistory->recentPlans()
-            ->filter(fn ($plan): bool => $deloadOnly ? $plan->phase === 'deload' : $plan->phase !== 'deload')
+            ->filter(fn ($plan): bool => $deloadOnly ? $plan->phase === MesocyclePhase::Deload : $plan->phase !== MesocyclePhase::Deload)
             ->map(function ($plan): string {
                 $workouts = $plan->workoutDays
                     ->map(function ($workoutDay): string {
@@ -409,7 +410,7 @@ PROMPT;
 
                                 return $exercise->exercise.($result === null
                                     ? ''
-                                    : ' ('.$result->completed_sets.' sets × '.$result->completed_reps.' reps @ '.$result->completed_weight.' kg; '.$result->feedback.')');
+                                    : ' ('.$result->completed_sets.' sets × '.$result->completed_reps.' reps @ '.$result->completed_weight.' kg; '.$result->feedback->value.')');
                             })
                             ->implode(', ');
 
@@ -417,7 +418,7 @@ PROMPT;
                     })
                     ->implode(' | ');
 
-                return 'Plan '.$plan->mesocycle_number.' ('.$plan->phase.'): '.$workouts;
+                return 'Plan '.$plan->mesocycle_number.' ('.$plan->phase?->value.'): '.$workouts;
             })
             ->implode("\n") ?: 'None';
     }

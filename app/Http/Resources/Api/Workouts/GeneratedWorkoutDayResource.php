@@ -31,7 +31,7 @@ class GeneratedWorkoutDayResource extends JsonResource
             'creation_source' => $workoutDay->creation_source,
             'notes' => $workoutDay->notes,
             'blocks' => $workoutDay->blocks->sortBy('order_index')->map(fn (WorkoutBlock $block): array => [
-                'type' => $block->type,
+                'type' => $block->type->value,
                 'order_index' => $block->order_index,
                 'rounds' => $block->rounds,
                 'rest_after_block_seconds' => $block->rest_after_block_seconds,

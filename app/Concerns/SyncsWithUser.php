@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use App\Models\User;
+use BackedEnum;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -59,6 +60,8 @@ trait SyncsWithUser
 
             if (is_string($cast) && str_starts_with($cast, 'decimal:') && $value !== null) {
                 $attributes[$attribute] = (float) $value;
+            } elseif ($value instanceof BackedEnum) {
+                $attributes[$attribute] = $value->value;
             }
         }
 

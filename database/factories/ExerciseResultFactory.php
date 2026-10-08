@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ExerciseFeedback;
 use App\Models\ExerciseResult;
 use App\Models\PlannedExercise;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -20,7 +21,7 @@ class ExerciseResultFactory extends Factory
     {
         return [
             'planned_exercise_id' => PlannedExercise::factory(),
-            'feedback' => fake()->randomElement(['justRight', 'tooEasy', 'tooHard']),
+            'feedback' => fake()->randomElement(ExerciseFeedback::cases()),
             'completed_at' => fake()->dateTimeBetween('-2 months', 'now'),
             'completed_sets' => 3,
             'completed_reps' => 30,

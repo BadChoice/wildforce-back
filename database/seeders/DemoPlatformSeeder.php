@@ -173,7 +173,7 @@ class DemoPlatformSeeder extends Seeder
                 'starts_on' => now()->startOfWeek(),
                 'cycle_length' => 4,
                 'mesocycle_number' => 2,
-                'phase' => 'build',
+                'phase' => 'accumulation',
                 'phase_week' => 2,
             ]);
 

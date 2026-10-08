@@ -16,6 +16,14 @@ enum ExerciseSetStyle: string
     /**
      * @return list<string>
      */
+    public static function allCasesArray(): array
+    {
+        return array_column(self::cases(), 'value');
+    }
+
+    /**
+     * @return list<string>
+     */
     public function allowedFields(): array
     {
         return match ($this) {

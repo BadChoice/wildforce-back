@@ -2,6 +2,8 @@
 
 namespace App\Ai\Agents\Workouts;
 
+use App\Enums\ExerciseSetStyle;
+use App\Enums\WorkoutBlockType;
 use App\Enums\WorkoutDayType;
 use App\Enums\WorkoutFocus;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -22,7 +24,7 @@ final class WorkoutDayResponseSchema
             'estimatedDurationMinutes' => $schema->integer()->min(1)->required(),
             'notes' => $schema->string(),
             'blocks' => $schema->array()->min(1)->items($schema->object(fn (JsonSchema $schema): array => [
-                'type' => $schema->string()->enum(['warmup', 'standard', 'superset', 'cooldown'])->required(),
+                'type' => $schema->string()->enum(WorkoutBlockType::allCasesArray())->required(),
                 'rounds' => $schema->integer()->min(1)->required(),
                 'restAfterBlockSeconds' => $schema->integer()->min(0),
                 'notes' => $schema->string(),
@@ -40,7 +42,7 @@ final class WorkoutDayResponseSchema
                     'targetPaceSecondsPerKm' => $schema->integer()->min(1),
                     'restSeconds' => $schema->integer()->min(0),
                     'setStyleConfiguration' => $schema->object(fn (JsonSchema $schema): array => [
-                        'style' => $schema->string()->enum(['warmup', 'straight', 'topSetBackoff', 'ascendingPyramid', 'dropSet', 'restPause', 'intervals', 'tempo'])->required(),
+                        'style' => $schema->string()->enum(ExerciseSetStyle::allCasesArray())->required(),
                         'applies_to_final_set_only' => $schema->boolean(),
                         'drop_count' => $schema->integer()->min(1),
                         'drop_weight_percent' => $schema->number()->min(1)->max(100),

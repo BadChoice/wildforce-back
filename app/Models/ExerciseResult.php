@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\ExerciseFeedback;
 use Database\Factories\ExerciseResultFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Arr;
 
+/** @property ExerciseFeedback $feedback */
 class ExerciseResult extends Model implements Syncable
 {
     /** @use HasFactory<ExerciseResultFactory> */
@@ -21,7 +23,7 @@ class ExerciseResult extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['completed_at' => 'datetime', 'completed_weight' => 'decimal:2', 'per_set_reps' => 'array', 'per_set_weights_kg' => 'array', 'completed_distance_km' => 'decimal:3', 'watch_set_summary' => 'array', 'watch_rep_summaries' => 'array'];
+        return ['completed_at' => 'datetime', 'completed_weight' => 'decimal:2', 'per_set_reps' => 'array', 'per_set_weights_kg' => 'array', 'completed_distance_km' => 'decimal:3', 'watch_set_summary' => 'array', 'watch_rep_summaries' => 'array', 'feedback' => ExerciseFeedback::class];
     }
 
     /** @return BelongsTo<PlannedExercise, $this> */

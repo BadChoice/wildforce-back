@@ -87,7 +87,7 @@
             <div wire:key="completed-block-{{ $block->id ?? $blockIndex }}" class="space-y-3">
                 <div class="flex items-center gap-2 border-b border-zinc-200 pb-2 dark:border-zinc-800">
                     <span class="text-xs font-bold tracking-wider text-zinc-400 uppercase">{{ __('Block') }} {{ $blockIndex + 1 }}</span>
-                    <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ str($block->type ?? 'standard')->headline() }}</span>
+                    <span class="text-sm font-semibold text-zinc-700 dark:text-zinc-300">{{ str($block->type?->value ?? 'standard')->headline() }}</span>
                     @if ($block->notes)
                         <span class="text-xs text-zinc-500 dark:text-zinc-400">— {{ $block->notes }}</span>
                     @endif
@@ -112,7 +112,7 @@
                                                 {{ __('Skipped: :date', ['date' => $exercise->skipped_at->toDayDateTimeString()]) }}
                                             </flux:badge>
                                         @elseif ($latestResult?->feedback)
-                                            <flux:badge size="sm" variant="subtle">{{ __('Feedback: :feedback', ['feedback' => str($latestResult->feedback)->headline()]) }}</flux:badge>
+                                            <flux:badge size="sm" variant="subtle">{{ __('Feedback: :feedback', ['feedback' => str($latestResult->feedback->value)->headline()]) }}</flux:badge>
                                         @endif
                                     </div>
 

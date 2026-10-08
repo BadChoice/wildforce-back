@@ -59,7 +59,7 @@
                             <div class="mt-3 space-y-2">
                                 @foreach ($workoutDay->blocks->sortBy('order_index') as $block)
                                     <div wire:key="kanban-block-{{ $block->id }}">
-                                        <p class="font-medium text-zinc-700 dark:text-zinc-300">{{ str($block->type)->headline() }}</p>
+                                        <p class="font-medium text-zinc-700 dark:text-zinc-300">{{ str($block->type->value)->headline() }}</p>
                                         <ul class="mt-1 space-y-1.5">
                                             @forelse ($block->exercises->sortBy('order_index') as $plannedExercise)
                                                 <x-workout-plans.exercise-summary :planned-exercise="$plannedExercise" wire:key="kanban-exercise-{{ $plannedExercise->id }}" />
