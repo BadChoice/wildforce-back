@@ -4,6 +4,8 @@ namespace App\Services\Workouts;
 
 use App\Ai\Agents\Workouts\WorkoutPlanGeneratorAgent;
 use App\Enums\Equipment;
+use App\Enums\Generated\ExerciseCategory;
+use App\Enums\Generated\ExerciseTrackingMode;
 use App\Enums\MesocyclePhase;
 use App\Models\TrainingLocation;
 use App\Models\User;
@@ -274,8 +276,8 @@ PROMPT;
     {
         return in_array($block['type'], ['standard', 'superset'], true)
             && isset($plannedExercise['sets'])
-            && ($exercise['trackingMode'] ?? null) === 'reps'
-            && ! in_array($exercise['category'] ?? null, ['cardio', 'mobility'], true);
+            && ($exercise['trackingMode'] ?? null) === ExerciseTrackingMode::Reps->value
+            && ! in_array($exercise['category'] ?? null, [ExerciseCategory::Cardio->value, ExerciseCategory::Mobility->value], true);
     }
 
     /**

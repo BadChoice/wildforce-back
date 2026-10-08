@@ -10,7 +10,7 @@ use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Throwable;
 
-#[Signature('app:export-exercise-catalog {--ios : Generate the iOS Exercise.swift and ExerciseCatalog.swift files} {--php : Generate the PHP muscle group enums}')]
+#[Signature('app:export-exercise-catalog {--ios : Generate the iOS Exercise.swift and ExerciseCatalog.swift files} {--php : Generate PHP exercise catalog enums}')]
 #[Description('Generate mobile exercise catalog source files')]
 class ExportExerciseCatalog extends Command
 {
