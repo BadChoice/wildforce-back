@@ -26,7 +26,7 @@ class GeneratedWorkoutDayResource extends JsonResource
             'status' => $workoutDay->status,
             'order_index' => $workoutDay->order_index,
             'intended_weekday' => $workoutDay->intended_weekday,
-            'day_type' => $workoutDay->day_type,
+            'day_type' => $workoutDay->day_type?->value,
             'estimated_duration_minutes' => $workoutDay->estimated_duration_minutes,
             'creation_source' => $workoutDay->creation_source,
             'notes' => $workoutDay->notes,

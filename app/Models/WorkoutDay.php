@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\WorkoutDayType;
 use App\Enums\WorkoutFocus;
 use App\Enums\WorkoutKind;
 use Database\Factories\WorkoutDayFactory;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property WorkoutFocus $focus
+ * @property WorkoutDayType|null $day_type
  * @property WorkoutKind $kind
  */
 class WorkoutDay extends Model implements Syncable
@@ -29,6 +31,7 @@ class WorkoutDay extends Model implements Syncable
         return [
             'kind' => WorkoutKind::class,
             'focus' => WorkoutFocus::class,
+            'day_type' => WorkoutDayType::class,
             'did_count_toward_streak' => 'boolean',
             'scheduled_for' => 'datetime',
             'started_at' => 'datetime',

@@ -1,6 +1,7 @@
 <?php
 
 use App\Ai\Agents\Workouts\SingleWorkoutFromTextAgent;
+use App\Enums\WorkoutDayType;
 use App\Models\User;
 use App\Services\Workouts\SingleWorkoutFromTextGenerator;
 
@@ -29,6 +30,7 @@ test('converts free-form workout text into an unsaved workout day', function () 
 
     expect($workoutDay->exists)->toBeFalse()
         ->and($workoutDay->title)->toBe('Back and biceps')
+        ->and($workoutDay->day_type)->toBe(WorkoutDayType::Hypertrophy)
         ->and($workoutDay->blocks->first()->exercises->first()->exercise)->toBe('bentOverRow')
         ->and($workoutDay->blocks->first()->exercises->first()->target_weight_kg)->toBe('59.00');
 

@@ -1,6 +1,7 @@
 <?php
 
 use App\Ai\Agents\Workouts\WorkoutPlanGeneratorAgent;
+use App\Enums\WorkoutDayType;
 use App\Models\ExerciseProfile;
 use App\Models\ExerciseResult;
 use App\Models\PlannedExercise;
@@ -70,6 +71,7 @@ test('returns an unsaved workout plan generated from the client context', functi
         ->and($plan->mesocycle_number)->toBe(1)
         ->and($plan->phase)->toBe('accumulation')
         ->and($plan->workoutDays)->toHaveCount(1)
+        ->and($plan->workoutDays->first()->day_type)->toBe(WorkoutDayType::Hypertrophy)
         ->and($plan->workoutDays->first()->blocks->first()->exercises->first()->exercise)->toBe('pushUp')
         ->and($plan->workoutDays->first()->blocks->first()->exercises->first()->target_reps)->toBe([12, 10, 8])
         ->and($plan->workoutDays->first()->blocks->first()->exercises->first()->target_weights_kg)->toBe([20, 22.5, 25])
