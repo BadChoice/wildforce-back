@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\MealType;
 use Database\Factories\NutritionMealFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ class NutritionMeal extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['target_calories' => 'decimal:2', 'target_protein_grams' => 'decimal:2', 'target_carbs_grams' => 'decimal:2', 'target_fat_grams' => 'decimal:2', 'example_foods' => 'array', 'discarded_at' => 'datetime'];
+        return ['meal_type' => MealType::class, 'target_calories' => 'decimal:2', 'target_protein_grams' => 'decimal:2', 'target_carbs_grams' => 'decimal:2', 'target_fat_grams' => 'decimal:2', 'example_foods' => 'array', 'discarded_at' => 'datetime'];
     }
 
     /** @return BelongsTo<NutritionDay, $this> */

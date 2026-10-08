@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Concerns\UsesUuidPrimaryKey;
 use App\Contracts\Syncable;
+use App\Enums\MealType;
 use Database\Factories\NutritionLogEntryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +20,7 @@ class NutritionLogEntry extends Model implements Syncable
 
     protected function casts(): array
     {
-        return ['logged_at' => 'datetime', 'is_favorite' => 'boolean'];
+        return ['logged_at' => 'datetime', 'meal_type' => MealType::class, 'is_favorite' => 'boolean'];
     }
 
     /** @return BelongsTo<User, $this> */

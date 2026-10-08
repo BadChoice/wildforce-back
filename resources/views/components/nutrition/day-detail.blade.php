@@ -8,9 +8,9 @@
         ['label' => __('Carbs'), 'unit' => 'g', 'logged' => $day->carbsGrams, 'target' => (float) $planDay?->target_carbs_grams],
         ['label' => __('Fat'), 'unit' => 'g', 'logged' => $day->fatGrams, 'target' => (float) $planDay?->target_fat_grams],
     ];
-    $mealTypeOrder = ['breakfast', 'lunch', 'snack', 'dinner'];
+    $mealTypeOrder = array_map(fn (\App\Enums\MealType $mealType): string => $mealType->value, \App\Enums\MealType::cases());
     $entriesByMealType = $entries
-        ->groupBy(fn ($entry): string => $entry->meal_type ?? 'other')
+        ->groupBy(fn ($entry): string => $entry->meal_type?->value ?? 'other')
         ->sortBy(fn ($group, string $mealType): int => ($position = array_search($mealType, $mealTypeOrder, true)) === false ? count($mealTypeOrder) : $position);
     $imageUrl = fn ($entry): ?string => match (true) {
         $entry->media?->local_relative_path !== null => route('nutrition-log-entries.image', $entry),
@@ -38,7 +38,9 @@
 
     <div class="grid gap-2 sm:grid-cols-2">
         @foreach ($macros as $macro)
-            @php($percentage = $macro['target'] > 0 ? (int) round(($macro['logged'] / $macro['target']) * 100) : null)
+            @php
+                $percentage = $macro['target'] > 0 ? (int) round(($macro['logged'] / $macro['target']) * 100) : null;
+            @endphp
             <flux:card class="space-y-2 p-3">
                 <div class="flex items-baseline justify-between gap-2">
                     <flux:text variant="subtle" class="text-xs">{{ $macro['label'] }}</flux:text>
@@ -87,7 +89,19 @@
                     @if (! empty($meal->example_foods))
                         <div class="mt-2 flex flex-wrap gap-1">
                             @foreach ($meal->example_foods as $food)
-                                <flux:badge size="sm" color="zinc">{{ str($food)->headline() }}</flux:badge>
+                                @php
+                                    $foodName = is_array($food) ? ($food['name'] ?? null) : $food;
+                                    $foodAmountGrams = is_array($food) ? ($food['amountGrams'] ?? $food['amount_grams'] ?? null) : null;
+                                @endphp
+
+                                @if ($foodName)
+                                    <flux:badge size="sm" color="zinc">
+                                        {{ str($foodName)->headline() }}
+                                        @if ($foodAmountGrams)
+                                            · {{ number_format((float) $foodAmountGrams) }} g
+                                        @endif
+                                    </flux:badge>
+                                @endif
                             @endforeach
                         </div>
                     @endif
@@ -104,10 +118,12 @@
 
             @forelse ($entriesByMealType as $mealType => $mealEntries)
                 <div wire:key="logged-meal-type-{{ $mealType }}" class="space-y-2">
-                    <flux:text variant="subtle" class="text-xs font-medium uppercase tracking-wide">{{ str($mealType)->headline() }}</flux:text>
+                    <flux:text variant="subtle" class="text-xs font-medium uppercase tracking-wide">{{ \App\Enums\MealType::tryFrom($mealType)?->label() ?? str($mealType)->headline() }}</flux:text>
 
                     @foreach ($mealEntries as $entry)
-                        @php($entryImageUrl = $imageUrl($entry))
+                        @php
+                            $entryImageUrl = $imageUrl($entry);
+                        @endphp
                         <div wire:key="logged-entry-{{ $entry->id }}" class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
                             <div class="flex items-start gap-3">
                                 @if ($entryImageUrl)

@@ -27,7 +27,14 @@ test('it shows a client nutrition plan with logged totals and the day detail to 
         'target_protein_grams' => 150,
         'planned_workout_title' => 'Lower body strength',
     ]);
-    NutritionMeal::factory()->for($planDay, 'day')->create(['title' => 'Protein oats']);
+    NutritionMeal::factory()->for($planDay, 'day')->create([
+        'title' => 'Protein oats',
+        'example_foods' => [
+            ['name' => 'Oats', 'amountGrams' => 60],
+            ['name' => 'Vedella magra', 'amount_grams' => 180],
+            'greekYogurt',
+        ],
+    ]);
     $entry = NutritionLogEntry::factory()->for($client)->create(['title' => 'Chicken bowl', 'logged_at' => '2026-10-05 13:00:00']);
     NutritionLogItem::factory()->for($entry, 'entry')->create(['name' => 'Grilled chicken', 'calories' => 1850, 'protein_grams' => 140]);
     $this->actingAs($coach);
@@ -43,6 +50,11 @@ test('it shows a client nutrition plan with logged totals and the day detail to 
         ->call('selectDay', '2026-10-05')
         ->assertSet('showDayDetail', true)
         ->assertSee('Protein oats')
+        ->assertSee('Oats')
+        ->assertSee('60 g')
+        ->assertSee('Vedella Magra')
+        ->assertSee('180 g')
+        ->assertSee('Greek Yogurt')
         ->assertSee('Chicken bowl')
         ->assertSee('Grilled chicken');
 });

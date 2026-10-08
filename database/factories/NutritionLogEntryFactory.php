@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\MealType;
 use App\Models\NutritionLogEntry;
 use App\Models\NutritionLogItem;
 use App\Models\User;
@@ -25,7 +26,7 @@ class NutritionLogEntryFactory extends Factory
             'nutrition_log_media_id' => null,
             'title' => fake()->randomElement(['Esmorzar post-entrenament', 'Dinar equilibrat', 'Sopar lleuger']),
             'logged_at' => fake()->dateTimeBetween('-2 weeks', 'now'),
-            'meal_type' => fake()->randomElement(['breakfast', 'lunch', 'snack', 'dinner']),
+            'meal_type' => fake()->randomElement(MealType::cases()),
             'notes' => null,
             'is_favorite' => false,
         ];

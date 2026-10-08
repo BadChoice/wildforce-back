@@ -22,6 +22,7 @@ test('it persists and returns a generated nutrition plan using the sync payload'
         ->assertJsonPath('data.goal', 'buildMuscle')
         ->assertJsonPath('data.days.0.target_calories', 2272)
         ->assertJsonPath('data.days.0.meals.0.title', 'Breakfast')
+        ->assertJsonPath('data.days.0.meals.0.meal_type', 'breakfast')
         ->assertJsonPath('data.days.0.meals.0.example_foods.0.amountGrams', 60);
 
     $this->assertDatabaseCount('nutrition_plans', 1);

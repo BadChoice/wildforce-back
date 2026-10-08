@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\MealType;
 use App\Models\NutritionDay;
 use App\Models\NutritionMeal;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,7 +23,7 @@ class NutritionMealFactory extends Factory
             'nutrition_day_id' => NutritionDay::factory(),
             'title' => fake()->randomElement(['Esmorzar', 'Dinar', 'Berenar', 'Sopar']),
             'order_index' => 0,
-            'meal_type' => fake()->randomElement(['breakfast', 'lunch', 'snack', 'dinner']),
+            'meal_type' => fake()->randomElement(MealType::cases()),
             'target_calories' => 600,
             'target_protein_grams' => 40,
             'target_carbs_grams' => 60,

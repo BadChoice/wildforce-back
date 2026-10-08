@@ -1,6 +1,7 @@
 <?php
 
 use App\Ai\Agents\Nutrition\NutritionPlanGeneratorAgent;
+use App\Enums\MealType;
 use App\Models\NutritionProfile;
 use App\Models\TrainingPreference;
 use App\Models\User;
@@ -30,7 +31,8 @@ test('returns an unsaved nutrition plan while preserving deterministic daily tar
         ->and($plan->days->first()->target_fat_grams)->toBe('64.00')
         ->and($plan->days->first()->planned_workout_title)->toBe('Full body')
         ->and($plan->days->first()->planned_workout_focus)->toBe('fullBody')
-        ->and($plan->days->first()->meals)->toHaveCount(1);
+        ->and($plan->days->first()->meals)->toHaveCount(1)
+        ->and($plan->days->first()->meals->first()->meal_type)->toBe(MealType::Breakfast);
 
     $this->assertDatabaseCount('nutrition_plans', 0);
     $this->assertDatabaseCount('nutrition_days', 0);
@@ -60,6 +62,7 @@ test('returns the nutrition prompt and response schema without prompting the AI'
         ->and($schema)->toHaveKey('properties.days')
         ->and($schema['properties']['days']['minItems'])->toBe(7)
         ->and($schema['properties']['days']['maxItems'])->toBe(7)
+        ->and($schema['properties']['days']['items']['properties']['meals']['items']['properties']['mealType']['enum'])->toBe(MealType::allCasesArray())
         ->and($schema['additionalProperties'])->toBeFalse();
 
     NutritionPlanGeneratorAgent::assertNeverPrompted();

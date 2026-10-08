@@ -3,6 +3,7 @@
 namespace App\Ai\Agents\Nutrition;
 
 use App\Enums\Goal;
+use App\Enums\MealType;
 use App\Enums\WorkoutFocus;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Attributes\Model;
@@ -80,7 +81,7 @@ INSTRUCTIONS;
                 'meals' => $schema->array()->items($schema->object(fn (JsonSchema $schema): array => [
                     'title' => $schema->string()->required(),
                     'orderIndex' => $schema->integer()->min(0)->required(),
-                    'mealType' => $schema->string()->enum(['breakfast', 'lunch', 'snack', 'dinner'])->required(),
+                    'mealType' => $schema->string()->enum(MealType::allCasesArray())->required(),
                     'targetMacros' => $schema->object($macros)->required(),
                     'guidance' => $schema->string(),
                     'exampleFoods' => $schema->array()->items($schema->object(fn (JsonSchema $schema): array => [

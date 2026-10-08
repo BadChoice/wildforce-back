@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MealType;
 use App\Models\ExerciseProfile;
 use App\Models\NutritionDay;
 use App\Models\NutritionLogEntry;
@@ -238,7 +239,8 @@ test('it synchronizes nutrition log media before an entry references it', functi
             'is_favorite' => false,
         ]],
     ])->assertOk()
-        ->assertJsonPath('data.0.nutrition_log_media_id', $mediaId);
+        ->assertJsonPath('data.0.nutrition_log_media_id', $mediaId)
+        ->assertJsonPath('data.0.meal_type', 'lunch');
 
     $this->assertDatabaseHas('nutrition_log_media', [
         'id' => $mediaId,
@@ -249,6 +251,7 @@ test('it synchronizes nutrition log media before an entry references it', functi
         'nutrition_log_media_id' => $mediaId,
         'user_id' => $user->id,
     ]);
+    expect(NutritionLogEntry::findOrFail($entryId)->meal_type)->toBe(MealType::Lunch);
 });
 
 test('it synchronizes a skipped planned exercise', function () {

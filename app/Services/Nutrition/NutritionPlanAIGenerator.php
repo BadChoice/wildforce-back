@@ -3,6 +3,7 @@
 namespace App\Services\Nutrition;
 
 use App\Ai\Agents\Nutrition\NutritionPlanGeneratorAgent;
+use App\Enums\MealType;
 use App\Models\NutritionDay;
 use App\Models\NutritionMeal;
 use App\Models\NutritionPlan;
@@ -197,7 +198,7 @@ PROMPT;
         $macros = $response['targetMacros'] ?? [];
         $meal = new NutritionMeal;
         $meal->forceFill([
-            'title' => $response['title'], 'order_index' => $index, 'meal_type' => $response['mealType'],
+            'title' => $response['title'], 'order_index' => $index, 'meal_type' => MealType::from($response['mealType']),
             'target_calories' => $macros['calories'], 'target_protein_grams' => $macros['protein'], 'target_carbs_grams' => $macros['carbs'], 'target_fat_grams' => $macros['fat'],
             'guidance' => $response['guidance'] ?? null, 'example_foods' => $response['exampleFoods'] ?? [],
         ]);
