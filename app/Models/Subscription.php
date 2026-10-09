@@ -100,6 +100,16 @@ class Subscription extends Model implements Syncable
         ]);
     }
 
+    public static function createCoachedExternal(?Carbon $startsAt = null): self
+    {
+        return new self([
+            'plan' => SubscriptionPlan::CoachedExternal,
+            'provider' => SubscriptionProvider::External,
+            'status' => SubscriptionStatus::Active,
+            'starts_at' => $startsAt ?? now(),
+        ]);
+    }
+
     public static function createDemo(DemoCode $demoCode, ?Carbon $startsAt = null): self
     {
         $startsAt ??= now();

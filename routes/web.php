@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AppleLoginController;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Billing\BillingController;
 use App\Http\Controllers\Billing\StripeCheckoutController;
+use App\Http\Controllers\ClientInvitationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExerciseCatalogController;
 use App\Http\Controllers\NutritionPlansController;
@@ -15,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 Route::post('auth/apple', AppleLoginController::class)->middleware('throttle:5,1')->name('apple.login');
 Route::post('auth/google', GoogleLoginController::class)->middleware('throttle:5,1')->name('google.login');
+Route::get('client-invitations/{token}', [ClientInvitationController::class, 'show'])
+    ->middleware('throttle:10,1')
+    ->name('client-invitations.show');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');

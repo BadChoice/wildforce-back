@@ -17,7 +17,7 @@
                             {{ __('Dashboard') }}
                         </flux:sidebar.item>
                     @endif
-                    @if (auth()->user()->clients(\App\Enums\CoachingEnrollmentStatus::Active)->exists())
+                    @if (auth()->user()->isCoach() || auth()->user()->clients(\App\Enums\CoachingEnrollmentStatus::Active)->exists())
                         <flux:sidebar.item icon="users" :href="route('clients.index')" :current="request()->routeIs('clients.*')" wire:navigate>
                             {{ __('Clients') }}
                         </flux:sidebar.item>

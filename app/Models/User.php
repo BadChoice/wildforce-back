@@ -269,6 +269,12 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
         return $this->hasMany(CoachExerciseContent::class, 'coach_user_id');
     }
 
+    /** @return HasMany<ClientInvitation, $this> */
+    public function clientInvitations(): HasMany
+    {
+        return $this->hasMany(ClientInvitation::class, 'coach_user_id');
+    }
+
     /** @return BelongsToMany<self, $this, CoachingEnrollment, 'enrollment'> */
     public function clients(?CoachingEnrollmentStatus $status = null): BelongsToMany
     {

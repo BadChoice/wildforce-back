@@ -4,12 +4,14 @@ use App\Enums\CoachingEnrollmentStatus;
 use App\Enums\Generated\MajorMuscleGroup;
 use App\Enums\Generated\MuscleGroup;
 use App\Enums\WorkoutFocus;
+use App\Models\ClientInvitation;
 use App\Models\PlannedExercise;
 use App\Models\User;
 use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Coaching\ClientInvitationService;
 use App\Services\Nutrition\NutritionAdherenceCalculator;
 use App\Services\Nutrition\NutritionPlanAIGenerator;
 use App\Services\Workouts\WorkoutPlanAIGenerator;
@@ -34,6 +36,12 @@ new class extends Component
     public string $selectedTab = 'info';
 
     public bool $showClientDetail = false;
+
+    public bool $showInviteClientModal = false;
+
+    public string $invitationEmail = '';
+
+    public string $invitationMessage = '';
 
     public bool $showProgressionAnalysis = false;
 
@@ -88,6 +96,24 @@ new class extends Component
             ->clients(CoachingEnrollmentStatus::Active)
             ->orderBy('users.name')
             ->get();
+    }
+
+    /**
+     * @return array{active: int, pending: int, limit: int|null}
+     */
+    #[Computed]
+    public function clientCapacity(): array
+    {
+        $coach = auth()->user();
+
+        return [
+            'active' => $this->clients->count(),
+            'pending' => ClientInvitation::query()
+                ->pending()
+                ->where('coach_user_id', $coach->id)
+                ->count(),
+            'limit' => $coach->subscription()->activeCoachSubscriptions()->value('active_client_limit'),
+        ];
     }
 
     /**
@@ -207,6 +233,37 @@ new class extends Component
         $this->showClientDetail = false;
         $this->showProgressionAnalysis = false;
         $this->resetNextPlanPromptPreview();
+    }
+
+    public function openInviteClientModal(): void
+    {
+        abort_unless(auth()->user()->isCoach(), 403);
+
+        $this->resetValidation();
+        $this->invitationEmail = '';
+        $this->invitationMessage = '';
+        $this->showInviteClientModal = true;
+    }
+
+    public function sendClientInvitation(ClientInvitationService $clientInvitationService): void
+    {
+        abort_unless(auth()->user()->isCoach(), 403);
+
+        $validated = $this->validate([
+            'invitationEmail' => ['required', 'string', 'email', 'max:255'],
+            'invitationMessage' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $clientInvitationService->invite(
+            auth()->user(),
+            $validated['invitationEmail'],
+            $validated['invitationMessage'] ?: null,
+        );
+
+        unset($this->clientCapacity);
+
+        $this->showInviteClientModal = false;
+        session()->flash('status', __('Invitation sent to :email.', ['email' => $validated['invitationEmail']]));
     }
 
     public function openProgressionAnalysis(): void
@@ -581,10 +638,33 @@ new class extends Component
 
 <div>
     <div class="rounded-xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-neutral-900">
-        <div class="mb-6">
-            <flux:heading size="lg" level="1">{{ __('Clients') }}</flux:heading>
-            <flux:text variant="subtle">{{ __('Clients enrolled in your coaching service.') }}</flux:text>
+        <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
+            <div>
+                <flux:heading size="lg" level="1">{{ __('Clients') }}</flux:heading>
+                <flux:text variant="subtle">{{ __('Clients enrolled in your coaching service.') }}</flux:text>
+            </div>
+
+            @if (auth()->user()->isCoach())
+                <div class="flex items-center gap-3">
+                    <flux:text variant="subtle">
+                        @if ($this->clientCapacity['limit'] === null)
+                            {{ $this->clientCapacity['active'] }}/{{ __('Unlimited') }}
+                        @else
+                            {{ $this->clientCapacity['active'] }}/{{ $this->clientCapacity['limit'] }}
+                        @endif
+                    </flux:text>
+                    <flux:button wire:click="openInviteClientModal" variant="primary" icon="user-plus">
+                        {{ __('Invite client') }}
+                    </flux:button>
+                </div>
+            @endif
         </div>
+
+        @if (session('status'))
+            <flux:callout variant="success" icon="check-circle" class="mb-6">
+                {{ session('status') }}
+            </flux:callout>
+        @endif
 
         <flux:table>
             <flux:table.columns>
@@ -615,6 +695,42 @@ new class extends Component
             </flux:table.rows>
         </flux:table>
     </div>
+
+    <flux:modal wire:model="showInviteClientModal" class="w-full max-w-lg">
+        <form wire:submit="sendClientInvitation" class="space-y-5">
+            <div>
+                <flux:heading size="lg">{{ __('Invite client') }}</flux:heading>
+                <flux:text variant="subtle" class="mt-1">{{ __('Send an invitation to join your coaching service.') }}</flux:text>
+            </div>
+
+            @if ($this->clientCapacity['pending'] > 0)
+                <flux:callout variant="warning" icon="information-circle">
+                    {{ trans_choice(':count pending invitation reserves a client place.|:count pending invitations reserve client places.', $this->clientCapacity['pending'], ['count' => $this->clientCapacity['pending']]) }}
+                </flux:callout>
+            @endif
+
+            <flux:field>
+                <flux:label>{{ __('Email address') }}</flux:label>
+                <flux:input wire:model="invitationEmail" type="email" autocomplete="email" autofocus />
+                <flux:error name="invitationEmail" />
+            </flux:field>
+
+            <flux:field>
+                <flux:label>{{ __('Message') }}</flux:label>
+                <flux:textarea wire:model="invitationMessage" rows="4" :placeholder="__('Optional message for your client')" />
+                <flux:error name="invitationMessage" />
+            </flux:field>
+
+            <div class="flex justify-end gap-3">
+                <flux:modal.close>
+                    <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="primary" icon="paper-airplane" wire:loading.attr="disabled">
+                    {{ __('Send invitation') }}
+                </flux:button>
+            </div>
+        </form>
+    </flux:modal>
 
     @if ($this->selectedClient)
         <flux:modal wire:model="showClientDetail" :closable="false" class="w-full max-w-3xl">

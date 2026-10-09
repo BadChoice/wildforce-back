@@ -2,11 +2,20 @@
     <div class="flex flex-col gap-6">
         <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
 
+        @if (request()->filled('invitation'))
+            <flux:callout variant="primary" icon="user-plus">
+                {{ __('Create your account to join your coach on Wildforce.') }}
+            </flux:callout>
+        @endif
+
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
         <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
             @csrf
+            @if (request()->filled('invitation'))
+                <input type="hidden" name="invitation" value="{{ request()->string('invitation') }}">
+            @endif
             <!-- Name -->
             <flux:input
                 name="name"
