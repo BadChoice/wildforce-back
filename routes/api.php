@@ -9,9 +9,11 @@ use App\Http\Controllers\Api\Auth\AppleAuthenticationController;
 use App\Http\Controllers\Api\Auth\GoogleAuthenticationController;
 use App\Http\Controllers\Api\Auth\LoginController;
 use App\Http\Controllers\Api\Auth\RegisterController;
+use App\Http\Controllers\Api\BodyProgress\BodyCompositionAnalysisController;
 use App\Http\Controllers\Api\BodyProgressPhotoController;
 use App\Http\Controllers\Api\FeedbackController;
 use App\Http\Controllers\Api\Nutrition\MacrosFromTextGenerationController;
+use App\Http\Controllers\Api\Nutrition\MealPhotoMacrosGenerationController;
 use App\Http\Controllers\Api\Nutrition\NutritionPlanGenerationController;
 use App\Http\Controllers\Api\Nutrition\OpenFoodFactsContributionController;
 use App\Http\Controllers\Api\NutritionLogEntryImageController;
@@ -56,6 +58,8 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
         Route::post('/workout-days/generate', SingleWorkoutGenerationController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
         Route::post('/nutrition-plans/generate', NutritionPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
         Route::post('/nutrition-macros/generate', MacrosFromTextGenerationController::class)->middleware(['idempotency', 'throttle:10,1', 'ai.budget']);
+        Route::post('/nutrition-macros/analyze-photo', MealPhotoMacrosGenerationController::class)->middleware(['idempotency', 'throttle:10,1', 'ai.budget']);
+        Route::post('/body-progress-photo-sessions/{bodyProgressPhotoSession}/composition-analysis', BodyCompositionAnalysisController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
         Route::post('/nutrition/open-food-facts/contributions', OpenFoodFactsContributionController::class)->middleware(['idempotency', 'throttle:10,1']);
         Route::get('/account/coaches', CoachController::class);
         Route::post('/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}', [BodyProgressPhotoController::class, 'store'])

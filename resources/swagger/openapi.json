@@ -37,6 +37,9 @@
     },
     {
       "name": "Nutrition"
+    },
+    {
+      "name": "Body Progress"
     }
   ],
   "paths": {
@@ -46,9 +49,7 @@
           "Authentication"
         ],
         "summary": "Register a user and issue a bearer token",
-        "security": [
-
-        ],
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -82,9 +83,7 @@
           "Authentication"
         ],
         "summary": "Log in and issue a bearer token",
-        "security": [
-
-        ],
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -119,9 +118,7 @@
         ],
         "summary": "Sign in with Google and issue a bearer token",
         "description": "Verifies a Google OpenID Connect ID token and signs in an existing linked identity. New users must complete onboarding and use the registration endpoint.",
-        "security": [
-
-        ],
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -156,9 +153,7 @@
         ],
         "summary": "Register with Google and issue a bearer token",
         "description": "Creates the user and complete initial sync graph after Google identity verification.",
-        "security": [
-
-        ],
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -193,9 +188,7 @@
         ],
         "summary": "Sign in with Apple and issue a bearer token",
         "description": "Exchanges the native Apple authorization code and signs in an existing linked identity.",
-        "security": [
-
-        ],
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -230,9 +223,7 @@
         ],
         "summary": "Register with Apple and issue a bearer token",
         "description": "Creates the user and complete initial sync graph after Apple identity verification.",
-        "security": [
-
-        ],
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -632,6 +623,110 @@
           },
           "404": {
             "description": "The session is not visible to the authenticated user, or no photo was uploaded for this angle."
+          }
+        }
+      }
+    },
+    "/api/body-progress-photo-sessions/{bodyProgressPhotoSession}/composition-analysis": {
+      "post": {
+        "tags": [
+          "Body Progress"
+        ],
+        "summary": "Analyse private body progress photos",
+        "description": "Analyses the already uploaded private front and/or profile photos for the session. No image is sent in this request. The result is an estimate only and not medical advice.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "name": "bodyProgressPhotoSession",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Body composition analysis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "required": [
+                        "estimatedBodyFatRange",
+                        "confidence",
+                        "summary",
+                        "insights",
+                        "recommendations"
+                      ],
+                      "properties": {
+                        "estimatedBodyFatRange": {
+                          "type": "string",
+                          "example": "18%–21%"
+                        },
+                        "confidence": {
+                          "type": "string",
+                          "enum": [
+                            "low",
+                            "medium",
+                            "high"
+                          ]
+                        },
+                        "summary": {
+                          "type": "string"
+                        },
+                        "insights": {
+                          "type": "array",
+                          "minItems": 2,
+                          "maxItems": 4,
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "recommendations": {
+                          "type": "array",
+                          "minItems": 2,
+                          "maxItems": 4,
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "description": "An active subscription, trial, or demo access is required (code `subscription_required`), or AI features are disabled for this account (code `ai_blocked`)."
+          },
+          "404": {
+            "description": "The body progress photo session does not belong to the authenticated user."
+          },
+          "409": {
+            "description": "The idempotency key is already in progress or was reused with a different request."
+          },
+          "422": {
+            "description": "At least one uploaded front or profile photo is required for analysis."
+          },
+          "429": {
+            "description": "The analysis rate limit of five requests per minute was exceeded. Also returned with code `ai_budget_exceeded` and a `resets_at` timestamp when the monthly AI budget is spent."
+          },
+          "502": {
+            "description": "The AI provider did not return structured JSON."
           }
         }
       }
@@ -1090,6 +1185,60 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/GenerateMacrosFromTextRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estimated meal macros",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MacrosFromTextResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "description": "An active subscription, trial, or demo access is required (code `subscription_required`), or AI features are disabled for this account (code `ai_blocked`)."
+          },
+          "409": {
+            "description": "The idempotency key is already in progress or was reused with a different request."
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "429": {
+            "description": "The estimation rate limit of ten requests per minute was exceeded. Also returned with code `ai_budget_exceeded` and a `resets_at` timestamp when the monthly AI budget is spent."
+          },
+          "502": {
+            "description": "The AI provider did not return structured JSON."
+          }
+        }
+      }
+    },
+    "/api/nutrition-macros/analyze-photo": {
+      "post": {
+        "tags": [
+          "Nutrition"
+        ],
+        "summary": "Estimate meal macros from a photo",
+        "description": "Estimates the foods, gram amounts, and macronutrients of a meal from an uploaded JPEG. Text fields are written in the authenticated user's preferred language. The image and estimate are not persisted; store the approved result through the nutrition-log sync flow.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzeMealPhotoRequest"
               }
             }
           }
@@ -2875,6 +3024,35 @@
           }
         }
       },
+      "AnalyzeMealPhotoRequest": {
+        "type": "object",
+        "required": [
+          "image"
+        ],
+        "properties": {
+          "image": {
+            "type": "string",
+            "format": "binary",
+            "description": "JPEG meal photo, up to 5 MB."
+          },
+          "meal_title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 255,
+            "description": "Optional meal context, for example Lunch."
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 2000,
+            "description": "Optional user context that may help estimate the meal."
+          }
+        }
+      },
       "MacrosFromTextResponse": {
         "type": "object",
         "required": [
@@ -3534,9 +3712,7 @@
   },
   "security": [
     {
-      "bearerAuth": [
-
-      ]
+      "bearerAuth": []
     }
   ]
 }

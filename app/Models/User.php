@@ -241,7 +241,9 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
      */
     public function monthlyAiBudgetInMicros(): int
     {
-        $subscription = $this->subscription()->first();
+        $subscription = $this->relationLoaded('subscription')
+            ? $this->subscription
+            : $this->subscription()->first();
         $plan = $subscription?->isActive() ? $subscription->plan : SubscriptionPlan::CoachedExternal;
 
         return $plan->monthlyAiBudgetInMicros();

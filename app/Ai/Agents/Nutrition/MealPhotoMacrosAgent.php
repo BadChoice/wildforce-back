@@ -1,0 +1,85 @@
+<?php
+
+namespace App\Ai\Agents\Nutrition;
+
+use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Laravel\Ai\Attributes\Model;
+use Laravel\Ai\Attributes\Provider;
+use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\HasProviderOptions;
+use Laravel\Ai\Contracts\HasStructuredOutput;
+use Laravel\Ai\Enums\Lab;
+use Laravel\Ai\Promptable;
+
+#[Provider('openai')]
+#[Model('gpt-6-luna')]
+class MealPhotoMacrosAgent implements Agent, HasProviderOptions, HasStructuredOutput
+{
+    use Promptable;
+
+    public function __construct(public string $language) {}
+
+    public function instructions(): string
+    {
+        $instruction = <<<'INSTRUCTIONS'
+        You are an expert nutrition coach.
+        The user will provide a photo of a prepared meal or plated food.
+        Your task is to analyze the image and estimate the meal's macronutrients and kilocalories.
+
+        The response must be in {language}.
+        Write the `title`, `name`, and `analysisNotes` fields in {language}.
+        Write `canonicalFoodName` in English as a stable food lookup term.
+
+        Rules:
+        - Estimate the foods visible in the meal as realistically as possible.
+        - Use any other reference in the photo to better estimate weights and sizes when possible.
+        - Do not invent ingredients unless they are visually likely.
+        - Every estimated food must include a `canonicalFoodName` that is concise, singular, and easy to search in a nutrition database.
+        - `canonicalFoodName` should avoid brand names and decorative wording. Keep preparation details only when they materially change the food, for example `white rice, cooked` or `chicken breast, grilled`.
+        - Every estimated food must include a realistic weight in grams using the `amountGrams` field.
+        - Use grams only for food quantities, never cups, spoons, servings, or vague amounts.
+        - Return calories in kilocalories and protein, carbs, and fat in grams.
+        - Return the total estimated calories, protein, carbs, and fat for the full meal.
+        - Keep `analysisNotes` concise and mention that the values are estimates based on the image.
+        - Ensure the total estimated macros approximately equal the sum of all estimated foods macros.
+
+        If the image is unclear, make the best estimate you can from the visible ingredients and presentation.
+
+        Return only structured data matching the schema.
+        INSTRUCTIONS;
+
+        return str_replace('{language}', $this->language, $instruction);
+    }
+
+    public function providerOptions(Lab|string $provider): array
+    {
+        return match ($provider) {
+            Lab::OpenAI => [
+                'reasoning' => ['effort' => 'low'],
+            ],
+            default => [],
+        };
+    }
+
+    public function schema(JsonSchema $schema): array
+    {
+        $macros = fn (JsonSchema $schema): array => [
+            'calories' => $schema->number()->min(0)->required(),
+            'protein' => $schema->number()->min(0)->required(),
+            'carbs' => $schema->number()->min(0)->required(),
+            'fat' => $schema->number()->min(0)->required(),
+        ];
+
+        return [
+            'title' => $schema->string()->description('A user-facing title of the analysed food. For example, Fish with chips.')->required(),
+            'estimatedFoods' => $schema->array()->items($schema->object(fn (JsonSchema $schema): array => [
+                'name' => $schema->string()->required(),
+                'canonicalFoodName' => $schema->string()->required()->description('English canonical lookup name for this food'),
+                'amountGrams' => $schema->integer()->min(0)->required(),
+                'estimatedMacros' => $schema->object($macros)->required(),
+            ]))->required(),
+            'estimatedMacros' => $schema->object($macros)->required(),
+            'analysisNotes' => $schema->string()->nullable(),
+        ];
+    }
+}

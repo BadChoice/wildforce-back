@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AiUsageController;
 use App\Http\Controllers\Api\BodyProgressPhotoController;
 use App\Http\Controllers\Api\NutritionLogEntryImageController;
 use App\Http\Controllers\Auth\AppleLoginController;
@@ -22,6 +23,7 @@ Route::get('client-invitations/{token}', [ClientInvitationController::class, 'sh
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
+    Route::get('admin/ai-usage', AiUsageController::class)->name('admin.ai-usage');
     Route::get('subscription/billing', [BillingController::class, 'premium'])->name('subscription.billing');
     Route::get('subscription/billing-friends', [BillingController::class, 'friends'])->name('subscription.billing.friends');
     Route::get('subscription/billing-coach', [BillingController::class, 'coach'])->name('subscription.billing.coach');
