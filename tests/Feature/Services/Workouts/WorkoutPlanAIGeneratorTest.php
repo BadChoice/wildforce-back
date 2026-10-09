@@ -207,6 +207,7 @@ test('keeps unreliable and empty data out of the prompt', function () {
                 'completed_sets' => 3,
                 'completed_reps' => 10,
                 'completed_weight' => $completedWeight,
+                'per_set_weights_kg' => $completedWeight === null ? null : array_fill(0, 3, $completedWeight),
             ]);
         }
     }

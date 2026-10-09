@@ -114,6 +114,20 @@ test('uses complete non-deload exercise history while limiting plan-level analys
         ->and($analysis->recentFeedbackBreakdown)->toBe(['justRight' => 3]);
 });
 
+test('reports trends for performed exercises without an exercise profile', function () {
+    $user = User::factory()->create();
+
+    createCompletedPlan($user, 1, '2026-01-01', 100, 'justRight');
+    createCompletedPlan($user, 2, '2026-02-01', 105, 'justRight');
+
+    $analysis = new WorkoutProgressionAnalyzer(
+        new TrainingHistory($user),
+        app(ExerciseCatalog::class),
+    )->analyze();
+
+    expect($analysis->exerciseTrends)->toBe(['benchPress' => 'improving']);
+});
+
 test('ignores warmup ramp-up sets when analysing progression', function () {
     $user = User::factory()->create(['current_streak' => 5]);
     createProgressionExerciseProfile($user, 'benchPress');

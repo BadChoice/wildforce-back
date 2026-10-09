@@ -78,36 +78,34 @@ final class TrainingHistory
             ])
             ->values();
 
-        $exerciseIds = $this->exerciseProfiles->pluck('exercise')->all();
-
-        $this->resultsByExercise = $exerciseIds === []
-            ? collect()
-            : ExerciseResult::query()
-                ->select([
-                    'id',
-                    'planned_exercise_id',
-                    'completed_at',
-                    'completed_reps',
-                    'completed_weight',
-                ])
-                ->with('plannedExercise:id,exercise')
-                ->whereHas('plannedExercise', function (Builder $query) use ($exerciseIds): void {
-                    $query->whereIn('exercise', $exerciseIds)
-                        ->whereRelation('block', 'type', '!=', WorkoutBlockType::Warmup->value)
-                        ->whereHas('workoutDay', function (Builder $query): void {
-                            $query->whereHas('plan', function (Builder $query): void {
-                                $query->whereBelongsTo($this->user)
-                                    ->where(function (Builder $query): void {
-                                        $query->whereNull('phase')
-                                            ->orWhere('phase', '!=', MesocyclePhase::Deload->value);
-                                    });
-                            });
+        $this->resultsByExercise = ExerciseResult::query()
+            ->select([
+                'id',
+                'planned_exercise_id',
+                'feedback',
+                'completed_at',
+                'completed_reps',
+                'completed_weight',
+                'per_set_reps',
+                'per_set_weights_kg',
+            ])
+            ->with('plannedExercise:id,exercise')
+            ->whereHas('plannedExercise', function (Builder $query): void {
+                $query->whereRelation('block', 'type', '!=', WorkoutBlockType::Warmup->value)
+                    ->whereHas('workoutDay', function (Builder $query): void {
+                        $query->whereHas('plan', function (Builder $query): void {
+                            $query->whereBelongsTo($this->user)
+                                ->where(function (Builder $query): void {
+                                    $query->whereNull('phase')
+                                        ->orWhere('phase', '!=', MesocyclePhase::Deload->value);
+                                });
                         });
-                })
-                ->orderBy('completed_at')
-                ->orderBy('id')
-                ->get()
-                ->groupBy(fn (ExerciseResult $result): string => $result->plannedExercise->exercise);
+                    });
+            })
+            ->orderBy('completed_at')
+            ->orderBy('id')
+            ->get()
+            ->groupBy(fn (ExerciseResult $result): string => $result->plannedExercise->exercise);
     }
 
     /**
@@ -124,6 +122,16 @@ final class TrainingHistory
     public function recentPlans(): Collection
     {
         return $this->recentPlans;
+    }
+
+    /**
+     * Exercises with non-deload working results, whether or not the user has a profile for them.
+     *
+     * @return list<string>
+     */
+    public function performedExercises(): array
+    {
+        return $this->resultsByExercise->keys()->all();
     }
 
     /**

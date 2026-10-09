@@ -74,49 +74,17 @@ final class WorkoutProgressionAnalyzer
      */
     public function exerciseTrends(): array
     {
+        $trendCalculator = new ExerciseTrendCalculator;
+
         return $this->trainingHistory->exerciseProfiles()
-            ->mapWithKeys(fn ($profile) => [
-                $profile->exercise => $this->progressionTrend($this->trainingHistory->resultsForExercise($profile->exercise)),
+            ->pluck('exercise')
+            ->merge($this->trainingHistory->performedExercises())
+            ->unique()
+            ->sort()
+            ->mapWithKeys(fn (string $exercise): array => [
+                $exercise => $trendCalculator->trend($this->trainingHistory->resultsForExercise($exercise)),
             ])
             ->all();
-    }
-
-    /**
-     * @param  Collection<int, ExerciseResult>  $results
-     */
-    private function progressionTrend(Collection $results): string
-    {
-        if ($results->count() < 2) {
-            return 'insufficient';
-        }
-
-        $recent = $results->slice(max($results->count() - 3, 0));
-        $earlier = $results->take(max(1, $results->count() - 3));
-        $recentAverageWeight = $this->average($recent->pluck('completed_weight')->filter(fn ($weight) => $weight !== null)->map(fn ($weight) => (float) $weight));
-        $earlierAverageWeight = $this->average($earlier->pluck('completed_weight')->filter(fn ($weight) => $weight !== null)->map(fn ($weight) => (float) $weight));
-
-        if ($recentAverageWeight !== null && $earlierAverageWeight !== null && $earlierAverageWeight > 0) {
-            $delta = ($recentAverageWeight - $earlierAverageWeight) / $earlierAverageWeight;
-
-            return match (true) {
-                $delta > 0.03 => 'improving',
-                $delta < -0.03 => 'regressing',
-                default => 'plateau',
-            };
-        }
-
-        $recentAverageReps = $this->average($recent->pluck('completed_reps')->filter(fn ($reps) => $reps !== null)->map(fn ($reps) => (float) $reps));
-        $earlierAverageReps = $this->average($earlier->pluck('completed_reps')->filter(fn ($reps) => $reps !== null)->map(fn ($reps) => (float) $reps));
-
-        if ($recentAverageReps === null || $earlierAverageReps === null) {
-            return 'insufficient';
-        }
-
-        return match (true) {
-            $recentAverageReps - $earlierAverageReps > 1 => 'improving',
-            $recentAverageReps - $earlierAverageReps < -1 => 'regressing',
-            default => 'plateau',
-        };
     }
 
     /**
@@ -267,13 +235,5 @@ final class WorkoutProgressionAnalyzer
         }
 
         return 'medium';
-    }
-
-    /**
-     * @param  Collection<int, float>  $values
-     */
-    private function average(Collection $values): ?float
-    {
-        return $values->isEmpty() ? null : (float) $values->average();
     }
 }

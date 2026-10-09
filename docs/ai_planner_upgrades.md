@@ -66,13 +66,22 @@ Fitxers principals:
 **Pendent:**
 - [ ] `Rotate when practical` encara pot incloure exercicis de mobilitat. Es resoldrà amb l'estat únic per exercici (pas 5).
 
-## ⬜ 4. Revisar el càlcul de tendències
+## ✅ 4. Revisar el càlcul de tendències
 
-`WorkoutProgressionAnalyzer::progressionTrend()` compara la mitjana de pes recent amb l'anterior, sense tenir en compte les reps ni el context.
+**Problema:** `progressionTrend()` comparava el pes mitjà recent amb l'anterior. `completed_weight` i `completed_reps` són només els de l'última sèrie, de manera que una sèrie de back-off o una dada mal entrada distorsionava la tendència. A més, el feedback no comptava i només hi havia tendència per als exercicis amb perfil (p. ex. `benchPress` en quedava fora si no tenia perfil).
 
-- [ ] Fer servir una mètrica comparable, per exemple l'e1RM estimat (Epley) o el volum de la millor sèrie, en lloc del pes mitjà.
-- [ ] Detectar valors absurds (p. ex. `cableOverheadTricepsExtension` a 30 kg i a 16 kg dins el mateix pla) i descartar-los o marcar-los.
-- [ ] Tenir en compte el feedback: `hard` amb el mateix pes no és el mateix que `easy` amb el mateix pes.
+**Fet:** nova classe `ExerciseTrendCalculator`.
+- Cada sessió es puntua per la millor sèrie (`per_set_reps` × `per_set_weights_kg`, amb `completed_*` com a alternativa):
+  - amb càrrega: e1RM d'Epley, `pes × (1 + (reps + RIR) / 30)`;
+  - pes corporal: `reps + RIR`.
+- El RIR surt del feedback (`veryEasy` 4, `easy` 3, `justRight` 2, `hard` 1, `veryHard` 0). El mateix pes i les mateixes reps amb `hard` puntuen menys que amb `easy`.
+- Es descarten els valors aïllats que es desvien més d'un 40 % de l'anterior i del següent en la mateixa direcció (p. ex. 30 → 16 → 30 kg).
+- Es compara la mitjana de les últimes sessions (fins a 3) amb la de les anteriors (fins a 3), sense solapar-les. El llindar és ±2,5 % en e1RM, o ±1 rep per al pes corporal.
+- `TrainingHistory` carrega els resultats de tots els exercicis fets (no només els que tenen perfil), i `exerciseTrends()` inclou perfils i exercicis fets.
+
+**Pendent:**
+- [ ] Un valor erroni a l'última sessió no es pot detectar (no té veí posterior). Es podria marcar en lloc de descartar-lo.
+- [ ] L'historial del prompt mostra `did 3×10` amb les reps de l'última sèrie. Es podrien mostrar les reps de cada sèrie quan varien (`12/8/10`).
 
 ## ⬜ 5. Un estat únic per exercici
 
