@@ -27,6 +27,5 @@ test('it renders the API documentation and its OpenAPI document locally', functi
         ->assertJsonPath('paths./api/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}.post.parameters.1.schema.enum', ['profile', 'front', 'torso'])
         ->assertJsonPath('paths./api/nutrition-log-entries/{nutritionLogEntry}/image.post.summary', 'Upload a private nutrition log entry image')
         ->assertJsonPath('paths./api/subscription/access.get.summary', "Get the authenticated user's app access")
-        ->assertJsonPath('paths./api/ai/completions.post.summary', 'Generate a structured AI completion')
         ->assertJsonPath('servers.0.url', 'http://wildforce.test');
 });

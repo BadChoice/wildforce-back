@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureAiBudgetAvailable;
 use App\Http\Middleware\Idempotency;
 use App\Http\Middleware\SetUserLocale;
 use Illuminate\Foundation\Application;
@@ -16,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
-        $middleware->alias(['idempotency' => Idempotency::class]);
+        $middleware->alias(['idempotency' => Idempotency::class, 'ai.budget' => EnsureAiBudgetAvailable::class]);
         $middleware->appendToGroup('web', SetUserLocale::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

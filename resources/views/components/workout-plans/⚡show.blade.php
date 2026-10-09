@@ -367,6 +367,12 @@ new class extends Component {
             'workoutText' => ['required', 'string', 'max:20000'],
         ]);
 
+        if (! auth()->user()->canUseAi()) {
+            $this->addError('workoutText', __('The monthly AI usage limit has been reached.'));
+
+            return;
+        }
+
         $workoutDay = $generator->generate($this->workoutPlan->user, $validated['workoutText']);
 
         $this->editingWorkoutDayId = null;

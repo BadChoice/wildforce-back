@@ -37,6 +37,24 @@ enum SubscriptionPlan: string
         ];
     }
 
+    /**
+     * Monthly AI spend allowed per user on this plan, in millionths of a US dollar.
+     */
+    public function monthlyAiBudgetInMicros(): int
+    {
+        return match ($this) {
+            self::Trial,
+            self::CoachTrial,
+            self::Demo,
+            self::Friends,
+            self::Premium,
+            self::CoachBasic,
+            self::CoachStudio,
+            self::CoachPro,
+            self::CoachedExternal => 2_000_000,
+        };
+    }
+
     public function coachClientLimit(): ?CoachClientLimit
     {
         return match ($this) {

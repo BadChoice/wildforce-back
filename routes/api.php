@@ -5,7 +5,6 @@ use App\Http\Controllers\Api\Account\AppleIdentityController;
 use App\Http\Controllers\Api\Account\AvatarController;
 use App\Http\Controllers\Api\Account\CoachController;
 use App\Http\Controllers\Api\Account\GoogleIdentityController;
-use App\Http\Controllers\Api\Ai\CompletionController;
 use App\Http\Controllers\Api\Auth\AppleAuthenticationController;
 use App\Http\Controllers\Api\Auth\GoogleAuthenticationController;
 use App\Http\Controllers\Api\Auth\LoginController;
@@ -53,11 +52,10 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::post('/feedback', FeedbackController::class);
 
     Route::middleware(EnsureUserHasAppAccess::class)->group(function () {
-        Route::post('/ai/completions', CompletionController::class)->middleware('throttle:10,1');
-        Route::post('/workout-plans/generate', WorkoutPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1']);
-        Route::post('/workout-days/generate', SingleWorkoutGenerationController::class)->middleware(['idempotency', 'throttle:5,1']);
-        Route::post('/nutrition-plans/generate', NutritionPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1']);
-        Route::post('/nutrition-macros/generate', MacrosFromTextGenerationController::class)->middleware(['idempotency', 'throttle:10,1']);
+        Route::post('/workout-plans/generate', WorkoutPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
+        Route::post('/workout-days/generate', SingleWorkoutGenerationController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
+        Route::post('/nutrition-plans/generate', NutritionPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
+        Route::post('/nutrition-macros/generate', MacrosFromTextGenerationController::class)->middleware(['idempotency', 'throttle:10,1', 'ai.budget']);
         Route::post('/nutrition/open-food-facts/contributions', OpenFoodFactsContributionController::class)->middleware(['idempotency', 'throttle:10,1']);
         Route::get('/account/coaches', CoachController::class);
         Route::post('/body-progress-photo-sessions/{bodyProgressPhotoSession}/photos/{angle}', [BodyProgressPhotoController::class, 'store'])

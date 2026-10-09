@@ -37,9 +37,6 @@
     },
     {
       "name": "Nutrition"
-    },
-    {
-      "name": "AI"
     }
   ],
   "paths": {
@@ -935,52 +932,6 @@
         }
       }
     },
-    "/api/ai/completions": {
-      "post": {
-        "tags": [
-          "AI"
-        ],
-        "summary": "Generate a structured AI completion",
-        "description": "Sends the prompt to the given provider and model and returns JSON matching the supplied JSON Schema. The response body is the structured object itself.",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AiCompletionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Structured completion matching the requested schema",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AiCompletionResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "$ref": "#/components/responses/Unauthenticated"
-          },
-          "403": {
-            "description": "An active subscription, trial, or demo access is required."
-          },
-          "422": {
-            "$ref": "#/components/responses/ValidationError"
-          },
-          "429": {
-            "description": "The completion rate limit of ten requests per minute was exceeded."
-          },
-          "502": {
-            "description": "The AI provider did not return structured JSON."
-          }
-        }
-      }
-    },
     "/api/workout-plans/generate": {
       "post": {
         "tags": [
@@ -1008,13 +959,13 @@
             "$ref": "#/components/responses/Unauthenticated"
           },
           "403": {
-            "description": "An active subscription, trial, or demo access is required."
+            "description": "An active subscription, trial, or demo access is required (code `subscription_required`), or AI features are disabled for this account (code `ai_blocked`)."
           },
           "409": {
             "description": "The idempotency key is already in progress or was reused with a different request."
           },
           "429": {
-            "description": "The generation rate limit of five requests per minute was exceeded."
+            "description": "The generation rate limit of five requests per minute was exceeded. Also returned with code `ai_budget_exceeded` and a `resets_at` timestamp when the monthly AI budget is spent."
           }
         }
       }
@@ -1056,7 +1007,7 @@
             "$ref": "#/components/responses/Unauthenticated"
           },
           "403": {
-            "description": "An active subscription, trial, or demo access is required."
+            "description": "An active subscription, trial, or demo access is required (code `subscription_required`), or AI features are disabled for this account (code `ai_blocked`)."
           },
           "409": {
             "description": "The idempotency key is already in progress or was reused with a different request."
@@ -1065,7 +1016,7 @@
             "$ref": "#/components/responses/ValidationError"
           },
           "429": {
-            "description": "The generation rate limit of five requests per minute was exceeded."
+            "description": "The generation rate limit of five requests per minute was exceeded. Also returned with code `ai_budget_exceeded` and a `resets_at` timestamp when the monthly AI budget is spent."
           }
         }
       }
@@ -1107,7 +1058,7 @@
             "$ref": "#/components/responses/Unauthenticated"
           },
           "403": {
-            "description": "An active subscription, trial, or demo access is required."
+            "description": "An active subscription, trial, or demo access is required (code `subscription_required`), or AI features are disabled for this account (code `ai_blocked`)."
           },
           "409": {
             "description": "The idempotency key is already in progress or was reused with a different request."
@@ -1116,7 +1067,7 @@
             "$ref": "#/components/responses/ValidationError"
           },
           "429": {
-            "description": "The generation rate limit of five requests per minute was exceeded."
+            "description": "The generation rate limit of five requests per minute was exceeded. Also returned with code `ai_budget_exceeded` and a `resets_at` timestamp when the monthly AI budget is spent."
           }
         }
       }
@@ -1158,7 +1109,7 @@
             "$ref": "#/components/responses/Unauthenticated"
           },
           "403": {
-            "description": "An active subscription, trial, or demo access is required."
+            "description": "An active subscription, trial, or demo access is required (code `subscription_required`), or AI features are disabled for this account (code `ai_blocked`)."
           },
           "409": {
             "description": "The idempotency key is already in progress or was reused with a different request."
@@ -1167,7 +1118,7 @@
             "$ref": "#/components/responses/ValidationError"
           },
           "429": {
-            "description": "The estimation rate limit of ten requests per minute was exceeded."
+            "description": "The estimation rate limit of ten requests per minute was exceeded. Also returned with code `ai_budget_exceeded` and a `resets_at` timestamp when the monthly AI budget is spent."
           },
           "502": {
             "description": "The AI provider did not return structured JSON."
@@ -2403,47 +2354,6 @@
             "maxLength": 64
           }
         }
-      },
-      "AiCompletionRequest": {
-        "type": "object",
-        "required": [
-          "prompt",
-          "schema",
-          "provider",
-          "model"
-        ],
-        "properties": {
-          "prompt": {
-            "type": "string",
-            "maxLength": 50000
-          },
-          "schema": {
-            "description": "JSON Schema of an object describing the expected response. Accepted as a JSON object or as a JSON-encoded string.",
-            "oneOf": [
-              {
-                "type": "object",
-                "additionalProperties": true
-              },
-              {
-                "type": "string"
-              }
-            ]
-          },
-          "provider": {
-            "type": "string",
-            "description": "A provider configured in config/ai.php.",
-            "example": "openai"
-          },
-          "model": {
-            "type": "string",
-            "maxLength": 100
-          }
-        }
-      },
-      "AiCompletionResponse": {
-        "type": "object",
-        "additionalProperties": true,
-        "description": "Object matching the schema sent in the request."
       },
       "SyncPushRequest": {
         "type": "object",

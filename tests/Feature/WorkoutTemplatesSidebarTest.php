@@ -3,6 +3,7 @@
 use App\Ai\Agents\Workouts\SingleWorkoutFromTextAgent;
 use App\Enums\CoachingEnrollmentStatus;
 use App\Enums\WorkoutKind;
+use App\Models\AiUsage;
 use App\Models\CoachingEnrollment;
 use App\Models\User;
 use App\Models\WorkoutDay;
@@ -135,3 +136,20 @@ function templateWorkoutFromTextResponse(): array
         ],
     ];
 }
+
+test('it does not generate a template from text once the coach has spent the monthly AI budget', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    CoachingEnrollment::create(['client_user_id' => $client->id, 'coach_user_id' => $coach->id, 'status' => CoachingEnrollmentStatus::Active, 'starts_at' => now()]);
+    AiUsage::factory()->for($coach)->create(['cost_micros' => $coach->monthlyAiBudgetInMicros()]);
+    SingleWorkoutFromTextAgent::fake()->preventStrayPrompts();
+    $this->actingAs($coach);
+
+    Livewire::test('workout-templates.index')
+        ->set('workoutText', '1. Remo Tandem — 59 kg — 3 series')
+        ->call('generateTemplateFromText')
+        ->assertHasErrors('workoutText')
+        ->assertSet('showWorkoutDayEditor', false);
+
+    SingleWorkoutFromTextAgent::assertNeverPrompted();
+});

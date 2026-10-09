@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\SyncsWithUser;
 use App\Contracts\Syncable;
 use App\Enums\CoachingEnrollmentStatus;
+use App\Enums\SubscriptionPlan;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -35,6 +36,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
+ * @property Carbon|null $ai_blocked_at
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -62,6 +64,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
             'is_admin' => 'boolean',
             'birth_date' => 'date',
             'last_completed_workout_at' => 'datetime',
+            'ai_blocked_at' => 'datetime',
             'height' => 'integer',
             'weight' => 'decimal:2',
             'password' => 'hashed',
@@ -220,6 +223,43 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
     {
         return ($this->subscription()->first()?->isActive() ?? false)
             || $this->hasActiveCoach();
+    }
+
+    /** @return HasMany<AiUsage, $this> */
+    public function aiUsages(): HasMany
+    {
+        return $this->hasMany(AiUsage::class);
+    }
+
+    public function isAiBlocked(): bool
+    {
+        return $this->ai_blocked_at !== null;
+    }
+
+    /**
+     * Users without an active subscription only have access through a coach, so they get the coached client budget.
+     */
+    public function monthlyAiBudgetInMicros(): int
+    {
+        $subscription = $this->subscription()->first();
+        $plan = $subscription?->isActive() ? $subscription->plan : SubscriptionPlan::CoachedExternal;
+
+        return $plan->monthlyAiBudgetInMicros();
+    }
+
+    public function currentMonthAiCostInMicros(): int
+    {
+        return (int) $this->aiUsages()->currentMonth()->sum('cost_micros');
+    }
+
+    public function hasExceededMonthlyAiBudget(): bool
+    {
+        return $this->currentMonthAiCostInMicros() >= $this->monthlyAiBudgetInMicros();
+    }
+
+    public function canUseAi(): bool
+    {
+        return ! $this->isAiBlocked() && ! $this->hasExceededMonthlyAiBudget();
     }
 
     public function isAdmin(): bool
