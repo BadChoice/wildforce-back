@@ -9,10 +9,9 @@ enum SubscriptionPlan: string
     case Demo = 'demo';
     case Friends = 'friends';
     case Premium = 'premium';
-    case CoachBasicMonthly = 'coach_basic_monthly';
-    case CoachBasicYearly = 'coach_basic_yearly';
-    case CoachProMonthly = 'coach_pro_monthly';
-    case CoachProYearly = 'coach_pro_yearly';
+    case CoachBasic = 'coach_basic';
+    case CoachStudio = 'coach_studio';
+    case CoachPro = 'coach_pro';
     case CoachedExternal = 'coached_external';
 
     public function isTemporaryAccess(): bool
@@ -22,7 +21,7 @@ enum SubscriptionPlan: string
 
     public function isCoachPlan(): bool
     {
-        return in_array($this, self::coachPlans(), true);
+        return $this->coachClientLimit() !== null;
     }
 
     /**
@@ -32,10 +31,20 @@ enum SubscriptionPlan: string
     {
         return [
             self::CoachTrial,
-            self::CoachBasicMonthly,
-            self::CoachBasicYearly,
-            self::CoachProMonthly,
-            self::CoachProYearly,
+            self::CoachBasic,
+            self::CoachStudio,
+            self::CoachPro,
         ];
+    }
+
+    public function coachClientLimit(): ?CoachClientLimit
+    {
+        return match ($this) {
+            self::CoachTrial,
+            self::CoachBasic => CoachClientLimit::Five,
+            self::CoachStudio => CoachClientLimit::Thirty,
+            self::CoachPro => CoachClientLimit::Unlimited,
+            default => null,
+        };
     }
 }

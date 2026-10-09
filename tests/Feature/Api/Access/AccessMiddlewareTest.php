@@ -39,7 +39,7 @@ test('it grants app access to a client with an active coach subscription', funct
 
     $coach = User::factory()->create();
     $coach->replaceSubscription(new Subscription([
-        'plan' => SubscriptionPlan::CoachBasicMonthly,
+        'plan' => SubscriptionPlan::CoachBasic,
         'provider' => SubscriptionProvider::Stripe,
         'status' => SubscriptionStatus::Active,
         'starts_at' => now()->subDay(),

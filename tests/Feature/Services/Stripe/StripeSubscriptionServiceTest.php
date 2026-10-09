@@ -52,6 +52,38 @@ test('it updates a Stripe subscription when Stripe disables renewal', function (
     $this->assertDatabaseCount('subscriptions', 1);
 });
 
+test('it assigns the Studio client limit to a Stripe subscription', function () {
+    config()->set('services.stripe.webhook_secret', 'whsec_test');
+    config()->set('services.stripe.prices.coach_studio.monthly.price_id', 'price_coach_studio_monthly');
+
+    $user = User::factory()->create();
+    $payload = stripeSubscriptionPayload($user, 'customer.subscription.created', [
+        'id' => 'sub_coach_studio',
+        'items' => [
+            'data' => [[
+                'price' => [
+                    'id' => 'price_coach_studio_monthly',
+                    'unit_amount_decimal' => '3900',
+                    'currency' => 'eur',
+                    'recurring' => [
+                        'interval' => 'month',
+                        'interval_count' => 1,
+                    ],
+                ],
+            ]],
+        ],
+    ]);
+
+    $subscription = app(StripeSubscriptionService::class)->synchronizeWebhook(
+        $payload,
+        stripeSignature($payload),
+    );
+
+    expect($subscription)
+        ->plan->toBe(SubscriptionPlan::CoachStudio)
+        ->active_client_limit->toBe(30);
+});
+
 /** @param array<string, mixed> $attributes */
 function stripeSubscriptionPayload(User $user, string $eventType, array $attributes = []): string
 {

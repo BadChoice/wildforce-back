@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $billing_currency
  * @property BillingInterval|null $billing_interval
  * @property int|null $billing_interval_count
+ * @property int|null $active_client_limit
  * @property string|null $provider_reference
  * @property Carbon|null $starts_at
  * @property Carbon|null $renews_at
@@ -42,6 +43,7 @@ use Illuminate\Support\Carbon;
     'billing_currency',
     'billing_interval',
     'billing_interval_count',
+    'active_client_limit',
     'provider_reference',
     'starts_at',
     'renews_at',
@@ -64,6 +66,7 @@ class Subscription extends Model implements Syncable
             'billing_amount' => 'decimal:3',
             'billing_interval' => BillingInterval::class,
             'billing_interval_count' => 'integer',
+            'active_client_limit' => 'integer',
             'starts_at' => 'datetime',
             'renews_at' => 'datetime',
             'cancelled_at' => 'datetime',
@@ -91,6 +94,7 @@ class Subscription extends Model implements Syncable
             'plan' => SubscriptionPlan::CoachTrial,
             'provider' => SubscriptionProvider::Internal,
             'status' => SubscriptionStatus::Active,
+            'active_client_limit' => SubscriptionPlan::CoachTrial->coachClientLimit()?->limit(),
             'starts_at' => $startsAt,
             'renews_at' => $startsAt->copy()->addDays(15),
         ]);
@@ -137,6 +141,15 @@ class Subscription extends Model implements Syncable
     public function isActiveCoachSubscription(): bool
     {
         return $this->isActive() && $this->plan->isCoachPlan();
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $subscription): void {
+            if ($subscription->active_client_limit === null) {
+                $subscription->active_client_limit = $subscription->plan->coachClientLimit()?->limit();
+            }
+        });
     }
 
     /**

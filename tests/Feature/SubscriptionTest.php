@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CoachClientLimit;
 use App\Enums\CoachingEnrollmentStatus;
 use App\Enums\SubscriptionPlan;
 use App\Enums\SubscriptionProvider;
@@ -49,6 +50,33 @@ test('a user is a coach with an active coach subscription', function () {
 
     expect($coach->isCoach())->toBeTrue()
         ->and($coach->subscription->plan)->toBe(SubscriptionPlan::CoachTrial);
+});
+
+test('a coach subscription receives its plan client limit when created', function (SubscriptionPlan $plan, ?int $expectedLimit) {
+    $user = User::factory()->create();
+
+    $subscription = $user->replaceSubscription(Subscription::factory()->make([
+        'user_id' => null,
+        'plan' => $plan,
+    ]));
+
+    expect($subscription->active_client_limit)->toBe($expectedLimit);
+})->with([
+    'basic' => [SubscriptionPlan::CoachBasic, CoachClientLimit::Five->limit()],
+    'studio' => [SubscriptionPlan::CoachStudio, CoachClientLimit::Thirty->limit()],
+    'pro' => [SubscriptionPlan::CoachPro, CoachClientLimit::Unlimited->limit()],
+]);
+
+test('a coach subscription client limit can be customized', function () {
+    $user = User::factory()->create();
+    $subscription = $user->replaceSubscription(Subscription::factory()->make([
+        'user_id' => null,
+        'plan' => SubscriptionPlan::CoachBasic,
+    ]));
+
+    $subscription->update(['active_client_limit' => 12]);
+
+    expect($subscription->fresh()->active_client_limit)->toBe(12);
 });
 
 test('a user with clients is not a coach without an active coach subscription', function () {

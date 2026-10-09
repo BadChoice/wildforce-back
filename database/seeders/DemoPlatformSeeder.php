@@ -43,7 +43,7 @@ class DemoPlatformSeeder extends Seeder
             'longest_streak' => 45,
             'xp' => 2100,
             'xp_level' => 12,
-        ], SubscriptionPlan::CoachProMonthly);
+        ], SubscriptionPlan::CoachPro);
 
         $activeClient = $this->createUser('Marta Soler', 'marta@wildforce.test', [
             'height' => 172,

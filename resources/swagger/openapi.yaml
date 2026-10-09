@@ -1378,10 +1378,9 @@ components:
                 - 'demo'
                 - 'friends'
                 - 'premium'
-                - 'coach_basic_monthly'
-                - 'coach_basic_yearly'
-                - 'coach_pro_monthly'
-                - 'coach_pro_yearly'
+                - 'coach_basic'
+                - 'coach_studio'
+                - 'coach_pro'
                 - 'coached_external'
                 - null
             renews_at:
@@ -1418,10 +1417,9 @@ components:
             - 'demo'
             - 'friends'
             - 'premium'
-            - 'coach_basic_monthly'
-            - 'coach_basic_yearly'
-            - 'coach_pro_monthly'
-            - 'coach_pro_yearly'
+            - 'coach_basic'
+            - 'coach_studio'
+            - 'coach_pro'
             - 'coached_external'
         provider:
           type: 'string'
@@ -1460,6 +1458,10 @@ components:
             - 'year'
             - null
         billing_interval_count:
+          type:
+            - 'integer'
+            - 'null'
+        active_client_limit:
           type:
             - 'integer'
             - 'null'

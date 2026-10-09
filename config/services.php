@@ -96,6 +96,30 @@ return [
                     'price_id' => env('STRIPE_PREMIUM_YEARLY_PRICE_ID'),
                 ],
             ],
+            'coach_basic' => [
+                'monthly' => [
+                    'price_id' => env('STRIPE_COACH_BASIC_MONTHLY_PRICE_ID'),
+                ],
+                'yearly' => [
+                    'price_id' => env('STRIPE_COACH_BASIC_YEARLY_PRICE_ID'),
+                ],
+            ],
+            'coach_studio' => [
+                'monthly' => [
+                    'price_id' => env('STRIPE_COACH_STUDIO_MONTHLY_PRICE_ID'),
+                ],
+                'yearly' => [
+                    'price_id' => env('STRIPE_COACH_STUDIO_YEARLY_PRICE_ID'),
+                ],
+            ],
+            'coach_pro' => [
+                'monthly' => [
+                    'price_id' => env('STRIPE_COACH_PRO_MONTHLY_PRICE_ID'),
+                ],
+                'yearly' => [
+                    'price_id' => env('STRIPE_COACH_PRO_YEARLY_PRICE_ID'),
+                ],
+            ],
         ],
     ],
 
