@@ -20,7 +20,7 @@ class ExerciseProfileFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'exercise' => fake()->randomElement(['barbellBenchPress', 'barbellBackSquat', 'latPulldown', 'romanianDeadlift']),
+            'exercise' => fake()->randomElement(['barbellBenchPress', 'barbellBackSquat', 'latPulldown', 'barbellRomanianDeadlift']),
             'level' => 'intermediate',
             'working_weight' => fake()->randomFloat(2, 20, 100),
             'estimated_one_rep_max' => fake()->randomFloat(2, 30, 140),

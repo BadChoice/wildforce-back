@@ -62,8 +62,6 @@ class ExerciseCatalog
      */
     public function imageUrl(string $exercise, string $gender = 'female'): string
     {
-        $imageKey = $this->exercise($exercise)['assets']['verticalImageKey'] ?? "{$exercise}_{gender}.jpeg";
-
-        return rtrim((string) config('exercise_catalog.image_base_url'), '/').'/vertical/'.str_replace('{gender}', $gender, $imageKey);
+        return rtrim((string) config('exercise_catalog.image_base_url'), '/').'/vertical/'.$exercise.'_'.$gender.'.jpeg';
     }
 }

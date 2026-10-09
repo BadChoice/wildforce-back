@@ -11,7 +11,7 @@ Fitxers principals:
 
 ## ✅ 1. Llista d'exercicis permesos truncada
 
-**Problema:** `availableExercises()` feia `->sortBy('id')->take(60)`, de manera que només arribaven els 60 primers exercicis per ordre alfabètic (fins a `lateralRaise`). En quedaven fora `pullUp`, `pushUp`, `overheadPress`, `romanianDeadlift`, `seatedCableRow`, `tricepsPushdown`… però el prompt els demanava com a anchors. El mateix bug era a `SingleWorkoutAIGenerator`.
+**Problema:** `availableExercises()` feia `->sortBy('id')->take(60)`, de manera que només arribaven els 60 primers exercicis per ordre alfabètic (fins a `lateralRaise`). En quedaven fora `pullUp`, `pushUp`, `barbellOverheadPress`, `barbellRomanianDeadlift`, `seatedCableRow`, `tricepsPushdown`… però el prompt els demanava com a anchors. El mateix bug era a `SingleWorkoutAIGenerator`.
 
 **Fet:**
 - S'ha tret el `take(60)` dels dos generadors.

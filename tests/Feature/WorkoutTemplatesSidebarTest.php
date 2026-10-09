@@ -131,7 +131,7 @@ function templateWorkoutFromTextResponse(): array
     return [
         'title' => 'Back template', 'focus' => 'pull', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
         'blocks' => [
-            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
+            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'barbellBentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
             ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'barbellBenchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],
         ],
     ];

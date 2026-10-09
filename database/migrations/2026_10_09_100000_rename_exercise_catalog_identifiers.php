@@ -8,6 +8,11 @@ return new class extends Migration
     private const RENAMES = [
         'inclineBenchPress' => 'dumbbellInclineBenchPress',
         'benchPress' => 'barbellBenchPress',
+        'hamstringCurl' => 'lyingLegCurl',
+        'chestFly' => 'dumbbellChestFly',
+        'overheadPress' => 'barbellOverheadPress',
+        'bentOverRow' => 'barbellBentOverRow',
+        'romanianDeadlift' => 'barbellRomanianDeadlift',
     ];
 
     /**

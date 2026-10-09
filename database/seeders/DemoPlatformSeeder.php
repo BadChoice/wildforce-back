@@ -139,7 +139,7 @@ class DemoPlatformSeeder extends Seeder
                 ['exercise' => 'barbellBenchPress'],
                 ['exercise' => 'barbellBackSquat'],
                 ['exercise' => 'latPulldown'],
-                ['exercise' => 'romanianDeadlift'],
+                ['exercise' => 'barbellRomanianDeadlift'],
             )
             ->for($user)
             ->create();

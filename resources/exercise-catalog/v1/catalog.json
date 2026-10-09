@@ -1808,8 +1808,8 @@
             }
         },
         {
-            "id": "hamstringCurl",
-            "name": "Hamstring Curl",
+            "id": "lyingLegCurl",
+            "name": "Lying Leg Curl",
             "category": "strength",
             "requiredEquipment": [
                 "legCurlMachine"
@@ -1829,7 +1829,7 @@
                 "kneePain"
             ],
             "substitutionCandidates": [
-                "romanianDeadlift",
+                "barbellRomanianDeadlift",
                 "gluteBridge",
                 "seatedLegCurl"
             ],
@@ -1884,14 +1884,14 @@
                 "kneePain"
             ],
             "substitutionCandidates": [
-                "hamstringCurl",
-                "romanianDeadlift"
+                "lyingLegCurl",
+                "barbellRomanianDeadlift"
             ],
             "description": "Isolates the hamstrings in a seated position for maximum contraction and muscle building.",
             "instructions": [
                 "Sit in the machine and adjust the lap pad so it rests firmly against your thighs.",
                 "Place your legs over the padded lever so it sits behind your ankles.",
-                "Curl your legs down and back as far as possible.",
+                "Start with your knees nearly straight, then curl your lower legs down and back as far as possible.",
                 "Slowly return the lever to the starting position."
             ],
             "tips": [
@@ -1991,7 +1991,7 @@
             "substitutionCandidates": [
                 "gluteBridge",
                 "deadlift",
-                "romanianDeadlift"
+                "barbellRomanianDeadlift"
             ],
             "description": "Widely considered the best exercise for maximum glute development and strength.",
             "instructions": [
@@ -2046,7 +2046,7 @@
             ],
             "substitutionCandidates": [
                 "hipThrust",
-                "romanianDeadlift"
+                "barbellRomanianDeadlift"
             ],
             "description": "A bodyweight floor exercise that activates the glutes and improves hip extension.",
             "instructions": [
@@ -2103,7 +2103,7 @@
                 "hipPain"
             ],
             "substitutionCandidates": [
-                "romanianDeadlift",
+                "barbellRomanianDeadlift",
                 "hipThrust"
             ],
             "description": "A fundamental lift for total body strength, targeting the entire posterior chain.",
@@ -2141,8 +2141,8 @@
             }
         },
         {
-            "id": "romanianDeadlift",
-            "name": "Romanian Deadlift",
+            "id": "barbellRomanianDeadlift",
+            "name": "Barbell Romanian Deadlift",
             "category": "strength",
             "requiredEquipment": [
                 "olympicBarbell"
@@ -2164,7 +2164,7 @@
             ],
             "substitutionCandidates": [
                 "deadlift",
-                "hamstringCurl",
+                "lyingLegCurl",
                 "hipThrust",
                 "dumbbellRomanianDeadlift"
             ],
@@ -2223,8 +2223,8 @@
                 "hipPain"
             ],
             "substitutionCandidates": [
-                "romanianDeadlift",
-                "hamstringCurl",
+                "barbellRomanianDeadlift",
+                "lyingLegCurl",
                 "gluteBridge"
             ],
             "description": "A hamstring-focused hinge using dumbbells, which allows for a more natural range of motion.",
@@ -2677,7 +2677,7 @@
                 "declinePushUp",
                 "barbellBenchPress",
                 "chestPressMachine",
-                "chestFly"
+                "dumbbellChestFly"
             ],
             "description": "A classic bodyweight exercise that builds chest, shoulder, and triceps strength.",
             "instructions": [
@@ -3344,7 +3344,7 @@
             "substitutionCandidates": [
                 "barbellBenchPress",
                 "pushUp",
-                "chestFly"
+                "dumbbellChestFly"
             ],
             "description": "Provides a stable and controlled way to target the chest muscles with reduced balance requirements.",
             "instructions": [
@@ -3379,8 +3379,8 @@
             }
         },
         {
-            "id": "chestFly",
-            "name": "Chest Fly",
+            "id": "dumbbellChestFly",
+            "name": "Dumbbell Chest Fly",
             "category": "strength",
             "requiredEquipment": [
                 "dumbbells",
@@ -3453,7 +3453,7 @@
                 "shoulderPain"
             ],
             "substitutionCandidates": [
-                "chestFly",
+                "dumbbellChestFly",
                 "pushUp",
                 "highToLowCableFly",
                 "lowToHighCableFly"
@@ -3568,7 +3568,7 @@
             ],
             "substitutionCandidates": [
                 "cableFly",
-                "chestFly"
+                "dumbbellChestFly"
             ],
             "description": "Setting the cables high and pulling downward targets the lower fibers of the chest.",
             "instructions": [
@@ -3621,7 +3621,7 @@
             ],
             "substitutionCandidates": [
                 "cableFly",
-                "chestFly",
+                "dumbbellChestFly",
                 "dumbbellInclineBenchPress"
             ],
             "description": "Setting the cables low and pulling upward targets the upper chest and front deltoids.",
@@ -3676,7 +3676,7 @@
                 "shoulderPain"
             ],
             "substitutionCandidates": [
-                "chestFly",
+                "dumbbellChestFly",
                 "cableFly"
             ],
             "description": "A machine-based fly that provides consistent tension on the chest for better isolation.",
@@ -3709,8 +3709,8 @@
             }
         },
         {
-            "id": "overheadPress",
-            "name": "Overhead Press",
+            "id": "barbellOverheadPress",
+            "name": "Barbell Overhead Press",
             "category": "strength",
             "requiredEquipment": [
                 "olympicBarbell"
@@ -3795,7 +3795,7 @@
                 "limitedShoulderMobility"
             ],
             "substitutionCandidates": [
-                "overheadPress",
+                "barbellOverheadPress",
                 "arnoldPress",
                 "lateralRaise"
             ],
@@ -3853,7 +3853,7 @@
                 "overheadMovementLimitation"
             ],
             "substitutionCandidates": [
-                "overheadPress",
+                "barbellOverheadPress",
                 "arnoldPress",
                 "chestPressMachine"
             ],
@@ -3911,7 +3911,7 @@
                 "limitedShoulderMobility"
             ],
             "substitutionCandidates": [
-                "overheadPress",
+                "barbellOverheadPress",
                 "lateralRaise",
                 "frontRaise"
             ],
@@ -4922,7 +4922,7 @@
                 "lowerBackPain"
             ],
             "substitutionCandidates": [
-                "bentOverRow",
+                "barbellBentOverRow",
                 "singleArmDumbbellRow",
                 "latPulldown",
                 "seatedMachineRow"
@@ -4981,7 +4981,7 @@
             ],
             "substitutionCandidates": [
                 "seatedCableRow",
-                "bentOverRow"
+                "barbellBentOverRow"
             ],
             "description": "A chest-supported machine row that isolates the back muscles while protecting the lower back.",
             "instructions": [
@@ -5015,8 +5015,8 @@
             }
         },
         {
-            "id": "bentOverRow",
-            "name": "Bent-Over Row",
+            "id": "barbellBentOverRow",
+            "name": "Barbell Bent-Over Row",
             "category": "strength",
             "requiredEquipment": [
                 "olympicBarbell"
@@ -5100,7 +5100,7 @@
                 "hipPain"
             ],
             "substitutionCandidates": [
-                "bentOverRow",
+                "barbellBentOverRow",
                 "singleArmDumbbellRow",
                 "seatedCableRow"
             ],
@@ -5160,7 +5160,7 @@
                 "hipPain"
             ],
             "substitutionCandidates": [
-                "bentOverRow",
+                "barbellBentOverRow",
                 "seatedMachineRow",
                 "seatedCableRow"
             ],
@@ -5220,7 +5220,7 @@
             ],
             "substitutionCandidates": [
                 "seatedCableRow",
-                "bentOverRow"
+                "barbellBentOverRow"
             ],
             "description": "Allows for a deeper range of motion and helps correct muscle imbalances in the back.",
             "instructions": [
@@ -5717,7 +5717,7 @@
                 "hipPain"
             ],
             "substitutionCandidates": [
-                "bentOverRow",
+                "barbellBentOverRow",
                 "seatedCableRow",
                 "singleArmDumbbellRow"
             ],
@@ -6616,7 +6616,7 @@
                 "limitedShoulderMobility"
             ],
             "substitutionCandidates": [
-                "overheadPress",
+                "barbellOverheadPress",
                 "pushUp",
                 "arnoldPress"
             ],
@@ -7021,7 +7021,7 @@
                 "lowerBackPain"
             ],
             "substitutionCandidates": [
-                "romanianDeadlift"
+                "barbellRomanianDeadlift"
             ],
             "description": "Improves flexibility in the back of the legs and helps prevent lower back pain.",
             "instructions": [

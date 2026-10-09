@@ -372,7 +372,7 @@ test('it fills a new scheduled workout editor from free-form text', function () 
     expect($workoutDay->workout_plan_id)->toBe($workoutPlan->id)
         ->and($workoutDay->scheduled_for?->toDateString())->toBe($targetDate)
         ->and($workoutBlocks)->toHaveCount(2)
-        ->and($plannedExercise->exercise)->toBe('bentOverRow')
+        ->and($plannedExercise->exercise)->toBe('barbellBentOverRow')
         ->and($plannedExercise->target_weight_kg)->toBe('59.00');
 });
 
@@ -382,7 +382,7 @@ function workoutFromTextResponse(): array
     return [
         'title' => 'Back day', 'focus' => 'pull', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
         'blocks' => [
-            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
+            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'barbellBentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
             ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'barbellBenchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],
         ],
     ];

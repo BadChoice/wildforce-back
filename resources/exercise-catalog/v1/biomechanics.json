@@ -779,7 +779,7 @@
             "dumbbells"
         ]
     },
-    "chestFly": {
+    "dumbbellChestFly": {
         "phase": "lowered/stretch",
         "bodyPosition": [
             "lying supine on a flat bench",
@@ -858,7 +858,7 @@
             "supinated narrow grip"
         ]
     },
-    "romanianDeadlift": {
+    "barbellRomanianDeadlift": {
         "phase": "bottom/stretch",
         "bodyPosition": [
             "standing hip hinge",
