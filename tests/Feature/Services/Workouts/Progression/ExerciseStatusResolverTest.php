@@ -17,7 +17,7 @@ beforeEach(function () {
 
     foreach (['2026-01-01', '2026-01-08', '2026-01-15'] as $week => $date) {
         createExerciseStatusPlan($this->user, $date, [
-            'benchPress' => [100, 'justRight'],
+            'barbellBenchPress' => [100, 'justRight'],
             'barbellBackSquat' => [100 + $week * 5, 'justRight'],
             'latPulldown' => [60, $week === 2 ? 'veryHard' : 'justRight'],
             'catCow' => [0, 'justRight'],
@@ -41,14 +41,14 @@ function resolveExerciseStatuses(User $user, bool $startsNewPhase): array
 test('gives each resistance exercise a single status', function () {
     expect(resolveExerciseStatuses($this->user, startsNewPhase: true))->toBe([
         'barbellBackSquat' => ExerciseStatus::Progress,
-        'benchPress' => ExerciseStatus::Rotate,
+        'barbellBenchPress' => ExerciseStatus::Rotate,
         'latPulldown' => ExerciseStatus::Reduce,
     ]);
 });
 
 test('keeps stale plateaued exercises until a new phase starts', function () {
     expect(resolveExerciseStatuses($this->user, startsNewPhase: false))
-        ->toHaveKey('benchPress', ExerciseStatus::Keep);
+        ->toHaveKey('barbellBenchPress', ExerciseStatus::Keep);
 });
 
 /**

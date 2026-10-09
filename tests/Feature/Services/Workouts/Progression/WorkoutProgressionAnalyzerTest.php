@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
 
 test('returns the progression state from a user training history', function () {
     $user = User::factory()->create(['current_streak' => 5]);
-    createProgressionExerciseProfile($user, 'benchPress');
+    createProgressionExerciseProfile($user, 'barbellBenchPress');
 
     createCompletedPlan($user, 1, '2026-01-01', 100, 'justRight');
     createCompletedPlan($user, 2, '2026-02-01', 105, 'justRight');
@@ -30,9 +30,9 @@ test('returns the progression state from a user training history', function () {
     )->analyze();
 
     expect($analysis->mesocycleNumber)->toBe(4)
-        ->and($analysis->exerciseTrends)->toBe(['benchPress' => 'improving'])
+        ->and($analysis->exerciseTrends)->toBe(['barbellBenchPress' => 'improving'])
         ->and($analysis->overallVolumeTrend)->toBe('increasing')
-        ->and($analysis->staleExercises)->toBe(['benchPress'])
+        ->and($analysis->staleExercises)->toBe(['barbellBenchPress'])
         ->and($analysis->completionRate)->toBe(1.0)
         ->and($analysis->recentCompletedWorkouts)->toBe(3)
         ->and($analysis->readinessLevel)->toBe('high')
@@ -68,7 +68,7 @@ test('returns the progression state from a user training history', function () {
 
 test('returns low readiness when recent exercise feedback is predominantly hard', function () {
     $user = User::factory()->create(['current_streak' => 10]);
-    createProgressionExerciseProfile($user, 'benchPress');
+    createProgressionExerciseProfile($user, 'barbellBenchPress');
 
     createCompletedPlan($user, 1, '2026-01-01', 100, 'hard');
     createCompletedPlan($user, 2, '2026-02-01', 100, 'veryHard');
@@ -95,7 +95,7 @@ test('returns low readiness when recent exercise feedback is predominantly hard'
 
 test('uses complete non-deload exercise history while limiting plan-level analysis to recent plans', function () {
     $user = User::factory()->create(['current_streak' => 5]);
-    createProgressionExerciseProfile($user, 'benchPress');
+    createProgressionExerciseProfile($user, 'barbellBenchPress');
 
     createCompletedPlan($user, 1, '2026-01-01', 50, 'justRight');
     createCompletedPlan($user, 2, '2026-02-01', 100, 'justRight');
@@ -108,7 +108,7 @@ test('uses complete non-deload exercise history while limiting plan-level analys
     )->analyze();
 
     expect($analysis->mesocycleNumber)->toBe(5)
-        ->and($analysis->exerciseTrends)->toBe(['benchPress' => 'improving'])
+        ->and($analysis->exerciseTrends)->toBe(['barbellBenchPress' => 'improving'])
         ->and($analysis->overallVolumeTrend)->toBe('stable')
         ->and($analysis->recentCompletedWorkouts)->toBe(3)
         ->and($analysis->recentFeedbackBreakdown)->toBe(['justRight' => 3]);
@@ -125,12 +125,12 @@ test('reports trends for performed exercises without an exercise profile', funct
         app(ExerciseCatalog::class),
     )->analyze();
 
-    expect($analysis->exerciseTrends)->toBe(['benchPress' => 'improving']);
+    expect($analysis->exerciseTrends)->toBe(['barbellBenchPress' => 'improving']);
 });
 
 test('ignores warmup ramp-up sets when analysing progression', function () {
     $user = User::factory()->create(['current_streak' => 5]);
-    createProgressionExerciseProfile($user, 'benchPress');
+    createProgressionExerciseProfile($user, 'barbellBenchPress');
 
     createCompletedPlan($user, 1, '2026-01-01', 100, 'justRight');
     createCompletedPlan($user, 2, '2026-02-01', 105, 'justRight');
@@ -140,7 +140,7 @@ test('ignores warmup ramp-up sets when analysing progression', function () {
     $warmupExercise = PlannedExercise::factory()
         ->for($workoutDay, 'workoutDay')
         ->for(WorkoutBlock::factory()->for($workoutDay, 'workoutDay')->create(['type' => WorkoutBlockType::Warmup]), 'block')
-        ->create(['exercise' => 'benchPress']);
+        ->create(['exercise' => 'barbellBenchPress']);
 
     ExerciseResult::query()->forceCreate([
         'id' => (string) Str::uuid(),
@@ -157,7 +157,7 @@ test('ignores warmup ramp-up sets when analysing progression', function () {
         app(ExerciseCatalog::class),
     )->analyze();
 
-    expect($analysis->exerciseTrends)->toBe(['benchPress' => 'improving'])
+    expect($analysis->exerciseTrends)->toBe(['barbellBenchPress' => 'improving'])
         ->and($analysis->recentFeedbackBreakdown)->toBe(['justRight' => 3]);
 });
 
@@ -218,7 +218,7 @@ function createCompletedPlan(User $user, int $mesocycleNumber, string $date, flo
     $plannedExercise = PlannedExercise::factory()
         ->for($workoutDay, 'workoutDay')
         ->create([
-            'exercise' => 'benchPress',
+            'exercise' => 'barbellBenchPress',
             'created_at' => $createdAt,
             'updated_at' => $createdAt,
         ]);

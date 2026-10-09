@@ -3,7 +3,7 @@
         "schemaVersion": "1.0.0",
         "locale": "en",
         "source": "WildforceShared ExerciseCatalog.swift",
-        "exerciseCount": 133
+        "exerciseCount": 132
     },
     "referenceData": {
         "exerciseCategories": [
@@ -2675,7 +2675,7 @@
             ],
             "substitutionCandidates": [
                 "declinePushUp",
-                "benchPress",
+                "barbellBenchPress",
                 "chestPressMachine",
                 "chestFly"
             ],
@@ -2736,7 +2736,7 @@
             ],
             "substitutionCandidates": [
                 "pushUp",
-                "benchPress",
+                "barbellBenchPress",
                 "chestPressMachine"
             ],
             "description": "Perform push-ups with your feet elevated on a bench to place more emphasis on the upper chest and shoulders.",
@@ -2772,8 +2772,8 @@
             }
         },
         {
-            "id": "benchPress",
-            "name": "Bench Press",
+            "id": "barbellBenchPress",
+            "name": "Barbell Bench Press",
             "category": "strength",
             "requiredEquipment": [
                 "flatBench",
@@ -2796,7 +2796,7 @@
                 "elbowPain"
             ],
             "substitutionCandidates": [
-                "inclineBenchPress",
+                "dumbbellInclineBenchPress",
                 "chestPressMachine",
                 "pushUp",
                 "dumbbellBenchPress",
@@ -2859,7 +2859,7 @@
                 "elbowPain"
             ],
             "substitutionCandidates": [
-                "benchPress",
+                "barbellBenchPress",
                 "chestPressMachine",
                 "pushUp"
             ],
@@ -2919,7 +2919,7 @@
                 "elbowPain"
             ],
             "substitutionCandidates": [
-                "benchPress",
+                "barbellBenchPress",
                 "chestPressMachine",
                 "pushUp"
             ],
@@ -2956,69 +2956,6 @@
             }
         },
         {
-            "id": "inclineBenchPress",
-            "name": "Incline Bench Press",
-            "category": "strength",
-            "requiredEquipment": [
-                "adjustableBench",
-                "dumbbells"
-            ],
-            "compatibleGoals": [
-                "buildMuscle",
-                "gainStrength",
-                "bodyRecomposition"
-            ],
-            "movementPatterns": [
-                "horizontalPush"
-            ],
-            "difficulty": "beginner",
-            "isUnilateral": false,
-            "isPerSideLoad": false,
-            "contraindicatedRestrictions": [
-                "shoulderPain",
-                "wristPain",
-                "elbowPain"
-            ],
-            "substitutionCandidates": [
-                "benchPress",
-                "arnoldPress",
-                "chestPressMachine",
-                "barbellInclineBenchPress",
-                "smithMachineInclineBenchPress"
-            ],
-            "description": "An upward-angled press that targets the upper portion of the chest and shoulders.",
-            "instructions": [
-                "Set an adjustable bench to a 30-45 degree incline.",
-                "Sit with your back against the bench and feet flat on the floor.",
-                "Press the dumbbells upward from shoulder height until your arms are extended over your chest.",
-                "Lower the weights back to shoulder level with control."
-            ],
-            "tips": [
-                "Don't let the dumbbells drift too far forward or backward.",
-                "Focus on squeezing your upper chest at the top of the movement.",
-                "Maintain a stable core to avoid excessive arching."
-            ],
-            "primaryMuscles": [
-                "chest"
-            ],
-            "secondaryMuscles": [
-                "shoulders",
-                "triceps"
-            ],
-            "supportsExternalLoad": true,
-            "trackingMode": "reps",
-            "targetMetrics": [
-                "reps",
-                "weight"
-            ],
-            "metValue": 5,
-            "notesForLlm": "Upper-chest biased press; dumbbell implementation offers more shoulder freedom.",
-            "assets": {
-                "verticalImageKey": "inclineBenchPress_{gender}.jpeg",
-                "tutorialImageKey": "inclineBenchPress_{gender}.png"
-            }
-        },
-        {
             "id": "dumbbellInclineBenchPress",
             "name": "Dumbbell Incline Bench Press",
             "category": "strength",
@@ -3043,7 +2980,6 @@
                 "elbowPain"
             ],
             "substitutionCandidates": [
-                "inclineBenchPress",
                 "barbellInclineBenchPress",
                 "smithMachineInclineBenchPress",
                 "dumbbellBenchPress"
@@ -3105,8 +3041,8 @@
                 "elbowPain"
             ],
             "substitutionCandidates": [
-                "inclineBenchPress",
-                "benchPress",
+                "dumbbellInclineBenchPress",
+                "barbellBenchPress",
                 "smithMachineInclineBenchPress"
             ],
             "description": "Pressing a barbell on an incline bench targets the upper chest and shoulders while allowing for heavier loads.",
@@ -3165,7 +3101,7 @@
                 "elbowPain"
             ],
             "substitutionCandidates": [
-                "inclineBenchPress",
+                "dumbbellInclineBenchPress",
                 "barbellInclineBenchPress",
                 "chestPressMachine"
             ],
@@ -3226,7 +3162,7 @@
                 "elbowPain"
             ],
             "substitutionCandidates": [
-                "benchPress",
+                "barbellBenchPress",
                 "dumbbellDeclineBenchPress",
                 "smithMachineDeclineBenchPress"
             ],
@@ -3288,7 +3224,7 @@
             ],
             "substitutionCandidates": [
                 "barbellDeclineBenchPress",
-                "benchPress",
+                "barbellBenchPress",
                 "pushUp"
             ],
             "description": "Dumbbell decline press provides a deep stretch for the lower chest and improved range of motion.",
@@ -3406,7 +3342,7 @@
                 "elbowPain"
             ],
             "substitutionCandidates": [
-                "benchPress",
+                "barbellBenchPress",
                 "pushUp",
                 "chestFly"
             ],
@@ -3465,7 +3401,7 @@
             ],
             "substitutionCandidates": [
                 "cableFly",
-                "benchPress"
+                "barbellBenchPress"
             ],
             "description": "An isolation movement that stretches and defines the chest muscles.",
             "instructions": [
@@ -3686,7 +3622,7 @@
             "substitutionCandidates": [
                 "cableFly",
                 "chestFly",
-                "inclineBenchPress"
+                "dumbbellInclineBenchPress"
             ],
             "description": "Setting the cables low and pulling upward targets the upper chest and front deltoids.",
             "instructions": [
@@ -4527,7 +4463,7 @@
             ],
             "substitutionCandidates": [
                 "tricepsDip",
-                "benchPress",
+                "barbellBenchPress",
                 "pushUp",
                 "ringDip"
             ],
@@ -6795,7 +6731,7 @@
             "substitutionCandidates": [
                 "pushUp",
                 "chestPressMachine",
-                "benchPress"
+                "barbellBenchPress"
             ],
             "description": "A push-up variation where you lift your hands off the floor at the bottom of each rep to ensure a full range of motion and build explosive power.",
             "instructions": [

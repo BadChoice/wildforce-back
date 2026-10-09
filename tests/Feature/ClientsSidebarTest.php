@@ -309,7 +309,7 @@ test('it updates a workout day and removes its deleted blocks and exercises', fu
     $retainedExercise = PlannedExercise::factory()
         ->for($workoutDay, 'workoutDay')
         ->for($retainedBlock, 'block')
-        ->create(['exercise' => 'benchPress']);
+        ->create(['exercise' => 'barbellBenchPress']);
     $this->actingAs($coach);
 
     Livewire::test('dashboard.clients')

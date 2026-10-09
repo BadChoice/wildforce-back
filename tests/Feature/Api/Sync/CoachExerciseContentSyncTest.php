@@ -24,7 +24,7 @@ test('it pulls the content of the active coaches of the user', function () {
         'exercise' => 'walking',
         'notes' => 'Keep a neutral spine.',
     ]);
-    $deletedMedia = CoachExerciseContent::factory()->create(['coach_user_id' => $this->coach->id, 'exercise' => 'benchPress']);
+    $deletedMedia = CoachExerciseContent::factory()->create(['coach_user_id' => $this->coach->id, 'exercise' => 'barbellBenchPress']);
     $deletedMedia->delete();
     $pausedCoach = User::factory()->create();
     CoachingEnrollment::factory()->create([

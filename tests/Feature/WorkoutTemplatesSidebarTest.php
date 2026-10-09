@@ -27,15 +27,15 @@ test('it lets a coach create and delete workout templates from the sidebar page'
     Livewire::test('workout-templates.index')
         ->call('openWorkoutDayEditor')
         ->set('exerciseCategory', 'strength')
-        ->assertSee('Bench Press')
+        ->assertSee('Barbell Bench Press')
         ->assertDontSee('Push-Up')
         ->set('exerciseMuscle', 'glutes')
-        ->assertDontSee('Bench Press')
+        ->assertDontSee('Barbell Bench Press')
         ->set('workoutDayTitle', 'Upper-body strength')
         ->set('workoutDayFocus', 'upperBody')
         ->set('exerciseCategory', '')
         ->set('exerciseMuscle', '')
-        ->call('addExercise', 'benchPress')
+        ->call('addExercise', 'barbellBenchPress')
         ->call('saveWorkoutDay')
         ->assertSet('showWorkoutDayEditor', false)
         ->assertSee('Upper-body strength');
@@ -45,7 +45,7 @@ test('it lets a coach create and delete workout templates from the sidebar page'
     expect($template->user_id)->toBe($coach->id)
         ->and($template->workout_plan_id)->toBeNull()
         ->and($template->kind)->toBe(WorkoutKind::Template)
-        ->and($template->blocks()->sole()->exercises()->sole()->exercise)->toBe('benchPress');
+        ->and($template->blocks()->sole()->exercises()->sole()->exercise)->toBe('barbellBenchPress');
 
     Livewire::test('workout-templates.index')
         ->call('openExistingWorkoutDayEditor', $template->id)
@@ -60,7 +60,7 @@ test('it lets a coach create and delete workout templates from the sidebar page'
 
     expect($template->title)->toBe('Upper-body hypertrophy')
         ->and($template->estimated_duration_minutes)->toBe(50)
-        ->and($template->blocks()->sole()->exercises()->sole()->exercise)->toBe('benchPress');
+        ->and($template->blocks()->sole()->exercises()->sole()->exercise)->toBe('barbellBenchPress');
 
     Livewire::test('workout-templates.index')
         ->call('deleteTemplate', $template->id)
@@ -132,7 +132,7 @@ function templateWorkoutFromTextResponse(): array
         'title' => 'Back template', 'focus' => 'pull', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
         'blocks' => [
             ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
-            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'benchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],
+            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'barbellBenchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],
         ],
     ];
 }

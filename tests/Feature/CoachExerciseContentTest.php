@@ -146,7 +146,7 @@ test('the exercise list marks the exercises with coach content', function () {
     CoachExerciseContent::factory()->create(['coach_user_id' => $this->coach->id, 'exercise' => 'walking']);
     $removedMedia = CoachExerciseContent::factory()->create(['coach_user_id' => $this->coach->id, 'exercise' => 'airSquat']);
     $removedMedia->delete();
-    CoachExerciseContent::factory()->create(['exercise' => 'benchPress']);
+    CoachExerciseContent::factory()->create(['exercise' => 'barbellBenchPress']);
 
     Livewire::actingAs($this->coach)
         ->test('exercises.catalog')
@@ -154,6 +154,6 @@ test('the exercise list marks the exercises with coach content', function () {
         ->assertSee('Custom')
         ->set('search', 'airSquat')
         ->assertDontSee('Custom')
-        ->set('search', 'benchPress')
+        ->set('search', 'barbellBenchPress')
         ->assertDontSee('Custom');
 });

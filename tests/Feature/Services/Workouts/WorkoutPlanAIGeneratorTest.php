@@ -181,7 +181,7 @@ test('keeps unreliable and empty data out of the prompt', function () {
     TrainingLocation::factory()->for($user)->create([
         'equipment' => array_column(Equipment::cases(), 'value'),
     ]);
-    foreach (['pushUp', 'catCow', 'benchPress'] as $exercise) {
+    foreach (['pushUp', 'catCow', 'barbellBenchPress'] as $exercise) {
         ExerciseProfile::factory()->for($user)->create(['exercise' => $exercise, 'working_weight' => 50]);
     }
     ExerciseProfile::factory()->for($user)->create([
@@ -220,7 +220,7 @@ test('keeps unreliable and empty data out of the prompt', function () {
     expect($prompt)->toContain('Weight: unknown')
         ->toContain('Completion rate: 50%')
         ->toContain("exercise | status | last performance (best set) | trend\npushUp | progress | 3×10 @ 35 kg, hard | improving\n```")
-        ->and($profiles)->toContain('benchPress | 50 kg')
+        ->and($profiles)->toContain('barbellBenchPress | 50 kg')
         ->not->toContain('pushUp')
         ->not->toContain('pullUp')
         ->and($history)->toContain('push (completed): pushUp (planned 3×8-12 @ 35 kg; did 3×10 @ 35 kg, hard), catCow (planned 3×8-12; did 3×10, hard)')

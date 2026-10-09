@@ -37,7 +37,7 @@ test('it renders workout days with their blocks and exercises in kanban view', f
     ]);
     $block = WorkoutBlock::factory()->for($workoutDay)->create(['type' => 'superset']);
     PlannedExercise::factory()->for($workoutDay)->for($block, 'block')->create([
-        'exercise' => 'benchPress',
+        'exercise' => 'barbellBenchPress',
         'sets' => 4,
         'reps_min' => 6,
         'reps_max' => 8,
@@ -49,7 +49,7 @@ test('it renders workout days with their blocks and exercises in kanban view', f
         ->assertSet('viewMode', 'kanban')
         ->assertSee('Push day')
         ->assertSee('Superset')
-        ->assertSee('Bench Press')
+        ->assertSee('Barbell Bench Press')
         ->assertSee('4 × 6–8')
         ->call('openWorkoutDayEditor', $workoutDay->id)
         ->assertSet('showWorkoutDayEditor', true);
@@ -105,7 +105,7 @@ test('it opens completed workout day view popup when pressing a completed workou
     ]);
 
     $plannedExercise = PlannedExercise::factory()->for($workoutDay)->for($block, 'block')->create([
-        'exercise' => 'benchPress',
+        'exercise' => 'barbellBenchPress',
         'sets' => 3,
         'reps_min' => 8,
         'reps_max' => 10,
@@ -383,7 +383,7 @@ function workoutFromTextResponse(): array
         'title' => 'Back day', 'focus' => 'pull', 'dayType' => 'hypertrophy', 'estimatedDurationMinutes' => 55,
         'blocks' => [
             ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'bentOverRow', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 59, 'restSeconds' => 90]]],
-            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'benchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],
+            ['type' => 'standard', 'rounds' => 1, 'exercises' => [['exercise' => 'barbellBenchPress', 'sets' => 3, 'repsMin' => 8, 'repsMax' => 12, 'targetWeightKg' => 40, 'restSeconds' => 90]]],
         ],
     ];
 }

@@ -136,7 +136,7 @@ class DemoPlatformSeeder extends Seeder
         ExerciseProfile::factory()
             ->count(4)
             ->sequence(
-                ['exercise' => 'benchPress'],
+                ['exercise' => 'barbellBenchPress'],
                 ['exercise' => 'barbellBackSquat'],
                 ['exercise' => 'latPulldown'],
                 ['exercise' => 'romanianDeadlift'],

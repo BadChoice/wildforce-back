@@ -60,12 +60,12 @@ Fitxers principals:
 - **Historial recent**:
   - s'ometen els dies sense cap resultat (`planned` i `skipped` buits) i els plans que queden buits;
   - cada dia mostra el focus i l'estat: `push (completed): …`;
-  - cada exercici mostra què estava prescrit i què es va fer: `benchPress (planned 4×6-8 @ 40 kg; did 4×8 @ 40 kg, justRight)`;
+  - cada exercici mostra què estava prescrit i què es va fer: `barbellBenchPress (planned 4×6-8 @ 40 kg; did 4×8 @ 40 kg, justRight)`;
   - els pesos van sense decimals sobrers (`37.5 kg`, `40 kg`).
 
 ## ✅ 4. Revisar el càlcul de tendències
 
-**Problema:** `progressionTrend()` comparava el pes mitjà recent amb l'anterior. `completed_weight` i `completed_reps` són només els de l'última sèrie, de manera que una sèrie de back-off o una dada mal entrada distorsionava la tendència. A més, el feedback no comptava i només hi havia tendència per als exercicis amb perfil (p. ex. `benchPress` en quedava fora si no tenia perfil).
+**Problema:** `progressionTrend()` comparava el pes mitjà recent amb l'anterior. `completed_weight` i `completed_reps` són només els de l'última sèrie, de manera que una sèrie de back-off o una dada mal entrada distorsionava la tendència. A més, el feedback no comptava i només hi havia tendència per als exercicis amb perfil (p. ex. `barbellBenchPress` en quedava fora si no tenia perfil).
 
 **Fet:** nova classe `ExerciseTrendCalculator`.
 - Cada sessió es puntua per la millor sèrie (`per_set_reps` × `per_set_weights_kg`, amb `completed_*` com a alternativa):
@@ -105,7 +105,7 @@ Fitxers principals:
   - `hard` → mantenir;
   - `veryHard` o regressió → baixar la càrrega un 5–10 % o substituir l'exercici.
 - [ ] Aplicar els paràmetres de `PhasePrescription` (rang de reps i RIR) en canviar de fase.
-- [ ] Passar a la IA la prescripció suggerida ja calculada (`benchPress → 4×6 @ 37.5 kg, RIR 1`).
+- [ ] Passar a la IA la prescripció suggerida ja calculada (`barbellBenchPress → 4×6 @ 37.5 kg, RIR 1`).
 - [ ] Opcional: que la IA només retorni exercicis i ordre, i que PHP ompli sèries, reps i càrregues.
 
 ## ⬜ 7. No cridar la IA dins d'una mateixa fase (estalvi més gran)

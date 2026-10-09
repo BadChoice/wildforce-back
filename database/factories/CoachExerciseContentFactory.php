@@ -20,7 +20,7 @@ class CoachExerciseContentFactory extends Factory
     {
         return [
             'coach_user_id' => User::factory(),
-            'exercise' => fake()->randomElement(['benchPress', 'barbellBackSquat', 'latPulldown', 'romanianDeadlift']),
+            'exercise' => fake()->randomElement(['barbellBenchPress', 'barbellBackSquat', 'latPulldown', 'romanianDeadlift']),
             'image_path' => null,
             'youtube_video_id' => 'dQw4w9WgXcQ',
             'notes' => null,
