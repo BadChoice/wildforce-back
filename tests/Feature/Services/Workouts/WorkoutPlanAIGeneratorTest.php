@@ -1,6 +1,7 @@
 <?php
 
 use App\Ai\Agents\Workouts\WorkoutPlanGeneratorAgent;
+use App\Enums\Equipment;
 use App\Enums\ExerciseSetStyle;
 use App\Enums\MesocyclePhase;
 use App\Enums\WorkoutBlockType;
@@ -166,6 +167,55 @@ test('separates deload performance from the active prescription baseline', funct
         ->not->toContain('20.00 kg')
         ->and($deloadHistory)->toContain('20.00 kg')
         ->not->toContain('35.00 kg');
+
+    WorkoutPlanGeneratorAgent::assertNeverPrompted();
+});
+
+test('lists every compatible exercise and omits mobility drills when warmups and cooldowns are skipped', function () {
+    $user = User::factory()->create();
+    TrainingPreference::factory()->for($user)->create([
+        'workout_days' => ['monday'],
+        'goal' => 'buildMuscle',
+        'skips_warmups' => true,
+        'skips_cooldowns' => true,
+    ]);
+    TrainingLocation::factory()->for($user)->create([
+        'equipment' => array_column(Equipment::cases(), 'value'),
+    ]);
+    WorkoutPlanGeneratorAgent::fake()->preventStrayPrompts();
+
+    $preview = app(WorkoutPlanAIGenerator::class)->preview($user);
+    $allowedExercises = (string) str($preview['prompt'])->after('## Allowed exercises');
+
+    expect($allowedExercises)->toContain('pullUp |')
+        ->toContain('tricepsPushdown |')
+        ->not->toContain('catCow |');
+
+    WorkoutPlanGeneratorAgent::assertNeverPrompted();
+});
+
+test('describes the phase position and its numeric prescription', function () {
+    $user = User::factory()->create();
+    TrainingPreference::factory()->for($user)->create([
+        'workout_days' => ['monday'],
+        'goal' => 'buildMuscle',
+        'general_training_level' => 'intermediate',
+        'body_composition_phase' => 'cut',
+    ]);
+    TrainingLocation::factory()->for($user)->create([
+        'equipment' => ['bodyweight'],
+    ]);
+    WorkoutPlan::factory()->for($user)->create(['mesocycle_number' => 4]);
+    WorkoutPlanGeneratorAgent::fake()->preventStrayPrompts();
+
+    $prompt = app(WorkoutPlanAIGenerator::class)->preview($user)['prompt'];
+
+    expect($prompt)->toContain('Phase: intensification week 2 of 2 (cycle week 5 of 6). Next week: deload')
+        ->toContain('## Phase prescription')
+        ->toContain('Main lifts: 3 sets × 6-10 reps, target RIR 1, rest 2-3 min.')
+        ->toContain('Accessories: 2-3 sets × 8-12 reps, target RIR 0, rest 90 s.')
+        ->toContain('Calorie deficit:')
+        ->toContain('Next week is a deload');
 
     WorkoutPlanGeneratorAgent::assertNeverPrompted();
 });

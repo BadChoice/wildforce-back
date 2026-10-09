@@ -58,7 +58,6 @@ final class SingleWorkoutAIGenerator
                     && array_intersect($exercise['contraindicatedRestrictions'] ?? [], $restrictions) === [];
             })
             ->sortBy('id')
-            ->take(60)
             ->values();
     }
 

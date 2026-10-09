@@ -39,8 +39,8 @@ final class MesocyclePhaseRules
             return null;
         }
 
-        $accumulationLength = $cycleLength <= 4 ? $cycleLength - 1 : intdiv($cycleLength, 2);
-        $intensificationLength = max($cycleLength - $accumulationLength - 1, 0);
+        $accumulationLength = self::phaseLength(MesocyclePhase::Accumulation, $cycleLength);
+        $intensificationLength = self::phaseLength(MesocyclePhase::Intensification, $cycleLength);
         $positionInCycle = (($mesocycleNumber - 1) % $cycleLength) + 1;
 
         if ($positionInCycle <= $accumulationLength) {
@@ -67,6 +67,20 @@ final class MesocyclePhaseRules
             'cycleLength' => $cycleLength,
             'positionInCycle' => $positionInCycle,
         ];
+    }
+
+    /**
+     * Number of weeks the given phase lasts within a cycle of the given length.
+     */
+    public static function phaseLength(MesocyclePhase $phase, int $cycleLength): int
+    {
+        $accumulationLength = $cycleLength <= 4 ? $cycleLength - 1 : intdiv($cycleLength, 2);
+
+        return match ($phase) {
+            MesocyclePhase::Accumulation => $accumulationLength,
+            MesocyclePhase::Intensification => max($cycleLength - $accumulationLength - 1, 0),
+            MesocyclePhase::Deload => 1,
+        };
     }
 
     public static function mesocycleIndex(int $mesocycleNumber, int $cycleLength): ?int

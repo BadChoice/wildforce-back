@@ -13,6 +13,7 @@ use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
 use App\Services\Workouts\Progression\MesocyclePhaseRules;
+use App\Services\Workouts\Progression\PhasePrescription;
 use App\Services\Workouts\Progression\ProgressionAnalysis;
 use App\Services\Workouts\Progression\TrainingHistory;
 use App\Services\Workouts\Progression\WorkoutProgressionAnalyzer;
@@ -156,9 +157,8 @@ final class WorkoutPlanAIGenerator
             $analysis->mesocycleNumber,
             $preferences?->general_training_level ?? 'beginner',
         );
-        $phaseDescription = $phase === null
-            ? 'Not periodized'
-            : $phase['phase']->value.' (week '.$phase['weekInPhase'].' of '.$phase['cycleLength'].')';
+        $phaseDescription = $this->phaseDescription($phase, $analysis->mesocycleNumber);
+        $phasePrescription = PhasePrescription::describe($phase, $preferences?->goal, $preferences?->body_composition_phase);
         $profiles = $this->markdownList($user->exerciseProfiles
             ->map(fn ($profile): string => implode(' | ', array_filter([
                 $profile->exercise,
@@ -205,7 +205,6 @@ final class WorkoutPlanAIGenerator
 ## Progression context
 - Next plan number: {$analysis->mesocycleNumber}
 - Phase: {$phaseDescription}
-- Phase prescription: {$this->phaseGuidance($phase['phase'] ?? null, $preferences?->goal)}
 - Readiness: {$analysis->readinessLevel}
 - Completion rate: {$analysis->completionRate}
 - Overall volume trend: {$analysis->overallVolumeTrend}
@@ -214,6 +213,10 @@ final class WorkoutPlanAIGenerator
 - Rotate when practical: {$this->list($analysis->staleExercises)}
 - Underworked muscles: {$this->list($analysis->neglectedMuscleGroups)}
 - Overworked muscles: {$this->list($analysis->overworkedMuscleGroups)}
+
+## Phase prescription
+Default working parameters for this week. Deviate only when readiness, recent performance, or the duration budget requires a more conservative choice.
+{$phasePrescription}
 
 ## Exercise profiles
 {$profiles}
@@ -289,20 +292,21 @@ PROMPT;
         $location = $user->trainingLocations->firstWhere('is_default', true) ?? $user->trainingLocations->first();
         $equipment = $this->equipment($location) ?? [Equipment::Bodyweight->value];
         $restrictions = $preferences?->movement_restrictions ?? [];
+        $needsMobilityExercises = $preferences?->needsMobilityExercises() ?? true;
 
         return collect($this->exerciseCatalog->all()['exercises'] ?? [])
             ->filter(fn (mixed $exercise): bool => is_array($exercise))
-            ->filter(function (array $exercise) use ($preferences, $equipment, $restrictions): bool {
+            ->filter(function (array $exercise) use ($preferences, $equipment, $restrictions, $needsMobilityExercises): bool {
                 $requiredEquipment = $exercise['requiredEquipment'] ?? [];
                 $compatibleGoals = $exercise['compatibleGoals'] ?? [];
                 $contraindications = $exercise['contraindicatedRestrictions'] ?? [];
 
                 return array_diff($requiredEquipment, $equipment) === []
                     && ($compatibleGoals === [] || in_array($preferences?->goal, $compatibleGoals, true))
-                    && array_intersect($contraindications, $restrictions) === [];
+                    && array_intersect($contraindications, $restrictions) === []
+                    && ($needsMobilityExercises || ($exercise['category'] ?? null) !== ExerciseCategory::Mobility->value);
             })
             ->sortBy('id')
-            ->take(60)
             ->values();
     }
 
@@ -385,18 +389,22 @@ PROMPT;
         return $value === [] || $value === null ? 'None' : (string) json_encode($value);
     }
 
-    private function phaseGuidance(?MesocyclePhase $phase, ?string $goal): string
+    /**
+     * @param  array{phase: MesocyclePhase, weekInPhase: int, cycleLength: int, positionInCycle: int}|null  $phase
+     */
+    private function phaseDescription(?array $phase, int $mesocycleNumber): string
     {
-        return match ($phase) {
-            MesocyclePhase::Deload => 'Reduce working volume by roughly 40% and use conservative loads.',
-            MesocyclePhase::Intensification => $goal === 'gainStrength'
-                ? 'Main lifts: 2-5 reps, 82-92% of 1RM, 3-5 minutes rest.'
-                : 'Reduce volume, use challenging but controlled loads, and rest 2-3 minutes on main lifts.',
-            MesocyclePhase::Accumulation => $goal === 'gainStrength'
-                ? 'Main lifts: 5-8 reps, 75-80% of 1RM, 2-3 minutes rest.'
-                : 'Prioritise productive volume with moderate loads, usually 8-15 reps and 60-90 seconds rest.',
-            default => 'Build sustainable technique and consistency before increasing load or volume.',
-        };
+        if ($phase === null) {
+            return 'Not periodized';
+        }
+
+        $phaseLength = MesocyclePhaseRules::phaseLength($phase['phase'], $phase['cycleLength']);
+        $nextPhase = MesocyclePhaseRules::phaseInfoForCycleLength($mesocycleNumber + 1, $phase['cycleLength'])['phase'] ?? null;
+
+        return $phase['phase']->value
+            .' week '.$phase['weekInPhase'].' of '.$phaseLength
+            .' (cycle week '.$phase['positionInCycle'].' of '.$phase['cycleLength'].')'
+            .($nextPhase === null || $nextPhase === $phase['phase'] ? '' : '. Next week: '.$nextPhase->value);
     }
 
     private function recentWorkoutHistory(TrainingHistory $trainingHistory, bool $deloadOnly = false): string

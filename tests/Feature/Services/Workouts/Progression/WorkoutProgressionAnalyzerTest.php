@@ -131,7 +131,11 @@ test('resolves mesocycle phases by training level and cycle position', function 
             'cycleLength' => 6,
             'positionInCycle' => 6,
         ])
-        ->and(MesocyclePhaseRules::phaseInfo(1, 'completeBeginner'))->toBeNull();
+        ->and(MesocyclePhaseRules::phaseInfo(1, 'completeBeginner'))->toBeNull()
+        ->and(MesocyclePhaseRules::phaseLength(MesocyclePhase::Accumulation, 6))->toBe(3)
+        ->and(MesocyclePhaseRules::phaseLength(MesocyclePhase::Intensification, 6))->toBe(2)
+        ->and(MesocyclePhaseRules::phaseLength(MesocyclePhase::Intensification, 4))->toBe(0)
+        ->and(MesocyclePhaseRules::phaseLength(MesocyclePhase::Deload, 6))->toBe(1);
 });
 
 function createProgressionExerciseProfile(User $user, string $exercise): void

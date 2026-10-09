@@ -30,6 +30,17 @@ class TrainingPreference extends Model implements Syncable
     }
 
     /**
+     * Whether mobility drills are useful to this user: they do warmups or cooldowns, or train mobility on purpose.
+     */
+    public function needsMobilityExercises(): bool
+    {
+        return ! $this->skips_warmups
+            || ! $this->skips_cooldowns
+            || $this->goal === 'improveMobility'
+            || in_array('mobility', $this->custom_workout_focuses ?? [], true);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function syncPayload(): array
