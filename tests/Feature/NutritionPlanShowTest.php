@@ -12,7 +12,7 @@ use Livewire\Livewire;
 
 test('it shows a client nutrition plan with logged totals and the day detail to their coach', function () {
     $this->travelTo('2026-10-06 12:00:00');
-    $client = User::factory()->create(['name' => 'Alex Client']);
+    $client = User::factory()->create(['name' => 'Alex Client', 'timezone' => 'Europe/Madrid']);
     $coach = User::factory()->create();
     CoachingEnrollment::create([
         'client_user_id' => $client->id,
@@ -49,6 +49,7 @@ test('it shows a client nutrition plan with logged totals and the day detail to 
         ->assertSee('On target')
         ->assertSee('Logged food')
         ->assertSee('Chicken bowl')
+        ->assertSee('15:00')
         ->call('selectDay', '2026-10-05')
         ->assertSet('showDayDetail', true)
         ->assertSee('Protein oats')

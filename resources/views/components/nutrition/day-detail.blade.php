@@ -1,4 +1,4 @@
-@props(['day', 'meals', 'entries'])
+@props(['day', 'meals', 'entries', 'timezone'])
 
 @use('App\Enums\MealType')
 
@@ -84,7 +84,7 @@
                                 <div class="min-w-0 flex-1">
                                     <div class="flex items-baseline justify-between gap-2">
                                         <span class="truncate font-medium">{{ $entry->title }}</span>
-                                        <span class="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">{{ $entry->logged_at->setTimezone($day->date->getTimezone())->format('H:i') }}</span>
+                                        <span class="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">{{ $entry->logged_at->setTimezone($timezone)->format('H:i') }}</span>
                                     </div>
                                     @if ($entry->notes)
                                         <p class="mt-1 text-zinc-600 dark:text-zinc-300">{{ $entry->notes }}</p>

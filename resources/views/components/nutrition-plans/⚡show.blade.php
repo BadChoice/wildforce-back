@@ -206,7 +206,7 @@ new class extends Component {
                         @forelse ($loggedEntries as $entry)
                             <div wire:key="nutrition-plan-logged-entry-{{ $entry->id }}" class="flex items-baseline justify-between gap-2">
                                 <span class="font-medium">{{ $entry->title }}</span>
-                                <span class="shrink-0 text-zinc-500 dark:text-zinc-400">{{ $entry->logged_at->setTimezone($planDay->date->getTimezone())->format('H:i') }}</span>
+                                <span class="shrink-0 text-zinc-500 dark:text-zinc-400">{{ $entry->logged_at->setTimezone($nutritionPlan->user->preferredTimezone())->format('H:i') }}</span>
                             </div>
                         @empty
                             <p class="text-zinc-500 dark:text-zinc-400">{{ __('Nothing was logged on this day.') }}</p>
@@ -255,7 +255,7 @@ new class extends Component {
 
     <flux:modal wire:model="showDayDetail" class="w-full max-w-4xl">
         @if ($this->selectedDay)
-            <x-nutrition.day-detail :day="$this->selectedDay" :meals="$this->selectedDayMeals" :entries="$this->selectedDayEntries" />
+            <x-nutrition.day-detail :day="$this->selectedDay" :meals="$this->selectedDayMeals" :entries="$this->selectedDayEntries" :timezone="$nutritionPlan->user->preferredTimezone()" />
         @endif
     </flux:modal>
 </div>

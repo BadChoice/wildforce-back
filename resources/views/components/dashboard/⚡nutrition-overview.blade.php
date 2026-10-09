@@ -115,7 +115,7 @@ new class extends Component {
     @if ($this->selectedDay)
         <div class="space-y-4">
             <flux:button size="sm" variant="ghost" icon="arrow-left" wire:click="closeDay" class="-ml-2">{{ __('Nutrition') }}</flux:button>
-            <x-nutrition.day-detail :day="$this->selectedDay" :meals="$this->selectedDayMeals" :entries="$this->selectedDayEntries" />
+            <x-nutrition.day-detail :day="$this->selectedDay" :meals="$this->selectedDayMeals" :entries="$this->selectedDayEntries" :timezone="$user->preferredTimezone()" />
         </div>
     @else
         <x-nutrition.adherence-summary :summary="$this->summary" />
