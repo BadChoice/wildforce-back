@@ -62,59 +62,7 @@
         @endforeach
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-        <div class="space-y-3">
-            <flux:heading size="sm">{{ __('Planned meals') }}</flux:heading>
-
-            @if ($planDay?->pre_workout_guidance || $planDay?->post_workout_guidance)
-                <dl class="grid gap-2">
-                    @if ($planDay->pre_workout_guidance)
-                        <x-dashboard.detail-item :label="__('Pre-workout')" :value="$planDay->pre_workout_guidance" />
-                    @endif
-                    @if ($planDay->post_workout_guidance)
-                        <x-dashboard.detail-item :label="__('Post-workout')" :value="$planDay->post_workout_guidance" />
-                    @endif
-                </dl>
-            @endif
-
-            @forelse ($meals as $meal)
-                <div wire:key="planned-meal-{{ $meal->id }}" class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
-                    <div class="flex items-baseline justify-between gap-2">
-                        <span class="font-medium">{{ $meal->title }}</span>
-                        <span class="text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
-                            {{ number_format((float) $meal->target_calories) }} kcal · P {{ number_format((float) $meal->target_protein_grams) }} · C {{ number_format((float) $meal->target_carbs_grams) }} · F {{ number_format((float) $meal->target_fat_grams) }}
-                        </span>
-                    </div>
-                    @if ($meal->guidance)
-                        <p class="mt-1 text-zinc-600 dark:text-zinc-300">{{ $meal->guidance }}</p>
-                    @endif
-                    @if (! empty($meal->example_foods))
-                        <div class="mt-2 flex flex-wrap gap-1">
-                            @foreach ($meal->example_foods as $food)
-                                @php
-                                    $foodName = is_array($food) ? ($food['name'] ?? null) : $food;
-                                    $foodAmountGrams = is_array($food) ? ($food['amountGrams'] ?? $food['amount_grams'] ?? null) : null;
-                                @endphp
-
-                                @if ($foodName)
-                                    <flux:badge size="sm" color="zinc">
-                                        {{ str($foodName)->headline() }}
-                                        @if ($foodAmountGrams)
-                                            · {{ number_format((float) $foodAmountGrams) }} g
-                                        @endif
-                                    </flux:badge>
-                                @endif
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            @empty
-                <div class="rounded-lg border border-dashed border-zinc-300 p-4 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-                    {{ $planDay ? __('This day has no planned meals.') : __('No nutrition plan covers this day.') }}
-                </div>
-            @endforelse
-        </div>
-
+    <div class="space-y-6">
         <div class="space-y-3">
             <flux:heading size="sm">{{ __('Logged food') }}</flux:heading>
 
@@ -171,6 +119,58 @@
             @empty
                 <div class="rounded-lg border border-dashed border-zinc-300 p-4 text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
                     {{ __('Nothing was logged on this day.') }}
+                </div>
+            @endforelse
+        </div>
+
+        <div class="space-y-3 rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700">
+            <flux:heading size="sm">{{ __('Planned meals') }}</flux:heading>
+
+            @if ($planDay?->pre_workout_guidance || $planDay?->post_workout_guidance)
+                <dl class="grid gap-2">
+                    @if ($planDay->pre_workout_guidance)
+                        <x-dashboard.detail-item :label="__('Pre-workout')" :value="$planDay->pre_workout_guidance" />
+                    @endif
+                    @if ($planDay->post_workout_guidance)
+                        <x-dashboard.detail-item :label="__('Post-workout')" :value="$planDay->post_workout_guidance" />
+                    @endif
+                </dl>
+            @endif
+
+            @forelse ($meals as $meal)
+                <div wire:key="planned-meal-{{ $meal->id }}" class="rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+                    <div class="flex items-baseline justify-between gap-2">
+                        <span class="font-medium">{{ $meal->title }}</span>
+                        <span class="text-xs tabular-nums text-zinc-500 dark:text-zinc-400">
+                            {{ number_format((float) $meal->target_calories) }} kcal · P {{ number_format((float) $meal->target_protein_grams) }} · C {{ number_format((float) $meal->target_carbs_grams) }} · F {{ number_format((float) $meal->target_fat_grams) }}
+                        </span>
+                    </div>
+                    @if ($meal->guidance)
+                        <p class="mt-1 text-zinc-600 dark:text-zinc-300">{{ $meal->guidance }}</p>
+                    @endif
+                    @if (! empty($meal->example_foods))
+                        <div class="mt-2 flex flex-wrap gap-1">
+                            @foreach ($meal->example_foods as $food)
+                                @php
+                                    $foodName = is_array($food) ? ($food['name'] ?? null) : $food;
+                                    $foodAmountGrams = is_array($food) ? ($food['amountGrams'] ?? $food['amount_grams'] ?? null) : null;
+                                @endphp
+
+                                @if ($foodName)
+                                    <flux:badge size="sm" color="zinc">
+                                        {{ str($foodName)->headline() }}
+                                        @if ($foodAmountGrams)
+                                            · {{ number_format((float) $foodAmountGrams) }} g
+                                        @endif
+                                    </flux:badge>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            @empty
+                <div class="text-zinc-500 dark:text-zinc-400">
+                    {{ $planDay ? __('This day has no planned meals.') : __('No nutrition plan covers this day.') }}
                 </div>
             @endforelse
         </div>

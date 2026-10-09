@@ -47,6 +47,8 @@ test('it shows a client nutrition plan with logged totals and the day detail to 
         ->assertSee('2,000')
         ->assertSee('1,850')
         ->assertSee('On target')
+        ->assertSee('Logged food')
+        ->assertSee('Chicken bowl')
         ->call('selectDay', '2026-10-05')
         ->assertSet('showDayDetail', true)
         ->assertSee('Protein oats')

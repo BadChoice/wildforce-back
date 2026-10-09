@@ -1,12 +1,14 @@
 <?php
 
 use App\Models\NutritionDay;
+use App\Models\NutritionLogEntry;
 use App\Models\NutritionPlan;
 use App\Services\Nutrition\Adherence\NutritionDayAdherence;
 use App\Services\Nutrition\NutritionAdherenceCalculator;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
@@ -86,6 +88,19 @@ new class extends Component {
         return $this->calculator->entriesOn($this->nutritionPlan->user, $this->selectedDay->date);
     }
 
+    /**
+     * @return SupportCollection<string, Collection<int, NutritionLogEntry>>
+     */
+    #[Computed]
+    public function loggedEntriesByDate(): SupportCollection
+    {
+        $user = $this->nutritionPlan->user;
+
+        return $this->calculator
+            ->entriesBetween($user, $this->nutritionPlan->startDate(), $this->nutritionPlan->endDate())
+            ->groupBy(fn (NutritionLogEntry $entry): string => $entry->logged_at->setTimezone($user->preferredTimezone())->toDateString());
+    }
+
     public function selectDay(string $date): void
     {
         if (! array_key_exists($date, $this->adherenceByDate)) {
@@ -137,6 +152,7 @@ new class extends Component {
     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         @forelse ($this->planDays as $planDay)
             @php($adherence = $this->adherenceByDate[$planDay->date->toDateString()] ?? null)
+            @php($loggedEntries = $this->loggedEntriesByDate->get($planDay->date->toDateString(), collect()))
             <div wire:key="nutrition-plan-day-{{ $planDay->id }}" x-data="{ showMeals: false }" @class([
                 'flex flex-col gap-3 rounded-xl border bg-white p-4 dark:bg-zinc-900',
                 'border-zinc-900 dark:border-white' => $adherence?->isToday,
@@ -183,24 +199,44 @@ new class extends Component {
                     </tbody>
                 </table>
 
-                <div x-show="showMeals" x-cloak class="space-y-2 border-t border-zinc-100 pt-3 text-xs dark:border-zinc-800">
-                    @foreach ($planDay->meals as $meal)
-                        <div wire:key="nutrition-plan-meal-{{ $meal->id }}">
-                            <div class="flex items-baseline justify-between gap-2">
-                                <span class="font-medium">{{ $meal->title }}</span>
-                                <span class="tabular-nums text-zinc-500 dark:text-zinc-400">{{ number_format((float) $meal->target_calories) }} kcal</span>
+                <div x-show="showMeals" x-cloak class="space-y-3 border-t border-zinc-100 pt-3 text-xs dark:border-zinc-800">
+                    <div class="space-y-2">
+                        <flux:text variant="subtle" class="text-xs font-medium uppercase tracking-wide">{{ __('Logged food') }}</flux:text>
+
+                        @forelse ($loggedEntries as $entry)
+                            <div wire:key="nutrition-plan-logged-entry-{{ $entry->id }}" class="flex items-baseline justify-between gap-2">
+                                <span class="font-medium">{{ $entry->title }}</span>
+                                <span class="shrink-0 text-zinc-500 dark:text-zinc-400">{{ $entry->logged_at->setTimezone($planDay->date->getTimezone())->format('H:i') }}</span>
                             </div>
-                            @if ($meal->guidance)
-                                <p class="text-zinc-600 dark:text-zinc-300">{{ $meal->guidance }}</p>
-                            @endif
-                        </div>
-                    @endforeach
-                    @if ($planDay->pre_workout_guidance)
-                        <p><span class="font-medium">{{ __('Pre-workout') }}:</span> {{ $planDay->pre_workout_guidance }}</p>
-                    @endif
-                    @if ($planDay->post_workout_guidance)
-                        <p><span class="font-medium">{{ __('Post-workout') }}:</span> {{ $planDay->post_workout_guidance }}</p>
-                    @endif
+                        @empty
+                            <p class="text-zinc-500 dark:text-zinc-400">{{ __('Nothing was logged on this day.') }}</p>
+                        @endforelse
+                    </div>
+
+                    <div class="space-y-2 rounded-lg border border-dashed border-zinc-300 p-3 dark:border-zinc-700">
+                        <flux:text variant="subtle" class="text-xs font-medium uppercase tracking-wide">{{ __('Planned meals') }}</flux:text>
+
+                        @forelse ($planDay->meals as $meal)
+                            <div wire:key="nutrition-plan-meal-{{ $meal->id }}">
+                                <div class="flex items-baseline justify-between gap-2">
+                                    <span class="font-medium">{{ $meal->title }}</span>
+                                    <span class="tabular-nums text-zinc-500 dark:text-zinc-400">{{ number_format((float) $meal->target_calories) }} kcal</span>
+                                </div>
+                                @if ($meal->guidance)
+                                    <p class="text-zinc-600 dark:text-zinc-300">{{ $meal->guidance }}</p>
+                                @endif
+                            </div>
+                        @empty
+                            <p class="text-zinc-500 dark:text-zinc-400">{{ __('This day has no planned meals.') }}</p>
+                        @endforelse
+
+                        @if ($planDay->pre_workout_guidance)
+                            <p><span class="font-medium">{{ __('Pre-workout') }}:</span> {{ $planDay->pre_workout_guidance }}</p>
+                        @endif
+                        @if ($planDay->post_workout_guidance)
+                            <p><span class="font-medium">{{ __('Post-workout') }}:</span> {{ $planDay->post_workout_guidance }}</p>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="mt-auto flex items-center justify-between gap-2">

@@ -112,10 +112,22 @@ final class NutritionAdherenceCalculator
      */
     public function entriesOn(User $user, CarbonInterface $date): Collection
     {
-        $date = CarbonImmutable::parse($date->toDateString(), $user->preferredTimezone());
+        return $this->entriesBetween($user, $date, $date);
+    }
+
+    /**
+     * The entries the user logged across a local calendar date range, with their items and photo.
+     *
+     * @return Collection<int, NutritionLogEntry>
+     */
+    public function entriesBetween(User $user, CarbonInterface $from, CarbonInterface $to): Collection
+    {
+        $timezone = $user->preferredTimezone();
+        $from = CarbonImmutable::parse($from->toDateString(), $timezone);
+        $to = CarbonImmutable::parse($to->toDateString(), $timezone);
 
         return $user->nutritionLogEntries()
-            ->whereBetween('logged_at', $this->storageRange($date, $date))
+            ->whereBetween('logged_at', $this->storageRange($from, $to))
             ->with([
                 'items' => fn (HasMany $query): HasMany => $query->orderBy('order_index'),
                 'media',
