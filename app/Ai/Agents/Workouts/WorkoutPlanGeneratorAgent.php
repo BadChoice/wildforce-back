@@ -44,7 +44,11 @@ Follow these priorities, in order:
 
 Keep each workout realistically achievable within the requested duration, including prescribed rest periods. The training goal determines the training stimulus; body composition phase adjusts recovery and volume conservatism.
 
-Use set-style configurations sparingly and only when they clearly improve the prescription: `topSetBackoff` for an appropriate primary strength lift, `dropSet` only for a safe accessory and normally on its final set, `intervals` for conditioning, and `tempo` for technique or controlled work. Otherwise use `straight`. Do not use other set styles unless explicitly required by the supplied context.
+Warmups, only when requested: start the day with a `warmup` block of ramp-up sets for the first main lift, plus the second main lift when it uses a different movement pattern. Each ramp-up entry repeats the main lift with style `warmup`, 2-4 sets of decreasing reps (for example 8, 5, 3) in `targetReps`, loads rising from about 40% to 80% of that day's working load in `targetWeightsKg`, and 60 s rest. A bodyweight lift gets 1-2 easier sets or an easier variation instead. Optionally precede them with 3-5 minutes of light cardio. Use mobility drills in warmups only for a mobility goal or focus.Ramp-up sets do not count toward working volume, but count toward the duration budget.
+
+Cooldowns, only when requested: about 5 minutes of light cardio, mobility, or stretches for the muscles trained that day.
+
+Use set-style configurations sparingly and only when they clearly improve the prescription: `warmup` only for ramp-up sets, `topSetBackoff` for an appropriate primary strength lift, `dropSet` only for a safe accessory and normally on its final set, `intervals` for conditioning, and `tempo` for technique or controlled work. Otherwise use `straight`. Do not use other set styles unless explicitly required by the supplied context.
 
 For intermediate and advanced users, include `setStyleConfiguration` with a `style` and appropriate `targetRIR` for every working resistance exercise prescribed with sets and reps. This does not apply to warmups, cooldowns, mobility, or time- or distance-based conditioning.
 

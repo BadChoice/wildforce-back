@@ -35,6 +35,19 @@ Fitxers principals:
 - [ ] Afinar els paràmetres per a `improveEndurance` i `improveMobility`, que ara fan servir la taula general.
 - [ ] Quan la readiness és `low`, aplicar l'ajust al codi (p. ex. RIR +1 i sèries al mínim del rang) en lloc de deixar-ho a la IA.
 
+## ✅ 2b. Escalfament amb sèries d'aproximació
+
+**Problema:** el warmup s'omplia amb drills de mobilitat genèrics. Al gimnàs, l'escalfament útil és l'específic: sèries d'aproximació del primer exercici principal.
+
+**Fet:**
+- L'agent fa el bloc `warmup` amb sèries d'aproximació (estil `warmup`): 2-4 sèries, reps que baixen i càrrega del ~40 % al ~80 % de la de treball. Opcionalment, 3-5 min de cardio suau.
+- El cooldown, quan es demana, és de ~5 min de cardio suau, mobilitat o estiraments dels músculs treballats.
+- `TrainingPreference::needsMobilityExercises()` ja no té en compte els warmups. La mobilitat entra al catàleg només per cooldowns, per l'objectiu `improveMobility` o per un dia amb focus `mobility`.
+- `TrainingHistory` ignora els exercicis dels blocs `warmup`, perquè les sèries d'aproximació no embrutin les tendències, el volum ni el feedback.
+
+**Pendent:**
+- [ ] Generar les sèries d'aproximació en PHP a partir de la càrrega de treball (amb el pas 6).
+
 ---
 
 ## ⬜ 3. Netejar soroll i dades poc fiables del prompt

@@ -1,10 +1,12 @@
 <?php
 
 use App\Enums\MesocyclePhase;
+use App\Enums\WorkoutBlockType;
 use App\Models\ExerciseProfile;
 use App\Models\ExerciseResult;
 use App\Models\PlannedExercise;
 use App\Models\User;
+use App\Models\WorkoutBlock;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
@@ -109,6 +111,39 @@ test('uses complete non-deload exercise history while limiting plan-level analys
         ->and($analysis->exerciseTrends)->toBe(['benchPress' => 'improving'])
         ->and($analysis->overallVolumeTrend)->toBe('stable')
         ->and($analysis->recentCompletedWorkouts)->toBe(3)
+        ->and($analysis->recentFeedbackBreakdown)->toBe(['justRight' => 3]);
+});
+
+test('ignores warmup ramp-up sets when analysing progression', function () {
+    $user = User::factory()->create(['current_streak' => 5]);
+    createProgressionExerciseProfile($user, 'benchPress');
+
+    createCompletedPlan($user, 1, '2026-01-01', 100, 'justRight');
+    createCompletedPlan($user, 2, '2026-02-01', 105, 'justRight');
+    createCompletedPlan($user, 3, '2026-03-01', 110, 'justRight');
+
+    $workoutDay = WorkoutDay::query()->latest('created_at')->firstOrFail();
+    $warmupExercise = PlannedExercise::factory()
+        ->for($workoutDay, 'workoutDay')
+        ->for(WorkoutBlock::factory()->for($workoutDay, 'workoutDay')->create(['type' => WorkoutBlockType::Warmup]), 'block')
+        ->create(['exercise' => 'benchPress']);
+
+    ExerciseResult::query()->forceCreate([
+        'id' => (string) Str::uuid(),
+        'planned_exercise_id' => $warmupExercise->id,
+        'feedback' => 'veryEasy',
+        'completed_at' => Carbon::parse('2026-03-01 18:00'),
+        'completed_sets' => 3,
+        'completed_reps' => 5,
+        'completed_weight' => 40,
+    ]);
+
+    $analysis = new WorkoutProgressionAnalyzer(
+        new TrainingHistory($user),
+        app(ExerciseCatalog::class),
+    )->analyze();
+
+    expect($analysis->exerciseTrends)->toBe(['benchPress' => 'improving'])
         ->and($analysis->recentFeedbackBreakdown)->toBe(['justRight' => 3]);
 });
 

@@ -3,6 +3,7 @@
 namespace App\Services\Workouts\Progression;
 
 use App\Enums\MesocyclePhase;
+use App\Enums\WorkoutBlockType;
 use App\Models\ExerciseProfile;
 use App\Models\ExerciseResult;
 use App\Models\User;
@@ -47,7 +48,8 @@ final class TrainingHistory
                     ->orderBy('id')
                     ->with([
                         'exercises' => fn (HasMany $query) => $query
-                            ->select(['id', 'workout_day_id', 'exercise', 'order_index'])
+                            ->select(['id', 'workout_day_id', 'workout_block_id', 'exercise', 'order_index'])
+                            ->whereRelation('block', 'type', '!=', WorkoutBlockType::Warmup->value)
                             ->orderBy('order_index')
                             ->orderBy('id')
                             ->with([
@@ -91,6 +93,7 @@ final class TrainingHistory
                 ->with('plannedExercise:id,exercise')
                 ->whereHas('plannedExercise', function (Builder $query) use ($exerciseIds): void {
                     $query->whereIn('exercise', $exerciseIds)
+                        ->whereRelation('block', 'type', '!=', WorkoutBlockType::Warmup->value)
                         ->whereHas('workoutDay', function (Builder $query): void {
                             $query->whereHas('plan', function (Builder $query): void {
                                 $query->whereBelongsTo($this->user)

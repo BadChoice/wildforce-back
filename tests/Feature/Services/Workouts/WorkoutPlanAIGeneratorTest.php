@@ -171,12 +171,12 @@ test('separates deload performance from the active prescription baseline', funct
     WorkoutPlanGeneratorAgent::assertNeverPrompted();
 });
 
-test('lists every compatible exercise and omits mobility drills when warmups and cooldowns are skipped', function () {
+test('lists every compatible exercise and omits mobility drills when cooldowns are skipped', function () {
     $user = User::factory()->create();
     TrainingPreference::factory()->for($user)->create([
         'workout_days' => ['monday'],
         'goal' => 'buildMuscle',
-        'skips_warmups' => true,
+        'skips_warmups' => false,
         'skips_cooldowns' => true,
     ]);
     TrainingLocation::factory()->for($user)->create([

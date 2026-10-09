@@ -2,7 +2,7 @@
 
 use App\Models\TrainingPreference;
 
-test('needs mobility exercises unless warmups and cooldowns are skipped without a mobility focus', function (array $attributes, bool $expected) {
+test('needs mobility exercises only for cooldowns or a mobility goal or focus', function (array $attributes, bool $expected) {
     $preferences = TrainingPreference::factory()->make([
         'goal' => 'buildMuscle',
         'skips_warmups' => true,
@@ -14,7 +14,7 @@ test('needs mobility exercises unless warmups and cooldowns are skipped without 
     expect($preferences->needsMobilityExercises())->toBe($expected);
 })->with([
     'skips warmups and cooldowns' => [[], false],
-    'does warmups' => [['skips_warmups' => false], true],
+    'does warmups only' => [['skips_warmups' => false], false],
     'does cooldowns' => [['skips_cooldowns' => false], true],
     'mobility goal' => [['goal' => 'improveMobility'], true],
     'mobility day focus' => [['custom_workout_focuses' => ['monday' => 'mobility']], true],
