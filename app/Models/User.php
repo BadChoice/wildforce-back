@@ -218,7 +218,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
 
     public function hasAppAccess(): bool
     {
-        return $this->subscription()->first()?->isActive() ?? false;
+        return ($this->subscription()->first()?->isActive() ?? false)
+            || $this->hasActiveCoach();
     }
 
     public function isAdmin(): bool
@@ -251,7 +252,15 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser, Sync
 
     public function isCoach(): bool
     {
-        return $this->clients(CoachingEnrollmentStatus::Active)->exists();
+        return $this->subscription()->activeCoachSubscriptions()->exists();
+    }
+
+    public function hasActiveCoach(): bool
+    {
+        return $this->coaches()
+            ->wherePivot('status', CoachingEnrollmentStatus::Active->value)
+            ->whereHas('subscription', fn (Builder $query) => $query->activeCoachSubscriptions())
+            ->exists();
     }
 
     /** @return HasMany<CoachExerciseContent, $this> */

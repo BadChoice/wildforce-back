@@ -653,7 +653,7 @@ new class extends Component {
     @endif
 
     <!-- Modals -->
-    <flux:modal wire:model="showWorkoutDayCompleted" class="w-full max-w-4xl p-0">
+    <flux:modal wire:model="showWorkoutDayCompleted" :closable="false" class="w-full max-w-4xl p-0">
         @if ($viewingWorkoutDay)
             <x-dashboard.workout-day-completed :workout-day="$viewingWorkoutDay" />
         @endif

@@ -1374,6 +1374,7 @@ components:
                 - 'null'
               enum:
                 - 'trial'
+                - 'coach_trial'
                 - 'demo'
                 - 'friends'
                 - 'premium'
@@ -1413,6 +1414,7 @@ components:
           type: 'string'
           enum:
             - 'trial'
+            - 'coach_trial'
             - 'demo'
             - 'friends'
             - 'premium'

@@ -5,6 +5,7 @@ namespace App\Enums;
 enum SubscriptionPlan: string
 {
     case Trial = 'trial';
+    case CoachTrial = 'coach_trial';
     case Demo = 'demo';
     case Friends = 'friends';
     case Premium = 'premium';
@@ -16,6 +17,25 @@ enum SubscriptionPlan: string
 
     public function isTemporaryAccess(): bool
     {
-        return in_array($this, [self::Trial, self::Demo], true);
+        return in_array($this, [self::Trial, self::CoachTrial, self::Demo], true);
+    }
+
+    public function isCoachPlan(): bool
+    {
+        return in_array($this, self::coachPlans(), true);
+    }
+
+    /**
+     * @return list<self>
+     */
+    public static function coachPlans(): array
+    {
+        return [
+            self::CoachTrial,
+            self::CoachBasicMonthly,
+            self::CoachBasicYearly,
+            self::CoachProMonthly,
+            self::CoachProYearly,
+        ];
     }
 }

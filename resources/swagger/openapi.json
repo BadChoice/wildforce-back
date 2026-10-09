@@ -2203,6 +2203,7 @@
                 ],
                 "enum": [
                   "trial",
+                  "coach_trial",
                   "demo",
                   "friends",
                   "premium",
@@ -2255,6 +2256,7 @@
             "type": "string",
             "enum": [
               "trial",
+              "coach_trial",
               "demo",
               "friends",
               "premium",

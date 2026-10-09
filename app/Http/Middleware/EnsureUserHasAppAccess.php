@@ -15,7 +15,7 @@ class EnsureUserHasAppAccess
     {
         if (! $request->user()->hasAppAccess()) {
             return response()->json([
-                'message' => 'An active subscription, trial, or demo access is required.',
+                'message' => 'An active subscription or active coach relationship is required.',
                 'code' => 'subscription_required',
             ], Response::HTTP_FORBIDDEN);
         }

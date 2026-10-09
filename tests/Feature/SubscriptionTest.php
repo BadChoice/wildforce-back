@@ -43,6 +43,27 @@ test('coaches and clients are related through coaching enrollments', function ()
         ->and($subscription->status)->toBe(SubscriptionStatus::Active);
 });
 
+test('a user is a coach with an active coach subscription', function () {
+    $coach = User::factory()->create();
+    $coach->replaceSubscription(Subscription::createCoachTrial());
+
+    expect($coach->isCoach())->toBeTrue()
+        ->and($coach->subscription->plan)->toBe(SubscriptionPlan::CoachTrial);
+});
+
+test('a user with clients is not a coach without an active coach subscription', function () {
+    $coach = User::factory()->create();
+    $client = User::factory()->create();
+    $coach->subscription()->update(['status' => SubscriptionStatus::Expired]);
+
+    CoachingEnrollment::factory()->create([
+        'coach_user_id' => $coach->id,
+        'client_user_id' => $client->id,
+    ]);
+
+    expect($coach->isCoach())->toBeFalse();
+});
+
 test('a user cannot attach a second subscription', function () {
     $user = User::factory()->create();
 

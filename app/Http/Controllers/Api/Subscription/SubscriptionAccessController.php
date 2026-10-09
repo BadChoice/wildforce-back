@@ -14,7 +14,7 @@ class SubscriptionAccessController extends Controller
 
         return response()->json([
             'data' => [
-                'has_access' => $subscription?->isActive() ?? false,
+                'has_access' => $request->user()->hasAppAccess(),
                 'status' => $subscription?->status?->value,
                 'plan' => $subscription?->plan?->value,
                 'renews_at' => $subscription?->renews_at?->toISOString(),

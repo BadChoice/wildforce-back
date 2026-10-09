@@ -11,6 +11,7 @@ use App\Enums\SubscriptionProvider;
 use App\Enums\SubscriptionStatus;
 use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -82,6 +83,19 @@ class Subscription extends Model implements Syncable
         ]);
     }
 
+    public static function createCoachTrial(?Carbon $startsAt = null): self
+    {
+        $startsAt ??= now();
+
+        return new self([
+            'plan' => SubscriptionPlan::CoachTrial,
+            'provider' => SubscriptionProvider::Internal,
+            'status' => SubscriptionStatus::Active,
+            'starts_at' => $startsAt,
+            'renews_at' => $startsAt->copy()->addDays(15),
+        ]);
+    }
+
     public static function createDemo(DemoCode $demoCode, ?Carbon $startsAt = null): self
     {
         $startsAt ??= now();
@@ -118,6 +132,27 @@ class Subscription extends Model implements Syncable
     {
         return in_array($this->status, [SubscriptionStatus::Active, SubscriptionStatus::GracePeriod], true)
             && ($this->renews_at === null || $this->renews_at->isFuture());
+    }
+
+    public function isActiveCoachSubscription(): bool
+    {
+        return $this->isActive() && $this->plan->isCoachPlan();
+    }
+
+    /**
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeActiveCoachSubscriptions(Builder $query): Builder
+    {
+        return $query
+            ->whereIn('plan', SubscriptionPlan::coachPlans())
+            ->whereIn('status', [SubscriptionStatus::Active, SubscriptionStatus::GracePeriod])
+            ->where(function (Builder $query): void {
+                $query
+                    ->whereNull('renews_at')
+                    ->orWhere('renews_at', '>', now());
+            });
     }
 
     /**
