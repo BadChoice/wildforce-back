@@ -60,24 +60,45 @@ final class ExerciseTrendCalculator
     }
 
     /**
-     * @return array{kind: 'load'|'reps', score: float}|null
+     * The session's best set: the highest estimated one-rep max for loaded work, otherwise the most reps.
+     *
+     * @return array{weight: float, reps: int}|null
      */
-    private function performance(ExerciseResult $result): ?array
+    public function bestSet(ExerciseResult $result): ?array
     {
-        $reserve = $this->repsInReserve($result->feedback);
         $sets = $this->sets($result);
         $loadedSets = $sets->filter(fn (array $set): bool => $set['weight'] > 0 && $set['reps'] > 0);
 
         if ($loadedSets->isNotEmpty()) {
-            return [
-                'kind' => 'load',
-                'score' => (float) $loadedSets->max(fn (array $set): float => $set['weight'] * (1 + ($set['reps'] + $reserve) / 30)),
-            ];
+            return $loadedSets->sortByDesc(fn (array $set): float => $this->estimatedOneRepMax($set['weight'], $set['reps']))->first();
         }
 
-        $bestReps = $sets->max('reps');
+        $bestSet = $sets->sortByDesc('reps')->first();
 
-        return $bestReps > 0 ? ['kind' => 'reps', 'score' => (float) ($bestReps + $reserve)] : null;
+        return $bestSet !== null && $bestSet['reps'] > 0 ? $bestSet : null;
+    }
+
+    /**
+     * @return array{kind: 'load'|'reps', score: float}|null
+     */
+    private function performance(ExerciseResult $result): ?array
+    {
+        $bestSet = $this->bestSet($result);
+
+        if ($bestSet === null) {
+            return null;
+        }
+
+        $reserve = $this->repsInReserve($result->feedback);
+
+        return $bestSet['weight'] > 0
+            ? ['kind' => 'load', 'score' => $this->estimatedOneRepMax($bestSet['weight'], $bestSet['reps'] + $reserve)]
+            : ['kind' => 'reps', 'score' => (float) ($bestSet['reps'] + $reserve)];
+    }
+
+    private function estimatedOneRepMax(float $weight, int $reps): float
+    {
+        return $weight * (1 + $reps / 30);
     }
 
     /**

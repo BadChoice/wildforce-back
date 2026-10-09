@@ -126,7 +126,7 @@ test('returns the generation prompt and response schema without prompting the AI
 
     expect($preview['instructions'])->toContain('expert strength and conditioning coach')
         ->and($preview['instructions'])->toContain('Follow these priorities, in order:')
-        ->and($preview['instructions'])->toContain('Maintaining the same load and reps is a valid prescription')
+        ->and($preview['instructions'])->toContain('maintaining the same load and reps is a valid prescription')
         ->and($preview['instructions'])->toContain('include `setStyleConfiguration` with a `style` and appropriate `targetRIR`')
         ->and($preview['prompt'])->toContain('## Client context')
         ->and($preview['prompt'])->toContain('Goal: buildMuscle')
@@ -219,10 +219,7 @@ test('keeps unreliable and empty data out of the prompt', function () {
 
     expect($prompt)->toContain('Weight: unknown')
         ->toContain('Completion rate: 50%')
-        ->toContain('Exercise trends: pushUp: improving')
-        ->toContain('Keep as anchors: pushUp')
-        ->not->toContain('catCow: plateau')
-        ->not->toContain('benchPress: insufficient')
+        ->toContain("exercise | status | last performance (best set) | trend\npushUp | progress | 3×10 @ 35 kg, hard | improving\n```")
         ->and($profiles)->toContain('benchPress | 50 kg')
         ->not->toContain('pushUp')
         ->not->toContain('pullUp')

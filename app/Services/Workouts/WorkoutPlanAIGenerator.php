@@ -4,16 +4,20 @@ namespace App\Services\Workouts;
 
 use App\Ai\Agents\Workouts\WorkoutPlanGeneratorAgent;
 use App\Enums\Equipment;
+use App\Enums\ExerciseStatus;
 use App\Enums\Generated\ExerciseCategory;
 use App\Enums\Generated\ExerciseTrackingMode;
 use App\Enums\MesocyclePhase;
 use App\Models\ExerciseProfile;
+use App\Models\ExerciseResult;
 use App\Models\PlannedExercise;
 use App\Models\TrainingLocation;
 use App\Models\User;
 use App\Models\WorkoutDay;
 use App\Models\WorkoutPlan;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
+use App\Services\Workouts\Progression\ExerciseStatusResolver;
+use App\Services\Workouts\Progression\ExerciseTrendCalculator;
 use App\Services\Workouts\Progression\MesocyclePhaseRules;
 use App\Services\Workouts\Progression\PhasePrescription;
 use App\Services\Workouts\Progression\ProgressionAnalysis;
@@ -162,7 +166,9 @@ final class WorkoutPlanAIGenerator
         $phaseDescription = $this->phaseDescription($phase, $analysis->mesocycleNumber);
         $phasePrescription = PhasePrescription::describe($phase, $preferences?->goal, $preferences?->body_composition_phase);
         $profiles = $this->exerciseProfiles($user, $trainingHistory);
-        $exerciseTrends = $this->resistanceExerciseTrends($analysis->exerciseTrends);
+        $exerciseStatuses = $this->exerciseStatusTable(
+            new ExerciseStatusResolver($trainingHistory, $this->exerciseCatalog)->resolve($analysis, $this->startsNewPhase($phase)),
+        );
         $exerciseList = $exercises
             ->map(fn (array $exercise): string => implode(' | ', array_filter([
                 $exercise['id'],
@@ -202,11 +208,15 @@ final class WorkoutPlanAIGenerator
 - Readiness: {$analysis->readinessLevel}
 - Completion rate: {$this->percentage($analysis->completionRate)}
 - Overall volume trend: {$analysis->overallVolumeTrend}
-- Exercise trends: {$this->associativeList($exerciseTrends)}
-- Keep as anchors: {$this->list(array_keys(array_filter($exerciseTrends, fn (string $trend): bool => in_array($trend, ['improving', 'plateau'], true))))}
-- Rotate when practical: {$this->list($analysis->staleExercises)}
 - Underworked muscles: {$this->list($analysis->neglectedMuscleGroups)}
 - Overworked muscles: {$this->list($analysis->overworkedMuscleGroups)}
+
+## Exercise status
+Recently trained resistance exercises. Exercises not listed can be chosen freely.
+```text
+exercise | status | last performance (best set) | trend
+{$exerciseStatuses}
+```
 
 ## Phase prescription
 Default working parameters for this week. Deviate only when readiness, recent performance, or the duration budget requires a more conservative choice.
@@ -363,14 +373,6 @@ PROMPT;
         return $values === [] || $values === null ? 'None' : implode(', ', $values);
     }
 
-    /**
-     * @param  array<string, string>  $values
-     */
-    private function associativeList(array $values): string
-    {
-        return $values === [] ? 'None' : collect($values)->map(fn (string $value, string $key): string => $key.': '.$value)->implode(', ');
-    }
-
     private function yesNo(bool $value): string
     {
         return $value ? 'Yes' : 'No';
@@ -469,23 +471,34 @@ PROMPT;
     }
 
     /**
-     * Trends worth acting on: resistance exercises with enough history.
-     *
-     * @param  array<string, string>  $exerciseTrends
-     * @return array<string, string>
+     * @param  array<string, array{status: ExerciseStatus, trend: string, lastResult: ExerciseResult}>  $exerciseStatuses
      */
-    private function resistanceExerciseTrends(array $exerciseTrends): array
+    private function exerciseStatusTable(array $exerciseStatuses): string
     {
-        $categories = collect($this->exerciseCatalog->all()['exercises'] ?? [])
-            ->filter(fn (mixed $exercise): bool => is_array($exercise) && isset($exercise['id']))
-            ->mapWithKeys(fn (array $exercise): array => [$exercise['id'] => $exercise['category'] ?? null]);
+        $trendCalculator = new ExerciseTrendCalculator;
 
-        return array_filter(
-            $exerciseTrends,
-            fn (string $trend, string $exercise): bool => $trend !== 'insufficient'
-                && ! in_array($categories->get($exercise), [ExerciseCategory::Mobility->value, ExerciseCategory::Cardio->value], true),
-            ARRAY_FILTER_USE_BOTH,
-        );
+        return collect($exerciseStatuses)
+            ->map(function (array $exerciseStatus, string $exercise) use ($trendCalculator): string {
+                $result = $exerciseStatus['lastResult'];
+                $bestSet = $trendCalculator->bestSet($result);
+                $sets = $result->completed_sets ?? count($result->per_set_reps ?? []);
+                $performance = $bestSet === null
+                    ? $result->feedback->value
+                    : $sets.'×'.$bestSet['reps'].($bestSet['weight'] > 0 ? ' @ '.$this->decimal($bestSet['weight']).' kg' : '').', '.$result->feedback->value;
+
+                return implode(' | ', [$exercise, $exerciseStatus['status']->value, $performance, $exerciseStatus['trend']]);
+            })
+            ->implode("\n") ?: 'None';
+    }
+
+    /**
+     * Non-periodized plans can rotate any week; periodized plans only at the start of a training phase.
+     *
+     * @param  array{phase: MesocyclePhase, weekInPhase: int, cycleLength: int, positionInCycle: int}|null  $phase
+     */
+    private function startsNewPhase(?array $phase): bool
+    {
+        return $phase === null || ($phase['weekInPhase'] === 1 && $phase['phase'] !== MesocyclePhase::Deload);
     }
 
     private function repRange(int $minimum, ?int $maximum): string

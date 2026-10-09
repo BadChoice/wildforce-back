@@ -63,9 +63,6 @@ Fitxers principals:
   - cada exercici mostra què estava prescrit i què es va fer: `benchPress (planned 4×6-8 @ 40 kg; did 4×8 @ 40 kg, justRight)`;
   - els pesos van sense decimals sobrers (`37.5 kg`, `40 kg`).
 
-**Pendent:**
-- [ ] `Rotate when practical` encara pot incloure exercicis de mobilitat. Es resoldrà amb l'estat únic per exercici (pas 5).
-
 ## ✅ 4. Revisar el càlcul de tendències
 
 **Problema:** `progressionTrend()` comparava el pes mitjà recent amb l'anterior. `completed_weight` i `completed_reps` són només els de l'última sèrie, de manera que una sèrie de back-off o una dada mal entrada distorsionava la tendència. A més, el feedback no comptava i només hi havia tendència per als exercicis amb perfil (p. ex. `benchPress` en quedava fora si no tenia perfil).
@@ -83,13 +80,22 @@ Fitxers principals:
 - [ ] Un valor erroni a l'última sessió no es pot detectar (no té veí posterior). Es podria marcar en lloc de descartar-lo.
 - [ ] L'historial del prompt mostra `did 3×10` amb les reps de l'última sèrie. Es podrien mostrar les reps de cada sèrie quan varien (`12/8/10`).
 
-## ⬜ 5. Un estat únic per exercici
+## ✅ 5. Un estat únic per exercici
 
-Ara n'hi ha tres llistes que se solapen (trends, anchors, rotate). Per exemple, `calfRaise` surt alhora a anchors i a rotate, i les instruccions necessiten un paràgraf per desempatar.
+**Problema:** hi havia tres llistes que se solapaven (trends, anchors, rotate). Per exemple, `calfRaise` sortia alhora a anchors i a rotate, i les instruccions necessitaven un paràgraf per desempatar.
 
-- [ ] Calcular al codi un sol estat per exercici: `keep` / `rotate` / `progress` / `hold` / `reduce`.
-- [ ] Enviar una sola taula compacta: `exercise | status | last performance | suggested next`.
-- [ ] Treure de les instruccions la prioritat 4 (desempat anchors/rotate) i simplificar la 5.
+**Fet:**
+- `ExerciseStatusResolver` dona un sol estat (`ExerciseStatus`) a cada exercici de resistència fet recentment (sense mobilitat ni cardio). Les regles s'apliquen en aquest ordre:
+  1. `reduce`: tendència `regressing` o últim feedback `veryHard`.
+  2. `rotate`: `plateau`, fet als 3 últims plans actius i **la setmana comença una fase nova** (no deload). Dins d'una fase es manté la selecció d'exercicis; sense periodització es pot rotar qualsevol setmana.
+  3. `progress`: tendència `improving` o últim feedback `easy`/`veryEasy`.
+  4. `keep`: la resta.
+- El prompt envia una sola taula `## Exercise status`: `exercise | status | last performance (best set) | trend`. La millor sèrie surt d'`ExerciseTrendCalculator::bestSet()`.
+- S'han tret les línies `Exercise trends`, `Keep as anchors` i `Rotate when practical`.
+- Instruccions: les antigues prioritats 4 i 5 són ara una sola prioritat que explica què fer amb cada estat.
+
+**Pendent:**
+- [ ] Afegir la columna `suggested next` amb la progressió calculada (pas 6).
 
 ## ⬜ 6. Progressió calculada en PHP
 
