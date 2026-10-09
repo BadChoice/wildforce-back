@@ -90,34 +90,34 @@ return [
             ],
             'premium' => [
                 'monthly' => [
-                    'price_id' => env('STRIPE_PREMIUM_MONTHLY_PRICE_ID'),
+                    'price_id' => env('STRIPE_PREMIUM_MONTHLY_PRICE_ID','price_1UKxmtFI3Ev7T3CmHhgi31jY'),
                 ],
                 'yearly' => [
-                    'price_id' => env('STRIPE_PREMIUM_YEARLY_PRICE_ID'),
+                    'price_id' => env('STRIPE_PREMIUM_YEARLY_PRICE_ID','price_1UKxnAFI3Ev7T3CmpwpvtF3o'),
                 ],
             ],
             'coach_basic' => [
                 'monthly' => [
-                    'price_id' => env('STRIPE_COACH_BASIC_MONTHLY_PRICE_ID'),
+                    'price_id' => env('STRIPE_COACH_BASIC_MONTHLY_PRICE_ID','price_1UOYRhFI3Ev7T3CmAqASFfbc'),
                 ],
                 'yearly' => [
-                    'price_id' => env('STRIPE_COACH_BASIC_YEARLY_PRICE_ID'),
+                    'price_id' => env('STRIPE_COACH_BASIC_YEARLY_PRICE_ID','price_1UOYScFI3Ev7T3Cm8K5GJwxU'),
                 ],
             ],
             'coach_studio' => [
                 'monthly' => [
-                    'price_id' => env('STRIPE_COACH_STUDIO_MONTHLY_PRICE_ID'),
+                    'price_id' => env('STRIPE_COACH_STUDIO_MONTHLY_PRICE_ID','price_1UOYTIFI3Ev7T3Cm5SbZUHDY'),
                 ],
                 'yearly' => [
-                    'price_id' => env('STRIPE_COACH_STUDIO_YEARLY_PRICE_ID'),
+                    'price_id' => env('STRIPE_COACH_STUDIO_YEARLY_PRICE_ID','price_1UOYU0FI3Ev7T3CmHYUt9bCy'),
                 ],
             ],
             'coach_pro' => [
                 'monthly' => [
-                    'price_id' => env('STRIPE_COACH_PRO_MONTHLY_PRICE_ID'),
+                    'price_id' => env('STRIPE_COACH_PRO_MONTHLY_PRICE_ID','price_1UOYUYFI3Ev7T3CmXGVDrcXZ'),
                 ],
                 'yearly' => [
-                    'price_id' => env('STRIPE_COACH_PRO_YEARLY_PRICE_ID'),
+                    'price_id' => env('STRIPE_COACH_PRO_YEARLY_PRICE_ID','price_1UOYUlFI3Ev7T3Cmp8LOFg1W'),
                 ],
             ],
         ],
