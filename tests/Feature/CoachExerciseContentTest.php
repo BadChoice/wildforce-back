@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\SubscriptionPlan;
 use App\Models\CoachExerciseContent;
 use App\Models\CoachingEnrollment;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -10,6 +12,8 @@ use Livewire\Livewire;
 beforeEach(function () {
     $this->disk = Storage::fake((string) config('filesystems.public_storage_disc'));
     $this->coach = User::factory()->create();
+    $this->coach->subscription()->delete();
+    Subscription::factory()->for($this->coach)->create(['plan' => SubscriptionPlan::CoachBasic]);
     CoachingEnrollment::factory()->create(['coach_user_id' => $this->coach->id]);
 });
 

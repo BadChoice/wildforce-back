@@ -220,7 +220,7 @@ class DemoPlatformSeeder extends Seeder
             ->complete()
             ->create(['source_workout_plan_id' => $workoutPlan->id]);
 
-        $nutritionLogMedia = NutritionLogMedia::factory()->create();
+        $nutritionLogMedia = NutritionLogMedia::factory()->for($user)->create();
 
         NutritionLogEntry::factory()
             ->count(6)
