@@ -6,6 +6,7 @@ use App\Enums\SubscriptionStatus;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Services\Stripe\StripeCheckoutService;
+use App\Services\Stripe\StripePriceDisplayService;
 use Mockery\MockInterface;
 
 test('it redirects an authenticated user to the Friends monthly Stripe Checkout', function () {
@@ -17,19 +18,56 @@ test('it redirects an authenticated user to the Friends monthly Stripe Checkout'
             ->andReturn('https://checkout.stripe.com/pay/monthly');
     });
 
-    $response = $this->actingAs($user)->post(route('billing.checkout', ['plan' => 'friends', 'interval' => 'monthly']));
+    $response = $this->actingAs($user)->post(route('subscription.billing.checkout', ['plan' => 'friends', 'interval' => 'monthly']));
 
     $response->assertRedirect('https://checkout.stripe.com/pay/monthly');
 });
 
-test('it displays the configured Friends Checkout options', function () {
+test('it displays only the configured Friends Checkout options', function () {
+    $user = User::factory()->create();
+    $this->mock(StripePriceDisplayService::class, function (MockInterface $mock): void {
+        $mock->shouldReceive('formattedPriceFor')
+            ->byDefault()
+            ->andReturn(null);
+        $mock->shouldReceive('formattedPriceFor')
+            ->once()
+            ->with(SubscriptionPlan::Friends, 'monthly')
+            ->andReturn('€4.20');
+        $mock->shouldReceive('formattedPriceFor')
+            ->once()
+            ->with(SubscriptionPlan::Friends, 'yearly')
+            ->andReturn('€42.00');
+    });
+
+    $this->actingAs($user)
+        ->get(route('subscription.billing.friends'))
+        ->assertSee('Friends')
+        ->assertDontSee('Premium')
+        ->assertDontSee('Coach Basic')
+        ->assertSee('Continue Monthly (€4.20)')
+        ->assertSee('Continue Yearly (€42.00)');
+});
+
+test('it displays only the configured Premium Checkout options', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get(route('billing.index'))
-        ->assertSee('Friends')
-        ->assertSee('Continue Monthly')
-        ->assertSee('Continue Yearly');
+        ->get(route('subscription.billing'))
+        ->assertSee('Premium')
+        ->assertDontSee('Friends')
+        ->assertDontSee('Coach Basic');
+});
+
+test('it displays only the configured Coach Checkout options', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->get(route('subscription.billing.coach'))
+        ->assertSee('Coach Basic')
+        ->assertSee('Coach Studio')
+        ->assertSee('Coach Pro')
+        ->assertDontSee('Friends')
+        ->assertDontSee('Premium');
 });
 
 test('it allows a demo subscription to start Stripe Checkout', function () {
@@ -49,13 +87,13 @@ test('it allows a demo subscription to start Stripe Checkout', function () {
     });
 
     $this->actingAs($user)
-        ->get(route('billing.index'))
+        ->get(route('subscription.billing.friends'))
         ->assertSee('Friends')
         ->assertSee('Continue Monthly')
         ->assertSee('Continue Yearly');
 
     $this->actingAs($user)
-        ->post(route('billing.checkout', ['plan' => 'friends', 'interval' => 'monthly']))
+        ->post(route('subscription.billing.checkout', ['plan' => 'friends', 'interval' => 'monthly']))
         ->assertRedirect('https://checkout.stripe.com/pay/monthly');
 });
 
@@ -75,15 +113,15 @@ test('it shows an existing subscription and prevents another Stripe Checkout', f
     });
 
     $this->actingAs($user)
-        ->get(route('billing.index'))
+        ->get(route('subscription.billing.friends'))
         ->assertSee('You already have a subscription.')
         ->assertSee('Friends')
         ->assertDontSee('Continue Monthly')
         ->assertDontSee('Continue Yearly');
 
     $this->actingAs($user)
-        ->post(route('billing.checkout', ['plan' => 'friends', 'interval' => 'monthly']))
-        ->assertRedirectToRoute('billing.index');
+        ->post(route('subscription.billing.checkout', ['plan' => 'friends', 'interval' => 'monthly']))
+        ->assertRedirectToRoute('subscription.billing.friends');
 });
 
 test('it redirects an authenticated user to the Friends yearly Stripe Checkout', function () {
@@ -95,7 +133,7 @@ test('it redirects an authenticated user to the Friends yearly Stripe Checkout',
             ->andReturn('https://checkout.stripe.com/pay/yearly');
     });
 
-    $response = $this->actingAs($user)->post(route('billing.checkout', ['plan' => 'friends', 'interval' => 'yearly']));
+    $response = $this->actingAs($user)->post(route('subscription.billing.checkout', ['plan' => 'friends', 'interval' => 'yearly']));
 
     $response->assertRedirect('https://checkout.stripe.com/pay/yearly');
 });
@@ -104,7 +142,7 @@ test('it does not expose Checkout for unsupported billing intervals', function (
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->post('/billing/checkout/friends/weekly')
+        ->post('/subscription/billing/checkout/friends/weekly')
         ->assertNotFound();
 });
 
@@ -112,6 +150,6 @@ test('it does not expose Checkout for plans without a configured Stripe price', 
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->post('/billing/checkout/premium/monthly')
+        ->post('/subscription/billing/checkout/trial/monthly')
         ->assertNotFound();
 });

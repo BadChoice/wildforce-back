@@ -20,7 +20,7 @@ class StripeCheckoutController extends Controller
         $subscription = $user->subscription()->first();
 
         if ($subscription !== null && ! $subscription->plan->isTemporaryAccess()) {
-            return to_route('billing.index');
+            return to_route($this->billingRoute((string) $request->route('plan')));
         }
 
         $plan = SubscriptionPlan::tryFrom((string) $request->route('plan'));
@@ -30,5 +30,20 @@ class StripeCheckoutController extends Controller
         $checkoutUrl = $stripeCheckout->create($user, $plan, $interval);
 
         return redirect()->away($checkoutUrl);
+    }
+
+    private function billingRoute(string $planValue): string
+    {
+        $plan = SubscriptionPlan::tryFrom($planValue);
+
+        if ($plan === SubscriptionPlan::Friends) {
+            return 'subscription.billing.friends';
+        }
+
+        if ($plan?->isCoachPlan()) {
+            return 'subscription.billing.coach';
+        }
+
+        return 'subscription.billing';
     }
 }

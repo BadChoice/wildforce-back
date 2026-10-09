@@ -33,10 +33,10 @@ test('it redirects an Apple user to their intended page', function () {
         $mock->shouldReceive('resolveWeb')->once()->andReturn(new AppleUserAuthenticationResult($user));
     });
 
-    $response = $this->withSession(['url.intended' => route('billing.index')])
+    $response = $this->withSession(['url.intended' => route('subscription.billing')])
         ->post(route('apple.login'), ['authorization_code' => 'apple-authorization-code']);
 
-    $response->assertRedirect(route('billing.index'));
+    $response->assertRedirect(route('subscription.billing'));
 });
 
 test('it requires an Apple authorization code for web login', function () {

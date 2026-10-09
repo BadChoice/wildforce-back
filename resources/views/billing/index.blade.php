@@ -10,15 +10,19 @@
                 @foreach ($checkoutPlans as $checkoutPlan)
                     <flux:card class="flex flex-col gap-4">
                         <div class="flex flex-col gap-1">
-                            <flux:heading size="lg">{{ str($checkoutPlan['plan']->value)->title() }}</flux:heading>
-                            <flux:text>{{ __('Choose a billing period for your :plan subscription.', ['plan' => str($checkoutPlan['plan']->value)->title()]) }}</flux:text>
+                            <flux:heading size="lg">{{ str($checkoutPlan['plan']->value)->replace('_', ' ')->title() }}</flux:heading>
+                            <flux:text>{{ __('Choose a billing period for your :plan subscription.', ['plan' => str($checkoutPlan['plan']->value)->replace('_', ' ')->title()]) }}</flux:text>
                         </div>
 
                         <div class="flex flex-col gap-2">
                             @foreach ($checkoutPlan['intervals'] as $interval)
-                                <form method="POST" action="{{ route('billing.checkout', ['plan' => $checkoutPlan['plan']->value, 'interval' => $interval]) }}">
+                                <form method="POST" action="{{ route('subscription.billing.checkout', ['plan' => $checkoutPlan['plan']->value, 'interval' => $interval['value']]) }}">
                                     @csrf
-                                    <flux:button type="submit" variant="primary" class="w-full">{{ __('Continue :interval', ['interval' => str($interval)->title()]) }}</flux:button>
+                                    <flux:button type="submit" variant="primary" class="w-full">
+                                        {{ $interval['price'] === null
+                                            ? __('Continue :interval', ['interval' => str($interval['value'])->title()])
+                                            : __('Continue :interval (:price)', ['interval' => str($interval['value'])->title(), 'price' => $interval['price']]) }}
+                                    </flux:button>
                                 </form>
                             @endforeach
                         </div>

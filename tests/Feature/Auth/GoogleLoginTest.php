@@ -30,10 +30,10 @@ test('it redirects a Google user to their intended page', function () {
         $mock->shouldReceive('resolve')->once()->andReturn(new GoogleUserAuthenticationResult($user));
     });
 
-    $response = $this->withSession(['url.intended' => route('billing.index')])
+    $response = $this->withSession(['url.intended' => route('subscription.billing')])
         ->post(route('google.login'), ['id_token' => 'google-id-token']);
 
-    $response->assertRedirect(route('billing.index'));
+    $response->assertRedirect(route('subscription.billing'));
 });
 
 test('it requires a Google identity token for web login', function () {

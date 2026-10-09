@@ -18,7 +18,9 @@ Route::post('auth/google', GoogleLoginController::class)->middleware('throttle:5
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', DashboardController::class)->name('dashboard');
-    Route::get('billing', BillingController::class)->name('billing.index');
+    Route::get('subscription/billing', [BillingController::class, 'premium'])->name('subscription.billing');
+    Route::get('subscription/billing-friends', [BillingController::class, 'friends'])->name('subscription.billing.friends');
+    Route::get('subscription/billing-coach', [BillingController::class, 'coach'])->name('subscription.billing.coach');
     Route::view('clients', 'clients.index')->name('clients.index');
     Route::get('exercises', [ExerciseCatalogController::class, 'index'])->name('exercises.index');
     Route::get('workout-plans', [WorkoutPlansController::class, 'index'])->name('workout-plans.index');
@@ -30,9 +32,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->whereIn('angle', ['profile', 'front', 'torso'])
         ->name('body-progress-photos.show');
     Route::view('workout-templates', 'workout-templates.index')->name('workout-templates.index');
-    Route::post('billing/checkout/{plan}/{interval}', StripeCheckoutController::class)
+    Route::post('subscription/billing/checkout/{plan}/{interval}', StripeCheckoutController::class)
         ->whereIn('interval', ['monthly', 'yearly'])
-        ->name('billing.checkout');
+        ->name('subscription.billing.checkout');
 });
 
 require __DIR__.'/settings.php';
