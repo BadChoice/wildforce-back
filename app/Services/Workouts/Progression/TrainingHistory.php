@@ -43,12 +43,12 @@ final class TrainingHistory
             ->select(['id', 'user_id', 'mesocycle_number', 'phase', 'created_at'])
             ->with([
                 'workoutDays' => fn (HasMany $query) => $query
-                    ->select(['id', 'workout_plan_id', 'status', 'order_index'])
+                    ->select(['id', 'workout_plan_id', 'focus', 'status', 'order_index'])
                     ->orderBy('order_index')
                     ->orderBy('id')
                     ->with([
                         'exercises' => fn (HasMany $query) => $query
-                            ->select(['id', 'workout_day_id', 'workout_block_id', 'exercise', 'order_index'])
+                            ->select(['id', 'workout_day_id', 'workout_block_id', 'exercise', 'order_index', 'sets', 'reps_min', 'reps_max', 'target_weight_kg'])
                             ->whereRelation('block', 'type', '!=', WorkoutBlockType::Warmup->value)
                             ->orderBy('order_index')
                             ->orderBy('id')

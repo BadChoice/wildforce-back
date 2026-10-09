@@ -163,10 +163,70 @@ test('separates deload performance from the active prescription baseline', funct
         ->after('## Recent deload history')
         ->before('## Allowed exercises');
 
-    expect($activePerformance)->toContain('35.00 kg')
-        ->not->toContain('20.00 kg')
-        ->and($deloadHistory)->toContain('20.00 kg')
-        ->not->toContain('35.00 kg');
+    expect($activePerformance)->toContain('did 3×10 @ 35 kg')
+        ->not->toContain('@ 20 kg')
+        ->and($deloadHistory)->toContain('did 3×10 @ 20 kg')
+        ->not->toContain('did 3×10 @ 35 kg');
+
+    WorkoutPlanGeneratorAgent::assertNeverPrompted();
+});
+
+test('keeps unreliable and empty data out of the prompt', function () {
+    $user = User::factory()->create(['weight' => null]);
+    TrainingPreference::factory()->for($user)->create([
+        'workout_days' => ['monday'],
+        'goal' => 'buildMuscle',
+        'skips_cooldowns' => false,
+    ]);
+    TrainingLocation::factory()->for($user)->create([
+        'equipment' => array_column(Equipment::cases(), 'value'),
+    ]);
+    foreach (['pushUp', 'catCow', 'benchPress'] as $exercise) {
+        ExerciseProfile::factory()->for($user)->create(['exercise' => $exercise, 'working_weight' => 50]);
+    }
+    ExerciseProfile::factory()->for($user)->create([
+        'exercise' => 'pullUp',
+        'working_weight' => 0,
+        'max_reps' => 0,
+        'preferred_rep_range_min' => null,
+    ]);
+
+    foreach ([['2026-01-01', 30], ['2026-01-08', 35]] as [$date, $weight]) {
+        $plan = WorkoutPlan::factory()->for($user)->create(['phase' => 'accumulation', 'created_at' => $date]);
+        $workoutDay = WorkoutDay::factory()->for($user)->for($plan, 'plan')->create(['focus' => 'push', 'status' => 'completed']);
+        WorkoutDay::factory()->for($user)->for($plan, 'plan')->create(['status' => 'skipped', 'order_index' => 1]);
+
+        foreach (['pushUp' => $weight, 'catCow' => null] as $exercise => $completedWeight) {
+            $plannedExercise = PlannedExercise::factory()->for($workoutDay, 'workoutDay')->create([
+                'exercise' => $exercise,
+                'target_weight_kg' => $completedWeight === null ? null : 35,
+            ]);
+            ExerciseResult::factory()->for($plannedExercise)->create([
+                'feedback' => 'hard',
+                'completed_at' => $date,
+                'completed_sets' => 3,
+                'completed_reps' => 10,
+                'completed_weight' => $completedWeight,
+            ]);
+        }
+    }
+    WorkoutPlanGeneratorAgent::fake()->preventStrayPrompts();
+
+    $prompt = app(WorkoutPlanAIGenerator::class)->preview($user)['prompt'];
+    $profiles = (string) str($prompt)->after('## Exercise profiles')->before('## Recent active workout performance');
+    $history = (string) str($prompt)->after('## Recent active workout performance')->before('## Recent deload history');
+
+    expect($prompt)->toContain('Weight: unknown')
+        ->toContain('Completion rate: 50%')
+        ->toContain('Exercise trends: pushUp: improving')
+        ->toContain('Keep as anchors: pushUp')
+        ->not->toContain('catCow: plateau')
+        ->not->toContain('benchPress: insufficient')
+        ->and($profiles)->toContain('benchPress | 50 kg')
+        ->not->toContain('pushUp')
+        ->not->toContain('pullUp')
+        ->and($history)->toContain('push (completed): pushUp (planned 3×8-12 @ 35 kg; did 3×10 @ 35 kg, hard), catCow (planned 3×8-12; did 3×10, hard)')
+        ->not->toContain('skipped');
 
     WorkoutPlanGeneratorAgent::assertNeverPrompted();
 });

@@ -50,17 +50,21 @@ Fitxers principals:
 
 ---
 
-## ⬜ 3. Netejar soroll i dades poc fiables del prompt
+## ✅ 3. Netejar soroll i dades poc fiables del prompt
 
-- [ ] `Weight: 0.00 kg` → ometre-ho o posar `unknown` quan no hi ha pes.
-- [ ] Arrodonir el `Completion rate` (0.7777… → 78 %).
-- [ ] **Exercise trends**: passar només els exercicis de resistència amb una tendència real (sense `insufficient` ni mobilitat).
-- [ ] **Anchors**: excloure la mobilitat, que gairebé sempre surt com a `plateau`.
-- [ ] **Exercise profiles**: deixar d'enviar-los, o enviar-los només per als exercicis sense historial recent. Contradiuen el rendiment real (p. ex. `dumbbellOverheadPress` 50 kg al perfil vs. 20 kg a l'entrenament) i hi ha moltes línies `0.00 kg | max reps: 0`.
-- [ ] **Historial recent**:
-  - treure els dies `planned` sense resultats i els `skipped:` buits;
-  - afegir el focus de cada dia (push/pull/legs);
-  - afegir el que estava prescrit (sèries × reps @ kg), perquè `justRight` o `hard` només tenen sentit comparats amb l'objectiu.
+**Fet:**
+- L'alçada i el pes surten com a `unknown` quan no n'hi ha (abans `Weight: 0.00 kg`).
+- El `Completion rate` surt en percentatge arrodonit (`78%`).
+- **Exercise trends** i **anchors**: només exercicis de resistència amb una tendència real (sense `insufficient`, mobilitat ni cardio).
+- **Exercise profiles**: només per als exercicis sense resultats a l'historial recent, i sense camps buits (`0 kg`, `max reps: 0`). Els perfils que queden buits no s'envien.
+- **Historial recent**:
+  - s'ometen els dies sense cap resultat (`planned` i `skipped` buits) i els plans que queden buits;
+  - cada dia mostra el focus i l'estat: `push (completed): …`;
+  - cada exercici mostra què estava prescrit i què es va fer: `benchPress (planned 4×6-8 @ 40 kg; did 4×8 @ 40 kg, justRight)`;
+  - els pesos van sense decimals sobrers (`37.5 kg`, `40 kg`).
+
+**Pendent:**
+- [ ] `Rotate when practical` encara pot incloure exercicis de mobilitat. Es resoldrà amb l'estat únic per exercici (pas 5).
 
 ## ⬜ 4. Revisar el càlcul de tendències
 

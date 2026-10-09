@@ -7,6 +7,8 @@ use App\Enums\Equipment;
 use App\Enums\Generated\ExerciseCategory;
 use App\Enums\Generated\ExerciseTrackingMode;
 use App\Enums\MesocyclePhase;
+use App\Models\ExerciseProfile;
+use App\Models\PlannedExercise;
 use App\Models\TrainingLocation;
 use App\Models\User;
 use App\Models\WorkoutDay;
@@ -159,16 +161,8 @@ final class WorkoutPlanAIGenerator
         );
         $phaseDescription = $this->phaseDescription($phase, $analysis->mesocycleNumber);
         $phasePrescription = PhasePrescription::describe($phase, $preferences?->goal, $preferences?->body_composition_phase);
-        $profiles = $this->markdownList($user->exerciseProfiles
-            ->map(fn ($profile): string => implode(' | ', array_filter([
-                $profile->exercise,
-                $profile->working_weight === null ? null : $profile->working_weight.' kg',
-                $profile->max_reps === null ? null : 'historical max reps: '.$profile->max_reps,
-                $profile->preferred_rep_range_min === null || $profile->preferred_rep_range_max === null
-                    ? null
-                    : $profile->preferred_rep_range_min.'-'.$profile->preferred_rep_range_max.' reps',
-            ])))
-            ->all());
+        $profiles = $this->exerciseProfiles($user, $trainingHistory);
+        $exerciseTrends = $this->resistanceExerciseTrends($analysis->exerciseTrends);
         $exerciseList = $exercises
             ->map(fn (array $exercise): string => implode(' | ', array_filter([
                 $exercise['id'],
@@ -184,8 +178,8 @@ final class WorkoutPlanAIGenerator
 - Goal: {$preferences?->goal}
 - Training level: {$preferences?->general_training_level}
 - Age: {$user->birth_date?->age}
-- Height: {$user->height} cm
-- Weight: {$user->weight} kg
+- Height: {$this->measurement($user->height, 'cm')}
+- Weight: {$this->measurement($user->weight, 'kg')}
 - Gender: {$user->gender}
 - Preferred language: {$user->language}
 - Lifestyle: {$preferences?->lifestyle}
@@ -206,10 +200,10 @@ final class WorkoutPlanAIGenerator
 - Next plan number: {$analysis->mesocycleNumber}
 - Phase: {$phaseDescription}
 - Readiness: {$analysis->readinessLevel}
-- Completion rate: {$analysis->completionRate}
+- Completion rate: {$this->percentage($analysis->completionRate)}
 - Overall volume trend: {$analysis->overallVolumeTrend}
-- Exercise trends: {$this->associativeList($analysis->exerciseTrends)}
-- Keep as anchors: {$this->list(array_keys(array_filter($analysis->exerciseTrends, fn (string $trend): bool => in_array($trend, ['improving', 'plateau'], true))))}
+- Exercise trends: {$this->associativeList($exerciseTrends)}
+- Keep as anchors: {$this->list(array_keys(array_filter($exerciseTrends, fn (string $trend): bool => in_array($trend, ['improving', 'plateau'], true))))}
 - Rotate when practical: {$this->list($analysis->staleExercises)}
 - Underworked muscles: {$this->list($analysis->neglectedMuscleGroups)}
 - Overworked muscles: {$this->list($analysis->overworkedMuscleGroups)}
@@ -219,10 +213,11 @@ Default working parameters for this week. Deviate only when readiness, recent pe
 {$phasePrescription}
 
 ## Exercise profiles
+Self-reported starting points for exercises without recent performance.
 {$profiles}
 
 ## Recent active workout performance
-Use this section to prescribe sets, reps, and loads. It excludes deload sessions.
+Use this section to prescribe sets, reps, and loads. It excludes deload sessions. Each exercise shows what was prescribed, then what was done and how it felt.
 {$this->markdownList(explode("\n", $this->recentWorkoutHistory($trainingHistory)))}
 
 ## Recent deload history
@@ -410,27 +405,107 @@ PROMPT;
     private function recentWorkoutHistory(TrainingHistory $trainingHistory, bool $deloadOnly = false): string
     {
         return $trainingHistory->recentPlans()
-            ->filter(fn ($plan): bool => $deloadOnly ? $plan->phase === MesocyclePhase::Deload : $plan->phase !== MesocyclePhase::Deload)
-            ->map(function ($plan): string {
+            ->filter(fn (WorkoutPlan $plan): bool => $deloadOnly ? $plan->phase === MesocyclePhase::Deload : $plan->phase !== MesocyclePhase::Deload)
+            ->map(function (WorkoutPlan $plan): ?string {
                 $workouts = $plan->workoutDays
-                    ->map(function ($workoutDay): string {
-                        $exercises = $workoutDay->exercises
-                            ->map(function ($exercise): string {
-                                $result = $exercise->exerciseResults->last();
+                    ->filter(fn (WorkoutDay $workoutDay): bool => $workoutDay->exercises->contains(fn (PlannedExercise $exercise): bool => $exercise->exerciseResults->isNotEmpty()))
+                    ->map(fn (WorkoutDay $workoutDay): string => $workoutDay->focus?->value.' ('.$workoutDay->status.'): '.$workoutDay->exercises
+                        ->map(fn (PlannedExercise $exercise): string => $this->exercisePerformance($exercise))
+                        ->implode(', '));
 
-                                return $exercise->exercise.($result === null
-                                    ? ''
-                                    : ' ('.$result->completed_sets.' sets × '.$result->completed_reps.' reps @ '.$result->completed_weight.' kg; '.$result->feedback->value.')');
-                            })
-                            ->implode(', ');
-
-                        return $workoutDay->status.': '.$exercises;
-                    })
-                    ->implode(' | ');
-
-                return 'Plan '.$plan->mesocycle_number.' ('.$plan->phase?->value.'): '.$workouts;
+                return $workouts->isEmpty()
+                    ? null
+                    : 'Plan '.$plan->mesocycle_number.' ('.$plan->phase?->value.'): '.$workouts->implode(' | ');
             })
+            ->filter()
             ->implode("\n") ?: 'None';
+    }
+
+    private function exercisePerformance(PlannedExercise $exercise): string
+    {
+        $prescription = $exercise->sets === null || $exercise->reps_min === null
+            ? null
+            : $exercise->sets.'×'.$this->repRange($exercise->reps_min, $exercise->reps_max)
+                .((float) $exercise->target_weight_kg > 0 ? ' @ '.$this->decimal($exercise->target_weight_kg).' kg' : '');
+        $result = $exercise->exerciseResults->last();
+        $performance = $result === null
+            ? 'not done'
+            : 'did '.$result->completed_sets.'×'.$result->completed_reps
+                .((float) $result->completed_weight > 0 ? ' @ '.$this->decimal($result->completed_weight).' kg' : '')
+                .', '.$result->feedback->value;
+
+        return $exercise->exercise.' ('.($prescription === null ? '' : 'planned '.$prescription.'; ').$performance.')';
+    }
+
+    /**
+     * Profiles only for exercises without recent performance, which is a more reliable baseline.
+     */
+    private function exerciseProfiles(User $user, TrainingHistory $trainingHistory): string
+    {
+        $recentlyPerformed = $trainingHistory->recentPlans()
+            ->flatMap(fn (WorkoutPlan $plan) => $plan->workoutDays)
+            ->flatMap(fn (WorkoutDay $workoutDay) => $workoutDay->exercises)
+            ->filter(fn (PlannedExercise $exercise): bool => $exercise->exerciseResults->isNotEmpty())
+            ->pluck('exercise')
+            ->unique()
+            ->all();
+
+        return $this->markdownList($user->exerciseProfiles
+            ->reject(fn (ExerciseProfile $profile): bool => in_array($profile->exercise, $recentlyPerformed, true))
+            ->map(function (ExerciseProfile $profile): ?string {
+                $details = array_filter([
+                    (float) $profile->working_weight > 0 ? $this->decimal($profile->working_weight).' kg' : null,
+                    $profile->max_reps > 0 ? 'historical max reps: '.$profile->max_reps : null,
+                    $profile->preferred_rep_range_min === null || $profile->preferred_rep_range_max === null
+                        ? null
+                        : $profile->preferred_rep_range_min.'-'.$profile->preferred_rep_range_max.' reps',
+                ]);
+
+                return $details === [] ? null : implode(' | ', [$profile->exercise, ...$details]);
+            })
+            ->filter()
+            ->values()
+            ->all());
+    }
+
+    /**
+     * Trends worth acting on: resistance exercises with enough history.
+     *
+     * @param  array<string, string>  $exerciseTrends
+     * @return array<string, string>
+     */
+    private function resistanceExerciseTrends(array $exerciseTrends): array
+    {
+        $categories = collect($this->exerciseCatalog->all()['exercises'] ?? [])
+            ->filter(fn (mixed $exercise): bool => is_array($exercise) && isset($exercise['id']))
+            ->mapWithKeys(fn (array $exercise): array => [$exercise['id'] => $exercise['category'] ?? null]);
+
+        return array_filter(
+            $exerciseTrends,
+            fn (string $trend, string $exercise): bool => $trend !== 'insufficient'
+                && ! in_array($categories->get($exercise), [ExerciseCategory::Mobility->value, ExerciseCategory::Cardio->value], true),
+            ARRAY_FILTER_USE_BOTH,
+        );
+    }
+
+    private function repRange(int $minimum, ?int $maximum): string
+    {
+        return $maximum === null || $maximum === $minimum ? (string) $minimum : $minimum.'-'.$maximum;
+    }
+
+    private function decimal(string|float|int $weight): string
+    {
+        return rtrim(rtrim(number_format((float) $weight, 2, '.', ''), '0'), '.');
+    }
+
+    private function measurement(string|int|null $value, string $unit): string
+    {
+        return (float) $value > 0 ? $this->decimal($value).' '.$unit : 'unknown';
+    }
+
+    private function percentage(float $ratio): string
+    {
+        return round($ratio * 100).'%';
     }
 
     /**
