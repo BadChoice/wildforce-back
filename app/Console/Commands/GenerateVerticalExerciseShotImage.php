@@ -24,8 +24,12 @@ class GenerateVerticalExerciseShotImage extends Command
         $base = '
 Create a vertical (4:5) high-resolution fitness studio photograph.
 
-Use the EXACT SAME PERSON from the attached reference image as the athlete.
+Use the EXACT SAME PERSON from the attached athlete reference image as the athlete.
 This is an identity-preservation task, not a request to create a new fitness model.
+
+When a second exercise tutorial reference image is attached, use it only to
+accurately reproduce the exercise pose, equipment setup, and biomechanics.
+It must not override the athlete identity reference.
 
 The referenced athlete is performing:
 
@@ -148,16 +152,32 @@ No artifacts, no extra limbs, no warped equipment';
         $biomechanics = $exerciseCatalog->biomechanics($exerciseId);
 
         $image = Image::of($this->prompt($exercise, $biomechanics))
-            ->attachments([
-                Files\Image::fromPath(resource_path("assetModels/{$gender}.png")),
-            ])
+            ->attachments($this->attachments($gender, $exerciseId))
             ->portrait()
-            ->generate();
-        // ->generate(provider: Lab::OpenAI);
+            //->generate();
+            ->generate(provider: Lab::OpenAI);
 
         $image->storeAs('vertical/'.$exerciseId.'_'.$gender.'.jpeg');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * @return array<int, Files\Image>
+     */
+    private function attachments(string $gender, string $exerciseId): array
+    {
+        $attachments = [
+            Files\Image::fromPath(resource_path("assetModels/{$gender}.png")),
+        ];
+
+        $tutorialReference = resource_path("assetModels/exerciseTutorialReferences/{$exerciseId}.png");
+
+        if (is_file($tutorialReference)) {
+            $attachments[] = Files\Image::fromPath($tutorialReference);
+        }
+
+        return $attachments;
     }
 
     /**
