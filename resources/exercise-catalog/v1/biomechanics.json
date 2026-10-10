@@ -209,6 +209,7 @@
         ],
         "equipment": [
             "two cable handles",
+            "horizontal cable",
             "pulleys set approximately chest height"
         ],
         "arms": [
@@ -256,10 +257,12 @@
         ]
     },
     "lowToHighCableFly": {
-        "phase": "contracted",
+        "phase": "end",
         "bodyPosition": [
             "standing centered between two low cable pulleys",
             "slight forward step",
+            "arms straight",
+            "palms facing partially up",
             "torso stable"
         ],
         "equipment": [
@@ -743,6 +746,7 @@
             "priority": "ankle strap, low cable, and backward leg extension must all be clearly visible"
         },
         "mustNot": [
+            "no cable on the landing foot",
             "hip abduction to the side",
             "hip adduction across body",
             "dedicated glute kickback machine",

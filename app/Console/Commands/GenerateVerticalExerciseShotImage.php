@@ -154,8 +154,8 @@ No artifacts, no extra limbs, no warped equipment';
         $image = Image::of($this->prompt($exercise, $biomechanics))
             ->attachments($this->attachments($gender, $exerciseId))
             ->portrait()
-            //->generate();
-            ->generate(provider: Lab::OpenAI);
+            ->generate();
+            //->generate(provider: Lab::OpenAI);
 
         $image->storeAs('vertical/'.$exerciseId.'_'.$gender.'.jpeg');
 
