@@ -24,6 +24,7 @@ test('it renders the API documentation and its OpenAPI document locally', functi
         ->assertJsonPath('paths./api/nutrition-macros/generate.post.summary', 'Estimate meal macros from a text description')
         ->assertJsonPath('paths./api/nutrition-macros/analyze-photo.post.summary', 'Estimate meal macros from a photo')
         ->assertJsonPath('paths./api/nutrition-macros/analyze-photo.post.requestBody.content.multipart/form-data.schema.$ref', '#/components/schemas/AnalyzeMealPhotoRequest')
+        ->assertJsonPath('paths./api/nutrition-macros/analyze-label.post.summary', 'Extract macros from nutrition label text')
         ->assertJsonPath('paths./api/body-progress-photo-sessions/{bodyProgressPhotoSession}/composition-analysis.post.summary', 'Analyse private body progress photos')
         ->assertJsonPath('paths./api/body-progress-photo-sessions/{bodyProgressPhotoSession}/composition-analysis.post.parameters.0.$ref', '#/components/parameters/IdempotencyKey')
         ->assertJsonPath('paths./api/body-progress-photo-sessions/{bodyProgressPhotoSession}/composition-analysis.post.responses.200.content.application/json.schema.properties.data.properties.confidence.enum', ['low', 'medium', 'high'])

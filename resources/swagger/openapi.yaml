@@ -830,6 +830,39 @@ paths:
           description: 'The estimation rate limit of ten requests per minute was exceeded. Also returned with code `ai_budget_exceeded` and a `resets_at` timestamp when the monthly AI budget is spent.'
         502:
           description: 'The AI provider did not return structured JSON.'
+  /api/nutrition-macros/analyze-label:
+    post:
+      tags:
+        - Nutrition
+      summary: 'Extract macros from nutrition label text'
+      description: 'Extracts the per 100 g macronutrients and the serving size from the OCR text of a nutrition label. The OCR runs on the device; send the recognized text laid out as a table. Nothing is persisted.'
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeNutritionLabelRequest'
+      responses:
+        200:
+          description: 'Extracted label macros'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NutritionLabelMacrosResponse'
+        401:
+          $ref: '#/components/responses/Unauthenticated'
+        403:
+          description: 'An active subscription, trial, or demo access is required (code `subscription_required`), or AI features are disabled for this account (code `ai_blocked`).'
+        409:
+          description: 'The idempotency key is already in progress or was reused with a different request.'
+        422:
+          $ref: '#/components/responses/ValidationError'
+        429:
+          description: 'The extraction rate limit of ten requests per minute was exceeded. Also returned with code `ai_budget_exceeded` and a `resets_at` timestamp when the monthly AI budget is spent.'
+        502:
+          description: 'The AI provider did not return structured JSON.'
   /api/nutrition/open-food-facts/contributions:
     post:
       tags:
@@ -2036,6 +2069,35 @@ components:
           type:
             - string
             - 'null'
+    AnalyzeNutritionLabelRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          maxLength: 5000
+          description: 'OCR text of the nutrition label, one label row per line.'
+    NutritionLabelMacrosResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          $ref: '#/components/schemas/NutritionLabelMacros'
+    NutritionLabelMacros:
+      type: object
+      required:
+        - macros
+      properties:
+        servingSize:
+          type:
+            - string
+            - 'null'
+          description: 'The serving size as written on the label, for example 30 g.'
+        macros:
+          $ref: '#/components/schemas/EstimatedMacros'
+          description: 'Macros per 100 g. Values missing from the label are 0.'
     OpenFoodFactsContributionRequest:
       type: object
       required:
