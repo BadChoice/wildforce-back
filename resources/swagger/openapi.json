@@ -1116,6 +1116,79 @@
         }
       }
     },
+    "/api/workout-days/{workoutDay}/adapt-location": {
+      "post": {
+        "tags": [
+          "Workouts"
+        ],
+        "summary": "Adapt a workout day to another training location",
+        "description": "Generates a copy of the workout day adapted to the equipment at one of the workout owner's training locations, preserving its focus, movement patterns, difficulty, warmup/cooldown sections, and duration where practical. The original workout day is not changed and the draft is not persisted, so the response has no IDs or timestamps; once the user confirms, replace the workout day's content through the workout-day sync flow. The workout owner, an admin, or the owner's active coach may call it.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKey"
+          },
+          {
+            "name": "workoutDay",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "training_location_id"
+                ],
+                "properties": {
+                  "training_location_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "A training location owned by the workout day's user."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Adapted workout day draft",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratedWorkoutDayResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthenticated"
+          },
+          "403": {
+            "description": "The user cannot update this workout day, an active subscription, trial, or demo access is required (code `subscription_required`), or AI features are disabled for this account (code `ai_blocked`)."
+          },
+          "404": {
+            "description": "The workout day does not exist."
+          },
+          "409": {
+            "description": "The idempotency key is already in progress or was reused with a different request."
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          },
+          "429": {
+            "description": "The generation rate limit of five requests per minute was exceeded. Also returned with code `ai_budget_exceeded` and a `resets_at` timestamp when the monthly AI budget is spent."
+          }
+        }
+      }
+    },
     "/api/nutrition-plans/generate": {
       "post": {
         "tags": [

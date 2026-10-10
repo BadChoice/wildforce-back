@@ -3,6 +3,7 @@
 use App\Ai\Agents\Workouts\SingleWorkoutAgent;
 use App\Enums\SubscriptionStatus;
 use App\Enums\WorkoutDayType;
+use App\Models\PlannedExercise;
 use App\Models\TrainingPreference;
 use App\Models\User;
 use App\Models\WorkoutDay;
@@ -15,10 +16,11 @@ test('it returns a generated single workout without persisting it', function () 
         'general_training_level' => 'intermediate',
     ]);
     $workoutPlan = WorkoutPlan::factory()->for($user)->create();
-    WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
+    $historyDay = WorkoutDay::factory()->for($user)->for($workoutPlan, 'plan')->create([
         'title' => 'Full body history',
         'focus' => 'fullBody',
     ]);
+    PlannedExercise::factory()->for($historyDay, 'workoutDay')->create(['exercise' => 'barbellBackSquat']);
     SingleWorkoutAgent::fake([singleWorkoutGenerationResponse()])->preventStrayPrompts();
 
     $response = $this->actingAs($user, 'sanctum')->postJson('/api/workout-days/generate', singleWorkoutRequest(), [
@@ -38,14 +40,14 @@ test('it returns a generated single workout without persisting it', function () 
         ->assertJsonPath('data.blocks.0.exercises.0.set_style_configuration.target_rir', 2);
 
     $this->assertDatabaseCount('workout_days', 1);
-    $this->assertDatabaseCount('workout_blocks', 0);
-    $this->assertDatabaseCount('planned_exercises', 0);
+    $this->assertDatabaseCount('workout_blocks', 1);
+    $this->assertDatabaseCount('planned_exercises', 1);
 
     SingleWorkoutAgent::assertPrompted(fn ($prompt): bool => $prompt
         ->contains('## Single workout request')
         && $prompt->contains('Target duration: 45 minutes total')
         && $prompt->contains('Available equipment for this session: bodyweight')
-        && $prompt->contains('Full body history (fullBody)'));
+        && $prompt->contains('Full body history (fullBody): barbellBackSquat'));
 });
 
 test('it returns 422 when the single workout request is invalid', function () {

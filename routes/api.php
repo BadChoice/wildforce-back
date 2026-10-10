@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\Sync\SyncPushController;
 use App\Http\Controllers\Api\Webhooks\AppStoreServerNotificationController;
 use App\Http\Controllers\Api\Webhooks\StripeWebhookController;
 use App\Http\Controllers\Api\Workouts\SingleWorkoutGenerationController;
+use App\Http\Controllers\Api\Workouts\WorkoutDayLocationAdaptationController;
 use App\Http\Controllers\Api\Workouts\WorkoutPlanGenerationController;
 use App\Http\Middleware\EnsureUserHasAppAccess;
 use Illuminate\Http\Request;
@@ -56,6 +57,7 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::middleware(EnsureUserHasAppAccess::class)->group(function () {
         Route::post('/workout-plans/generate', WorkoutPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
         Route::post('/workout-days/generate', SingleWorkoutGenerationController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
+        Route::post('/workout-days/{workoutDay}/adapt-location', WorkoutDayLocationAdaptationController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
         Route::post('/nutrition-plans/generate', NutritionPlanGenerationController::class)->middleware(['idempotency', 'throttle:5,1', 'ai.budget']);
         Route::post('/nutrition-macros/generate', MacrosFromTextGenerationController::class)->middleware(['idempotency', 'throttle:10,1', 'ai.budget']);
         Route::post('/nutrition-macros/analyze-photo', MealPhotoMacrosGenerationController::class)->middleware(['idempotency', 'throttle:10,1', 'ai.budget']);

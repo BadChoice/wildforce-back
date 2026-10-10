@@ -19,6 +19,7 @@ test('it renders the API documentation and its OpenAPI document locally', functi
         ->assertJsonPath('paths./api/subscription/redeem-code.post.summary', 'Redeem a demo access code')
         ->assertJsonPath('paths./api/account/coaches.get.summary', "Get the authenticated user's active coaches")
         ->assertJsonPath('paths./api/workout-plans/generate.post.summary', 'Generate and save a one-week workout plan')
+        ->assertJsonPath('paths./api/workout-days/{workoutDay}/adapt-location.post.summary', 'Adapt a workout day to another training location')
         ->assertJsonPath('paths./api/nutrition-plans/generate.post.summary', 'Generate and save a seven-day nutrition plan')
         ->assertJsonPath('paths./api/nutrition-macros/generate.post.summary', 'Estimate meal macros from a text description')
         ->assertJsonPath('paths./api/nutrition-macros/analyze-photo.post.summary', 'Estimate meal macros from a photo')

@@ -6,14 +6,16 @@ use App\Ai\Agents\Workouts\SingleWorkoutAgent;
 use App\Enums\Generated\ExerciseCategory;
 use App\Enums\Generated\ExerciseTrackingMode;
 use App\Enums\WorkoutBlockType;
+use App\Models\PlannedExercise;
 use App\Models\User;
 use App\Models\WorkoutDay;
 use App\Services\ExerciseCatalog\ExerciseCatalog;
 use Illuminate\Support\Collection;
+use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Responses\StructuredAgentResponse;
 use RuntimeException;
 
-final class SingleWorkoutAIGenerator
+class SingleWorkoutAIGenerator
 {
     public function __construct(
         private readonly ExerciseCatalog $exerciseCatalog,
@@ -23,6 +25,15 @@ final class SingleWorkoutAIGenerator
     /** @param array{goal: string|null, focuses: list<string>, muscleGroups: list<string>, equipment: list<string>, includeWarmup: bool, includeCooldown: bool, durationMinutes: int} $request */
     public function generate(User $user, array $request): WorkoutDay
     {
+        return $this->generateWorkout($user, $request);
+    }
+
+    /**
+     * @param  array{goal: string|null, focuses: list<string>, muscleGroups: list<string>, equipment: list<string>, includeWarmup: bool, includeCooldown: bool, durationMinutes: int}  $request
+     * @param  string|null  $context  Extra prompt sections placed before the single workout request.
+     */
+    protected function generateWorkout(User $user, array $request, ?string $context = null): WorkoutDay
+    {
         $user->loadMissing(['trainingPreferences', 'exerciseProfiles', 'workoutPlans.workoutDays.exercises.exerciseResults']);
         $goal = $request['goal'] ?? $user->trainingPreferences?->goal ?? 'generalFitness';
         $exercises = $this->availableExercises($user, $goal, $request['equipment']);
@@ -31,7 +42,8 @@ final class SingleWorkoutAIGenerator
             throw new RuntimeException('Single workout generation requires compatible exercises for the requested equipment.');
         }
 
-        $response = (new SingleWorkoutAgent($exercises->pluck('id')->all()))->prompt($this->prompt($user, $request, $goal, $exercises));
+        $prompt = $this->prompt($user, $request, $goal, $exercises);
+        $response = $this->agent($exercises->pluck('id')->all())->prompt($context === null ? $prompt : $context."\n\n".$prompt);
 
         if (! $response instanceof StructuredAgentResponse) {
             throw new RuntimeException('The single workout generator did not return structured data.');
@@ -41,6 +53,12 @@ final class SingleWorkoutAIGenerator
         $this->validateSetStyleConfigurations($workout, $exercises, $user->trainingPreferences?->general_training_level);
 
         return $workout;
+    }
+
+    /** @param list<string> $exerciseIds */
+    protected function agent(array $exerciseIds): Agent
+    {
+        return new SingleWorkoutAgent($exerciseIds);
     }
 
     /** @param list<string> $equipment
